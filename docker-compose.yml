@@ -1,32 +1,4 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: whoami-postgres
-    environment:
-      POSTGRES_USER: whoami
-      POSTGRES_DB: whoami
-      PGDATA: /var/lib/postgresql/data/pgdata
-    expose:
-      - "5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U whoami -d whoami"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-    networks:
-      - whoami-network
-    deploy:
-      resources:
-        limits:
-          cpus: "0.50"
-          memory: 512M
-        reservations:
-          cpus: "0.10"
-          memory: 128M
-
   redis:
     image: redis:7-alpine
     container_name: whoami-redis
@@ -58,8 +30,6 @@ services:
       dockerfile: Dockerfile
     container_name: whoami-app
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     environment:
@@ -92,7 +62,6 @@ services:
           memory: 256M
 
 volumes:
-  postgres-data:
   redis-data:
 
 networks:
