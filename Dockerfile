@@ -60,4 +60,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["bun", "server.js"]
+CMD ["sh", "-c", "bun node_modules/prisma/build/index.js migrate deploy && exec bun server.js"]
