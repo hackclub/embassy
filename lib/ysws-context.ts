@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithRole, hasRole } from "@/lib/org";
 import { verifyApiKeyHash } from "@/lib/org";
+import { isBypassUser, isAuthBypassEnabled } from "@/lib/bypass";
 import type { Role, OrgRole } from "../generated/prisma/client";
 
 export interface YSWSContext {
@@ -46,9 +47,10 @@ export async function getYSWSContext(): Promise<YSWSContext | null> {
   // Superadmins and admins can access all YSWSes via org membership
   if (hasRole(user.role, "ADMIN")) {
     const orgs = await prisma.org.findMany({
-      where: {
-        members: { some: { userId: user.id } },
-      },
+      // The bypass user is not a member of any org; let them see everything.
+      where: isBypassUser(user.id)
+        ? {}
+        : { members: { some: { userId: user.id } } },
       include: {
         ysws: {
           where: { isActive: true },
@@ -159,11 +161,13 @@ export async function verifyYSWSAccess(
 
     if (!ysws || !ysws.isActive || !ysws.orgId) return null;
 
-    // Check if admin is member of the org
-    const orgMember = await prisma.orgMember.findUnique({
-      where: { orgId_userId: { orgId: ysws.orgId, userId } },
-    });
-    if (!orgMember) return null;
+    // Check if admin is member of the org (bypass user can access everything)
+    if (!isBypassUser(userId)) {
+      const orgMember = await prisma.orgMember.findUnique({
+        where: { orgId_userId: { orgId: ysws.orgId, userId } },
+      });
+      if (!orgMember) return null;
+    }
 
     return {
       yswsId: ysws.id,
@@ -237,7 +241,7 @@ export async function resolveAPIKeyContext(req: Request): Promise<APIKeyContext 
   }
 
   const session = await auth();
-  if (!session?.user?.id) return null;
+  if (!session?.user?.id && !isAuthBypassEnabled()) return null;
 
   const user = await getCurrentUserWithRole();
   if (!user) return null;
@@ -247,7 +251,25 @@ export async function resolveAPIKeyContext(req: Request): Promise<APIKeyContext 
     where: { userId: user.id },
     include: { org: true },
   });
-  if (!membership) return null;
+
+  if (!membership) {
+    // Bypass user has no org membership; fall back to the first org so the
+    // orders API stays testable without signing in.
+    if (isBypassUser(user.id)) {
+      const org = await prisma.org.findFirst({ orderBy: { createdAt: "asc" } });
+      if (!org) return null;
+      const ysws = await prisma.ySWS.findFirst({
+        where: { orgId: org.id, isActive: true },
+      });
+      return {
+        orgId: org.id,
+        yswsId: ysws?.id ?? null,
+        actorId: user.id,
+        actorType: "admin",
+      };
+    }
+    return null;
+  }
 
   // Get the YSWS for this org
   const ysws = await prisma.ySWS.findFirst({

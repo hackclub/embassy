@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import type { Role, OrgRole } from "../generated/prisma/client";
 import { auditLog } from "./audit";
+import { isAuthBypassEnabled, BYPASS_USER } from "./bypass";
 import { hash, verify } from "@node-rs/argon2";
 
 export type { Role, OrgRole };
@@ -36,8 +37,26 @@ export function isSuperadminEmail(email: string | null | undefined): boolean {
 
 export async function getCurrentUser() {
   const session = await auth();
-  if (!session?.user?.id) return null;
-  return session.user;
+  if (session?.user?.id) return session.user;
+
+  // ADMIN_BYPASS=true: allow testing everything without signing in.
+  // A synthetic superadmin user row is created so foreign keys and
+  // user-scoped queries keep working.
+  if (isAuthBypassEnabled()) {
+    await prisma.user.upsert({
+      where: { id: BYPASS_USER.id },
+      update: { role: "SUPERADMIN" },
+      create: {
+        id: BYPASS_USER.id,
+        name: BYPASS_USER.name,
+        email: BYPASS_USER.email,
+        role: "SUPERADMIN",
+      },
+    });
+    return BYPASS_USER;
+  }
+
+  return null;
 }
 
 export async function getCurrentUserWithRole(): Promise<

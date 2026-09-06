@@ -1,11 +1,17 @@
+import type { Metadata } from "next";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import Breadcrumb from "../../components/Breadcrumb";
-import PageHeader from "../../components/PageHeader";
 import Section from "../../components/Section";
 import StatusBadge from "../../components/StatusBadge";
 import { mapOrderStateToVariant } from "../../components/status-variant";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Track your passport – whoami",
+  description: "Track the status of your Hack Club Passport order.",
+  robots: { index: false },
+};
 
 function dateLabel(d: Date) {
   return new Intl.DateTimeFormat("en-GB", {
@@ -60,21 +66,18 @@ export default async function TrackPage({
   const currentStateIndex = TIMELINE_STEPS.findIndex((s) => s.state === order.currentState);
 
   return (
-    <>
-      <Breadcrumb
-        items={[
-          { label: "whoami", href: "/" },
-          { label: "Track passport" },
-        ]}
-      />
-
-      <div className="max-w-3xl mx-auto px-6 py-12">
+    <div className="min-h-screen flex flex-col bg-govuk-white">
+      <div className="flex-1 max-w-3xl w-full mx-auto px-6 py-12">
         <header className="mb-8 text-center">
-          <div className="mb-4">
-            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true" className="mx-auto text-hc-red">
-              <rect width="64" height="64" rx="8" fill="#e33f54" />
-              <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fontFamily="Georgia, serif" fontSize="24" fontWeight="bold" fill="white">HC</text>
-            </svg>
+          <div className="mb-4 flex justify-center">
+            <Image
+              src="/passport.png"
+              alt="Hack Club Passport"
+              width={96}
+              height={96}
+              className="object-contain"
+              priority
+            />
           </div>
           <h1 className="mb-2 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
             Hack Club Passport
@@ -225,9 +228,8 @@ export default async function TrackPage({
 
         <footer className="mt-8 pt-6 border-t border-govuk-grey-2 text-center text-sm text-govuk-grey-4">
           <p>Questions? Contact <Link href="mailto:passports@hackclub.com" className="underline underline-offset-2 hover:text-hc-red">passports@hackclub.com</Link></p>
-          <p className="mt-1"><Link href="/" className="underline underline-offset-2 hover:text-hc-red">Back to whoami</Link></p>
         </footer>
       </div>
-    </>
+    </div>
   );
 }

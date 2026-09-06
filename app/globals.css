@@ -23,7 +23,7 @@
   /* Header & Sidebar Heights */
   --header-height: 70px;
   --header-height-expanded: 120px;
-  --admin-header-height: 80px;
+  --admin-header-height: 56px;
   --dashboard-header-height: 100px;
   --sidebar-sticky-offset: calc(var(--header-height) + 1rem);
   --admin-sidebar-sticky-offset: calc(var(--admin-header-height) + 1rem);
