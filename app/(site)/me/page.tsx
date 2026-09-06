@@ -1,63 +1,56 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithRole } from "@/lib/org";
-import {
-  isHackatimeConfigured,
-  getHackatimeHours,
-} from "@/lib/hackatime";
-import PageHeader from "@/app/components/PageHeader";
-import Section from "@/app/components/Section";
+import { isHackatimeConfigured, getHackatimeHours } from "@/lib/hackatime";
+import { availableCredits } from "@/lib/credits";
+import ProjectCard from "./ProjectCard";
+import NewProjectButton from "./NewProjectButton";
+import type { ProjectCardData } from "./ProjectCard";
 
-type BannerVariant = "success" | "warning" | "error";
-
-const BANNER_MESSAGES: Record<string, { title: string; text: string; variant: BannerVariant }> = {
-  linked: {
-    title: "Hackatime linked",
-    text: "Your Hackatime account is now connected. Your tracked coding time can be spent as credits in the shop.",
-    variant: "success",
-  },
-  unlinked: {
-    title: "Hackatime unlinked",
-    text: "Your Hackatime account has been disconnected.",
-    variant: "success",
-  },
-  denied: {
-    title: "Hackatime not linked",
-    text: "You declined the Hackatime connection request. You can try again at any time.",
-    variant: "warning",
-  },
-  unconfigured: {
-    title: "Hackatime not linked",
-    text: "Hackatime linking is not available right now. Try again later.",
-    variant: "warning",
-  },
-  token_error: {
-    title: "Hackatime link failed",
-    text: "There was a problem getting an access token from Hackatime. Please try again.",
-    variant: "error",
-  },
-  state_mismatch: {
-    title: "Hackatime link failed",
-    text: "The connection could not be verified. Please start again.",
-    variant: "error",
-  },
-};
-
-function StatusCell({
+function TaskRow({
   done,
-  label,
+  href,
+  children,
+  hint,
 }: {
   done: boolean;
-  label: string;
+  href?: string;
+  children: React.ReactNode;
+  hint?: string;
 }) {
-  return (
-    <span className={`govuk-task-list__status ${done ? "govuk-task-list__status--completed" : "govuk-task-list__status--todo"}`}>
-      {label}
+  const label = (
+    <span className="flex items-center gap-2.5">
+      <span
+        aria-hidden="true"
+        className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-[3px] text-xs font-extrabold ${
+          done
+            ? "border-[#00a85d] bg-[#00D875] text-white"
+            : "border-govuk-grey-2 bg-white text-transparent"
+        }`}
+      >
+        ✓
+      </span>
+      <span className={`text-sm leading-snug ${done ? "text-govuk-grey-4 line-through" : "font-semibold"}`}>
+        {children}
+      </span>
     </span>
+  );
+
+  return (
+    <li className="py-1.5">
+      {href && !done ? (
+        <Link href={href} className="block rounded-xl px-1 py-1 hover:bg-white">
+          {label}
+        </Link>
+      ) : (
+        <div className="px-1 py-1">{label}</div>
+      )}
+      {hint && !done && <p className="ml-9 text-xs text-govuk-grey-4">{hint}</p>}
+    </li>
   );
 }
 
-export default async function MePage({
+export default async function MeHome({
   searchParams,
 }: {
   searchParams: Promise<{ hackatime?: string }>;
@@ -66,185 +59,160 @@ export default async function MePage({
   if (!user) return null;
 
   const { hackatime } = await searchParams;
-  const banner = hackatime ? BANNER_MESSAGES[hackatime] : undefined;
 
   const configured = isHackatimeConfigured();
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { hackatimeUid: true, creditsSpent: true },
+    select: { hackatimeUid: true, creditsSpent: true, name: true },
   });
   const linked = Boolean(dbUser?.hackatimeUid);
 
-  const [projectCount, journalCount, passportCount, recentProjects, recentJournal] =
-    await Promise.all([
-      prisma.project.count({ where: { userId: user.id } }),
-      prisma.journalEntry.count({ where: { userId: user.id } }),
-      prisma.passportOrder.count({ where: { recipientUserId: user.id } }),
-      prisma.project.findMany({
-        where: { userId: user.id },
-        orderBy: { createdAt: "desc" },
-        take: 3,
-      }),
-      prisma.journalEntry.findMany({
-        where: { userId: user.id },
-        orderBy: { entryDate: "desc" },
-        take: 3,
-      }),
-    ]);
+  const projects = await prisma.project.findMany({
+    where: { userId: user.id },
+    orderBy: { updatedAt: "desc" },
+    include: {
+      journalEntries: { orderBy: { entryDate: "desc" }, select: { id: true, title: true, content: true, entryDate: true } },
+    },
+  });
 
   let credits: number | null = null;
-  let hoursError = false;
-  if (configured && linked && dbUser) {
+  if (configured && linked) {
     const hours = await getHackatimeHours(user.id);
-    if (hours === null) {
-      hoursError = true;
-    } else {
-      credits = Math.max(0, Math.floor(hours) - (dbUser.creditsSpent ?? 0));
-    }
+    credits = availableCredits(hours, dbUser?.creditsSpent ?? 0);
   }
+
+  const projectCount = projects.length;
+  const hasPassport = await prisma.passportOrder.count({
+    where: { recipientUserId: user.id },
+  });
+
+  const projectCards: ProjectCardData[] = projects.map((p) => ({
+    id: p.id,
+    title: p.title,
+    description: p.description,
+    githubUrl: p.githubUrl,
+    demoUrl: p.demoUrl,
+    journalEntries: p.journalEntries.map((e) => ({
+      id: e.id,
+      title: e.title,
+      content: e.content,
+      entryDate: e.entryDate.toISOString(),
+    })),
+  }));
+
+  const tasksDone = {
+    hackatime: linked,
+    project: projectCount > 0,
+    passport: hasPassport > 0,
+  };
 
   return (
     <>
-      <PageHeader title="Your whoami" description={user.email ?? undefined} />
-
-      <Section title="Credits" divider={true}>
-        {configured ? (
-          linked ? (
-            <div className="govuk-inset">
-              <p className="text-2xl font-bold">
-                {hoursError
-                  ? "Could not fetch hours right now"
-                  : `Credits: ${credits ?? 0}`}
-              </p>
-              {!hoursError && (
-                <p className="mt-1 text-govuk-grey-4">
-                  1 credit = 1 hour of tracked coding time
-                </p>
-              )}
-              <form action="/api/hackatime/unlink" method="post" className="mt-3">
-                <button type="submit" className="govuk-button govuk-button--secondary govuk-button--small">
-                  Unlink Hackatime
-                </button>
-              </form>
-            </div>
-          ) : (
-            <div className="govuk-inset">
-              <a href="/api/hackatime/authorize" className="govuk-button">
-                Link Hackatime
-              </a>
-              <p className="mt-2 text-govuk-grey-4">
-                Optional — connects your tracked coding time so you can spend credits in the shop.
-              </p>
-            </div>
-          )
-        ) : (
-          <div className="govuk-inset">
-            <span className="govuk-tag govuk-tag--grey">Hackatime linking not configured</span>
-            <p className="mt-2 text-govuk-grey-4">
-              Credit earning is unavailable on this deployment.
-            </p>
-          </div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold leading-tight tracking-tight">
+            {dbUser?.name ? `Hey ${dbUser.name.split(" ")[0]}` : "Your whoami"}
+          </h1>
+          <p className="mt-1 text-govuk-grey-4">{user.email}</p>
+        </div>
+        {credits !== null && (
+          <span
+            className="game-box inline-flex items-center gap-2 !rounded-full !py-2 font-bold"
+            aria-label={`${credits} credits`}
+          >
+            <span aria-hidden="true" className="text-lg text-[#00a85d]">
+              ●
+            </span>
+            {credits} credits
+          </span>
         )}
-      </Section>
+        {linked && (
+          <form action="/api/hackatime/unlink" method="post">
+            <button
+              type="submit"
+              className="text-sm font-semibold text-govuk-grey-4 underline underline-offset-4 hover:text-govuk-black"
+            >
+              Unlink Hackatime
+            </button>
+          </form>
+        )}
+      </div>
 
-      {banner && (
-        <div className={`govuk-notification-banner govuk-notification-banner--${banner.variant}`} role="alert">
-          <p className="font-bold">{banner.title}</p>
-          <p>{banner.text}</p>
+      {hackatime === "linked" && (
+        <div className="govuk-notification-banner govuk-notification-banner--success mb-6" role="alert">
+          <p className="font-bold">Hackatime linked</p>
+          <p>Your credits are ready to spend in the shop.</p>
+        </div>
+      )}
+      {hackatime === "unlinked" && (
+        <div className="govuk-notification-banner govuk-notification-banner--success mb-6" role="alert">
+          <p className="font-bold">Hackatime unlinked</p>
+          <p>Your Hackatime account has been disconnected.</p>
         </div>
       )}
 
-      <Section title="Your tasks" divider={true}>
-        <ul className="govuk-task-list">
-          <li className="govuk-task-list__item">
-            <div className="govuk-task-list__name-and-hint">
-              {linked ? (
-                <span className="govuk-task-list__link">Link Hackatime (optional)</span>
-              ) : (
-                <a href="/api/hackatime/authorize" className="govuk-task-list__link">
+      <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
+        <section aria-label="Your projects">
+          {projectCount === 0 ? (
+            <div className="game-box flex flex-col items-center gap-4 py-12 text-center">
+              <p className="max-w-sm text-govuk-grey-4">
+                Projects are where your work lives — add one, then keep a journal
+                on it as you build.
+              </p>
+              <NewProjectButton />
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-5 sm:grid-cols-2">
+                {projectCards.map((project) => (
+                  <ProjectCard key={project.id} project={project} />
+                ))}
+              </div>
+              <div className="mt-6">
+                <NewProjectButton />
+              </div>
+            </>
+          )}
+        </section>
+
+        <aside aria-label="Getting started" className="self-start lg:sticky lg:top-20">
+          <div className="game-box">
+            <h2 className="mb-2 font-extrabold uppercase tracking-wide text-govuk-grey-4">
+              Getting started
+            </h2>
+            <ul className="divide-y-2 divide-dashed divide-govuk-grey-2" role="list">
+              <TaskRow
+                done={tasksDone.hackatime}
+                href={linked ? undefined : "/api/hackatime/authorize"}
+                hint={linked ? undefined : configured ? "Optional — unlocks the shop." : undefined}
+              >
+                <a href={linked ? undefined : "/api/hackatime/authorize"} className={linked ? undefined : "text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"}>
                   Link Hackatime (optional)
                 </a>
-              )}
-              <span className="govuk-task-list__hint">
-                Connect your tracked coding time to earn credits.
-              </span>
-            </div>
-            <StatusCell done={linked} label={linked ? "Done" : "To do"} />
-          </li>
-          <li className="govuk-task-list__item">
-            <div className="govuk-task-list__name-and-hint">
-              <Link href="/me/projects" className="govuk-task-list__link">
+              </TaskRow>
+              <TaskRow done={tasksDone.project} hint={tasksDone.project ? undefined : "Use the green button."}>
                 Add a project
-              </Link>
-              <span className="govuk-task-list__hint">
-                Show what you have been building.
-              </span>
-            </div>
-            <StatusCell done={projectCount > 0} label={projectCount > 0 ? "Done" : "To do"} />
-          </li>
-          <li className="govuk-task-list__item">
-            <div className="govuk-task-list__name-and-hint">
-              <Link href="/me/journal" className="govuk-task-list__link">
+              </TaskRow>
+              <TaskRow done={projectCards.some((p) => p.journalEntries.length > 0)} href={tasksDone.project ? "/me/projects" : undefined} hint={projectCards.some((p) => p.journalEntries.length > 0) ? undefined : "Tap a project card to journal."}>
                 Write a journal entry
-              </Link>
-              <span className="govuk-task-list__hint">
-                Keep a log of your work.
-              </span>
-            </div>
-            <StatusCell done={journalCount > 0} label={journalCount > 0 ? "Done" : "To do"} />
-          </li>
-          <li className="govuk-task-list__item">
-            <div className="govuk-task-list__name-and-hint">
-              <Link href="/me/shop" className="govuk-task-list__link">
+              </TaskRow>
+              <TaskRow
+                done={tasksDone.passport}
+                href="/me/shop"
+                hint={tasksDone.passport ? undefined : "Spend credits in the shop."}
+              >
                 Claim your passport
-              </Link>
-              <span className="govuk-task-list__hint">
-                Spend credits in the shop.
-              </span>
-            </div>
-            <StatusCell done={passportCount > 0} label={passportCount > 0 ? "Done" : "To do"} />
-          </li>
-        </ul>
-      </Section>
+              </TaskRow>
+            </ul>
+          </div>
 
-      <Section title="Recent projects" divider={true}>
-        {recentProjects.length === 0 ? (
-          <p className="text-govuk-grey-4">No projects yet.</p>
-        ) : (
-          <ul className="space-y-2" role="list">
-            {recentProjects.map((project) => (
-              <li key={project.id}>
-                <Link href="/me/projects" className="font-semibold text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover">
-                  {project.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-
-      <Section title="Recent journal entries" divider={false}>
-        {recentJournal.length === 0 ? (
-          <p className="text-govuk-grey-4">No journal entries yet.</p>
-        ) : (
-          <ul className="space-y-2" role="list">
-            {recentJournal.map((entry) => (
-              <li key={entry.id}>
-                <Link href="/me/journal" className="font-semibold text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover">
-                  {entry.title}
-                </Link>
-                <span className="ml-2 text-sm text-govuk-grey-4">
-                  {new Intl.DateTimeFormat("en-GB", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  }).format(entry.entryDate)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
+          {!configured && (
+            <p className="mt-3 text-xs text-govuk-grey-4">
+              Hackatime linking is not available on this deployment.
+            </p>
+          )}
+        </aside>
+      </div>
     </>
   );
 }

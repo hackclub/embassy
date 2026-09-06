@@ -6,7 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { generateRecipientToken, getCurrentUserWithRole } from "@/lib/org";
 import { getHackatimeHours } from "@/lib/hackatime";
-import { PASSPORT_PRICE_CREDITS } from "@/lib/shop-prices";
+import { PASSPORT_PRICE_CREDITS, availableCredits } from "@/lib/credits";
 
 export type MeFormState = { error?: string; ok?: string } | undefined;
 
@@ -42,6 +42,7 @@ const projectSchema = z.object({
 });
 
 const journalSchema = z.object({
+  projectId: z.string().min(1, "Choose a project"),
   title: z
     .string()
     .trim()
@@ -52,10 +53,6 @@ const journalSchema = z.object({
     .trim()
     .min(10, "Write at least 10 characters")
     .max(5000, "Entry is too long (maximum 5000 characters)"),
-  entryDate: z
-    .string()
-    .min(1, "Enter a date")
-    .refine((value) => !Number.isNaN(new Date(value).getTime()), "Enter a valid date"),
 });
 
 async function createProjectData(formData: FormData) {
@@ -147,18 +144,24 @@ export async function deleteProjectAction(formData: FormData): Promise<void> {
 
 async function createJournalData(formData: FormData) {
   const parsed = journalSchema.safeParse({
+    projectId: formData.get("projectId"),
     title: formData.get("title"),
     content: formData.get("content"),
-    entryDate: formData.get("entryDate"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid journal entry." } as const;
   }
+  const project = await prisma.project.findFirst({
+    where: { id: parsed.data.projectId, userId: (await getCurrentUserWithRole())?.id },
+    select: { id: true },
+  });
+  if (!project) return { error: "Project not found." } as const;
   return {
     data: {
+      projectId: project.id,
       title: parsed.data.title,
       content: parsed.data.content,
-      entryDate: new Date(parsed.data.entryDate),
+      entryDate: new Date(),
     },
   } as const;
 }
@@ -198,12 +201,28 @@ export async function updateJournalAction(
   });
   if (!existing) return { error: "Journal entry not found." };
 
-  const parsed = await createJournalData(formData);
-  if ("error" in parsed) return { error: parsed.error };
+  const parsed = journalSchema.safeParse({
+    projectId: formData.get("projectId"),
+    title: formData.get("title"),
+    content: formData.get("content"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid journal entry." };
+  }
+
+  const project = await prisma.project.findFirst({
+    where: { id: parsed.data.projectId, userId: user.id },
+    select: { id: true },
+  });
+  if (!project) return { error: "Project not found." };
 
   await prisma.journalEntry.update({
     where: { id: existing.id },
-    data: parsed.data,
+    data: {
+      projectId: project.id,
+      title: parsed.data.title,
+      content: parsed.data.content,
+    },
   });
 
   revalidatePath("/me/journal");
@@ -272,19 +291,19 @@ export async function buyPassportAction(
 
   if (!account.hackatimeUid) {
     return {
-      error: "Link Hackatime first — credits come from your tracked coding hours.",
+      error: "Link Hackatime first — you need credits to buy the passport.",
     };
   }
 
   const hours = await getHackatimeHours(user.id);
   if (hours === null) {
-    return { error: "Could not fetch your Hackatime hours. Try again in a minute." };
+    return { error: "Could not fetch your credit balance. Try again in a minute." };
   }
 
-  const credits = Math.floor(hours) - account.creditsSpent;
-  if (credits < PASSPORT_PRICE_CREDITS) {
+  const credits = availableCredits(hours, account.creditsSpent);
+  if (credits === null || credits < PASSPORT_PRICE_CREDITS) {
     return {
-      error: `Not enough credits — you have ${credits}, the passport costs ${PASSPORT_PRICE_CREDITS}.`,
+      error: `Not enough credits — you have ${credits ?? 0}, the passport costs ${PASSPORT_PRICE_CREDITS}.`,
     };
   }
 

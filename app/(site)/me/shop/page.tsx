@@ -7,7 +7,7 @@ import PageHeader from "@/app/components/PageHeader";
 import StatusBadge from "@/app/components/StatusBadge";
 import { mapOrderStateToVariant } from "@/app/components/status-variant";
 import BuyPassportForm from "./BuyPassportForm";
-import { PASSPORT_PRICE_CREDITS } from "@/lib/shop-prices";
+import { PASSPORT_PRICE_CREDITS } from "@/lib/credits";
 
 const ACTIVE_STATES = ["DELIVERED", "CANCELLED", "ERROR"];
 
@@ -16,7 +16,7 @@ type BannerVariant = "success" | "warning" | "error";
 const BANNER_MESSAGES: Record<string, { title: string; text: string; variant: BannerVariant }> = {
   linked: {
     title: "Hackatime linked",
-    text: "Your Hackatime account is now connected. Your tracked coding time is now credits you can spend here.",
+    text: "Your Hackatime account is now connected. Your credits are ready to spend here.",
     variant: "success",
   },
   denied: {
@@ -111,7 +111,7 @@ export default async function ShopPage({
           <div className="govuk-inset">
             <p className="text-3xl font-bold">{PASSPORT_PRICE_CREDITS} credits</p>
             <p className="mt-1 text-govuk-grey-4">
-              1 credit = 1 hour of tracked coding time (Hackatime, optional)
+              Yours to earn, one project at a time.
             </p>
           </div>
         </div>
@@ -121,7 +121,7 @@ export default async function ShopPage({
         linked ? (
           <div className="govuk-inset mt-8">
             {hoursFetchFailed ? (
-              <p>Could not fetch your Hackatime hours right now. Try refreshing in a minute.</p>
+              <p>Could not fetch your credit balance right now. Try refreshing in a minute.</p>
             ) : (
               <>
                 <p className="text-2xl font-bold">You have {credits ?? 0} credits</p>
@@ -141,7 +141,7 @@ export default async function ShopPage({
           <div className="govuk-notification-banner govuk-notification-banner--warning mt-8" role="alert">
             <p className="font-bold">Link Hackatime to buy</p>
             <p>
-              Linking Hackatime is optional, but you need linked credits to buy the
+              Linking Hackatime is optional, but you need credits to buy the
               passport.
             </p>
             <a href="/api/hackatime/authorize" className="govuk-button mt-3">
