@@ -1,5 +1,5 @@
 {
-  description = "Hack Club Passport / Embassy - Nix flake for development and deployment";
+  description = "Hack Club Passport / Embassy - Nix flake for development";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -101,36 +101,6 @@
             User = "1001";
             Volumes = {
               "/app/prisma" = {};
-            };
-          };
-        };
-
-        # NixOS module for production deployment
-        nixosModule = { config, pkgs, ... }: {
-          services.whoami = {
-            enable = config.services.whoami.enable or false;
-            package = self.packages.${system}.default;
-            database = {
-              host = "localhost";
-              port = 5432;
-              name = "whoami";
-              user = "whoami";
-              password = config.services.whoami.database.password or "whoami";
-            };
-            redis = {
-              host = "localhost";
-              port = 6379;
-            };
-            environment = {
-              NODE_ENV = "production";
-              AUTH_SECRET = config.services.whoami.authSecret;
-              AUTH_URL = config.services.whoami.authUrl;
-              AUTH_HCA_CLIENT_ID = config.services.whoami.hcaClientId;
-              AUTH_HCA_CLIENT_SECRET = config.services.whoami.hcaClientSecret;
-              SUPERADMIN_EMAILS = config.services.whoami.superadminEmails or "";
-              UPSTASH_REDIS_REST_URL = config.services.whoami.redis.url;
-              UPSTASH_REDIS_REST_TOKEN = config.services.whoami.redis.token;
-              PII_ENCRYPTION_KEY = config.services.whoami.piiEncryptionKey;
             };
           };
         };

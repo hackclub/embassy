@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { auth } from "@/auth";
 import { isAuthBypassEnabled } from "@/lib/bypass";
 
-// Security headers are owned by Caddy in production (infra/nix/services.nix).
+// Security headers are owned by the edge proxy in production.
 // This proxy only handles request IDs and auth redirects.
 
 // Page prefixes that anonymous visitors may access. Everything else requires

@@ -1,9 +1,0 @@
-keys:
-  # Deploy host age public key — paste the output of
-  # `age-keygen` run on the VPS (or any machine) at bootstrap.
-  - &deploy_age age1REPLACE_AT_BOOTSTRAP
-creation_rules:
-  - path_regex: infra/nix/secrets/.*\.enc\.yaml$
-    key_groups:
-      - age:
-          - *deploy_age
