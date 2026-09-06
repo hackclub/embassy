@@ -67,7 +67,9 @@ export const ModelName = {
   AuditLog: 'AuditLog',
   EmailDelivery: 'EmailDelivery',
   Submission: 'Submission',
-  Vote: 'Vote'
+  Vote: 'Vote',
+  Project: 'Project',
+  JournalEntry: 'JournalEntry'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -95,6 +97,9 @@ export const UserScalarFieldEnum = {
   slackId: 'slackId',
   hcaId: 'hcaId',
   role: 'role',
+  hackatimeUid: 'hackatimeUid',
+  hackatimeLinkedAt: 'hackatimeLinkedAt',
+  creditsSpent: 'creditsSpent',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -340,6 +345,33 @@ export const VoteScalarFieldEnum = {
 } as const
 
 export type VoteScalarFieldEnum = (typeof VoteScalarFieldEnum)[keyof typeof VoteScalarFieldEnum]
+
+
+export const ProjectScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  description: 'description',
+  githubUrl: 'githubUrl',
+  demoUrl: 'demoUrl',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ProjectScalarFieldEnum = (typeof ProjectScalarFieldEnum)[keyof typeof ProjectScalarFieldEnum]
+
+
+export const JournalEntryScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  content: 'content',
+  entryDate: 'entryDate',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type JournalEntryScalarFieldEnum = (typeof JournalEntryScalarFieldEnum)[keyof typeof JournalEntryScalarFieldEnum]
 
 
 export const SortOrder = {

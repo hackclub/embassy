@@ -44,6 +44,15 @@ export default async function Header() {
         {/* Navbar */}
         <div className="mx-auto flex max-w-5xl items-center justify-end gap-3 px-5 py-2 text-white">
           <div className="flex items-center gap-1">
+            {user && (
+              <Link
+                href="/me"
+                className="rounded-full px-2.5 py-1.5 text-sm font-semibold no-underline text-white transition-colors hover:bg-white/25 sm:px-3"
+              >
+                Me
+              </Link>
+            )}
+
             {canUseDashboard && (
               <Link
                 href="/dashboard"

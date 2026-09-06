@@ -1,0 +1,1 @@
+export const PASSPORT_PRICE_CREDITS = 7;

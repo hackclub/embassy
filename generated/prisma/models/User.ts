@@ -20,8 +20,18 @@ export type UserModel = runtime.Types.Result.DefaultSelection<Prisma.$UserPayloa
 
 export type AggregateUser = {
   _count: UserCountAggregateOutputType | null
+  _avg: UserAvgAggregateOutputType | null
+  _sum: UserSumAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
+}
+
+export type UserAvgAggregateOutputType = {
+  creditsSpent: number | null
+}
+
+export type UserSumAggregateOutputType = {
+  creditsSpent: number | null
 }
 
 export type UserMinAggregateOutputType = {
@@ -33,6 +43,9 @@ export type UserMinAggregateOutputType = {
   slackId: string | null
   hcaId: string | null
   role: $Enums.Role | null
+  hackatimeUid: string | null
+  hackatimeLinkedAt: Date | null
+  creditsSpent: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -46,6 +59,9 @@ export type UserMaxAggregateOutputType = {
   slackId: string | null
   hcaId: string | null
   role: $Enums.Role | null
+  hackatimeUid: string | null
+  hackatimeLinkedAt: Date | null
+  creditsSpent: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -59,11 +75,22 @@ export type UserCountAggregateOutputType = {
   slackId: number
   hcaId: number
   role: number
+  hackatimeUid: number
+  hackatimeLinkedAt: number
+  creditsSpent: number
   createdAt: number
   updatedAt: number
   _all: number
 }
 
+
+export type UserAvgAggregateInputType = {
+  creditsSpent?: true
+}
+
+export type UserSumAggregateInputType = {
+  creditsSpent?: true
+}
 
 export type UserMinAggregateInputType = {
   id?: true
@@ -74,6 +101,9 @@ export type UserMinAggregateInputType = {
   slackId?: true
   hcaId?: true
   role?: true
+  hackatimeUid?: true
+  hackatimeLinkedAt?: true
+  creditsSpent?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -87,6 +117,9 @@ export type UserMaxAggregateInputType = {
   slackId?: true
   hcaId?: true
   role?: true
+  hackatimeUid?: true
+  hackatimeLinkedAt?: true
+  creditsSpent?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -100,6 +133,9 @@ export type UserCountAggregateInputType = {
   slackId?: true
   hcaId?: true
   role?: true
+  hackatimeUid?: true
+  hackatimeLinkedAt?: true
+  creditsSpent?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -143,6 +179,18 @@ export type UserAggregateArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: UserAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: UserSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: UserMinAggregateInputType
@@ -173,6 +221,8 @@ export type UserGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
   take?: number
   skip?: number
   _count?: UserCountAggregateInputType | true
+  _avg?: UserAvgAggregateInputType
+  _sum?: UserSumAggregateInputType
   _min?: UserMinAggregateInputType
   _max?: UserMaxAggregateInputType
 }
@@ -186,9 +236,14 @@ export type UserGroupByOutputType = {
   slackId: string | null
   hcaId: string | null
   role: $Enums.Role
+  hackatimeUid: string | null
+  hackatimeLinkedAt: Date | null
+  creditsSpent: number
   createdAt: Date
   updatedAt: Date
   _count: UserCountAggregateOutputType | null
+  _avg: UserAvgAggregateOutputType | null
+  _sum: UserSumAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
 }
@@ -220,6 +275,9 @@ export type UserWhereInput = {
   slackId?: Prisma.StringNullableFilter<"User"> | string | null
   hcaId?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.EnumRoleFilter<"User"> | $Enums.Role
+  hackatimeUid?: Prisma.StringNullableFilter<"User"> | string | null
+  hackatimeLinkedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  creditsSpent?: Prisma.IntFilter<"User"> | number
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   accounts?: Prisma.AccountListRelationFilter
@@ -230,6 +288,8 @@ export type UserWhereInput = {
   receivedOrders?: Prisma.PassportOrderListRelationFilter
   submissions?: Prisma.SubmissionListRelationFilter
   votes?: Prisma.VoteListRelationFilter
+  projects?: Prisma.ProjectListRelationFilter
+  journalEntries?: Prisma.JournalEntryListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -241,6 +301,9 @@ export type UserOrderByWithRelationInput = {
   slackId?: Prisma.SortOrderInput | Prisma.SortOrder
   hcaId?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
+  hackatimeUid?: Prisma.SortOrderInput | Prisma.SortOrder
+  hackatimeLinkedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  creditsSpent?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   accounts?: Prisma.AccountOrderByRelationAggregateInput
@@ -251,6 +314,8 @@ export type UserOrderByWithRelationInput = {
   receivedOrders?: Prisma.PassportOrderOrderByRelationAggregateInput
   submissions?: Prisma.SubmissionOrderByRelationAggregateInput
   votes?: Prisma.VoteOrderByRelationAggregateInput
+  projects?: Prisma.ProjectOrderByRelationAggregateInput
+  journalEntries?: Prisma.JournalEntryOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -258,6 +323,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   email?: string
   slackId?: string
   hcaId?: string
+  hackatimeUid?: string
   AND?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   OR?: Prisma.UserWhereInput[]
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
@@ -265,6 +331,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   emailVerified?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   image?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.EnumRoleFilter<"User"> | $Enums.Role
+  hackatimeLinkedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  creditsSpent?: Prisma.IntFilter<"User"> | number
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   accounts?: Prisma.AccountListRelationFilter
@@ -275,7 +343,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   receivedOrders?: Prisma.PassportOrderListRelationFilter
   submissions?: Prisma.SubmissionListRelationFilter
   votes?: Prisma.VoteListRelationFilter
-}, "id" | "email" | "slackId" | "hcaId">
+  projects?: Prisma.ProjectListRelationFilter
+  journalEntries?: Prisma.JournalEntryListRelationFilter
+}, "id" | "email" | "slackId" | "hcaId" | "hackatimeUid">
 
 export type UserOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -286,11 +356,16 @@ export type UserOrderByWithAggregationInput = {
   slackId?: Prisma.SortOrderInput | Prisma.SortOrder
   hcaId?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
+  hackatimeUid?: Prisma.SortOrderInput | Prisma.SortOrder
+  hackatimeLinkedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  creditsSpent?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
+  _avg?: Prisma.UserAvgOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
   _min?: Prisma.UserMinOrderByAggregateInput
+  _sum?: Prisma.UserSumOrderByAggregateInput
 }
 
 export type UserScalarWhereWithAggregatesInput = {
@@ -305,6 +380,9 @@ export type UserScalarWhereWithAggregatesInput = {
   slackId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   hcaId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   role?: Prisma.EnumRoleWithAggregatesFilter<"User"> | $Enums.Role
+  hackatimeUid?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  hackatimeLinkedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+  creditsSpent?: Prisma.IntWithAggregatesFilter<"User"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -318,6 +396,9 @@ export type UserCreateInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -328,6 +409,8 @@ export type UserCreateInput = {
   receivedOrders?: Prisma.PassportOrderCreateNestedManyWithoutRecipientInput
   submissions?: Prisma.SubmissionCreateNestedManyWithoutUserInput
   votes?: Prisma.VoteCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -339,6 +422,9 @@ export type UserUncheckedCreateInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -349,6 +435,8 @@ export type UserUncheckedCreateInput = {
   receivedOrders?: Prisma.PassportOrderUncheckedCreateNestedManyWithoutRecipientInput
   submissions?: Prisma.SubmissionUncheckedCreateNestedManyWithoutUserInput
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -360,6 +448,9 @@ export type UserUpdateInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -370,6 +461,8 @@ export type UserUpdateInput = {
   receivedOrders?: Prisma.PassportOrderUpdateManyWithoutRecipientNestedInput
   submissions?: Prisma.SubmissionUpdateManyWithoutUserNestedInput
   votes?: Prisma.VoteUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -381,6 +474,9 @@ export type UserUncheckedUpdateInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -391,6 +487,8 @@ export type UserUncheckedUpdateInput = {
   receivedOrders?: Prisma.PassportOrderUncheckedUpdateManyWithoutRecipientNestedInput
   submissions?: Prisma.SubmissionUncheckedUpdateManyWithoutUserNestedInput
   votes?: Prisma.VoteUncheckedUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUncheckedUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -402,6 +500,9 @@ export type UserCreateManyInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -415,6 +516,9 @@ export type UserUpdateManyMutationInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -428,6 +532,9 @@ export type UserUncheckedUpdateManyInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -441,8 +548,15 @@ export type UserCountOrderByAggregateInput = {
   slackId?: Prisma.SortOrder
   hcaId?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  hackatimeUid?: Prisma.SortOrder
+  hackatimeLinkedAt?: Prisma.SortOrder
+  creditsSpent?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type UserAvgOrderByAggregateInput = {
+  creditsSpent?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
@@ -454,6 +568,9 @@ export type UserMaxOrderByAggregateInput = {
   slackId?: Prisma.SortOrder
   hcaId?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  hackatimeUid?: Prisma.SortOrder
+  hackatimeLinkedAt?: Prisma.SortOrder
+  creditsSpent?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -467,8 +584,15 @@ export type UserMinOrderByAggregateInput = {
   slackId?: Prisma.SortOrder
   hcaId?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  hackatimeUid?: Prisma.SortOrder
+  hackatimeLinkedAt?: Prisma.SortOrder
+  creditsSpent?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type UserSumOrderByAggregateInput = {
+  creditsSpent?: Prisma.SortOrder
 }
 
 export type UserScalarRelationFilter = {
@@ -495,6 +619,14 @@ export type NullableDateTimeFieldUpdateOperationsInput = {
 
 export type EnumRoleFieldUpdateOperationsInput = {
   set?: $Enums.Role
+}
+
+export type IntFieldUpdateOperationsInput = {
+  set?: number
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
@@ -617,6 +749,34 @@ export type UserUpdateOneRequiredWithoutVotesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutVotesInput, Prisma.UserUpdateWithoutVotesInput>, Prisma.UserUncheckedUpdateWithoutVotesInput>
 }
 
+export type UserCreateNestedOneWithoutProjectsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutProjectsInput, Prisma.UserUncheckedCreateWithoutProjectsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutProjectsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutProjectsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutProjectsInput, Prisma.UserUncheckedCreateWithoutProjectsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutProjectsInput
+  upsert?: Prisma.UserUpsertWithoutProjectsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutProjectsInput, Prisma.UserUpdateWithoutProjectsInput>, Prisma.UserUncheckedUpdateWithoutProjectsInput>
+}
+
+export type UserCreateNestedOneWithoutJournalEntriesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutJournalEntriesInput, Prisma.UserUncheckedCreateWithoutJournalEntriesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutJournalEntriesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutJournalEntriesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutJournalEntriesInput, Prisma.UserUncheckedCreateWithoutJournalEntriesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutJournalEntriesInput
+  upsert?: Prisma.UserUpsertWithoutJournalEntriesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutJournalEntriesInput, Prisma.UserUpdateWithoutJournalEntriesInput>, Prisma.UserUncheckedUpdateWithoutJournalEntriesInput>
+}
+
 export type UserCreateWithoutAccountsInput = {
   id?: string
   name?: string | null
@@ -626,6 +786,9 @@ export type UserCreateWithoutAccountsInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
@@ -635,6 +798,8 @@ export type UserCreateWithoutAccountsInput = {
   receivedOrders?: Prisma.PassportOrderCreateNestedManyWithoutRecipientInput
   submissions?: Prisma.SubmissionCreateNestedManyWithoutUserInput
   votes?: Prisma.VoteCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -646,6 +811,9 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
@@ -655,6 +823,8 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   receivedOrders?: Prisma.PassportOrderUncheckedCreateNestedManyWithoutRecipientInput
   submissions?: Prisma.SubmissionUncheckedCreateNestedManyWithoutUserInput
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -682,6 +852,9 @@ export type UserUpdateWithoutAccountsInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
@@ -691,6 +864,8 @@ export type UserUpdateWithoutAccountsInput = {
   receivedOrders?: Prisma.PassportOrderUpdateManyWithoutRecipientNestedInput
   submissions?: Prisma.SubmissionUpdateManyWithoutUserNestedInput
   votes?: Prisma.VoteUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -702,6 +877,9 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
@@ -711,6 +889,8 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   receivedOrders?: Prisma.PassportOrderUncheckedUpdateManyWithoutRecipientNestedInput
   submissions?: Prisma.SubmissionUncheckedUpdateManyWithoutUserNestedInput
   votes?: Prisma.VoteUncheckedUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUncheckedUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -722,6 +902,9 @@ export type UserCreateWithoutSessionsInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -731,6 +914,8 @@ export type UserCreateWithoutSessionsInput = {
   receivedOrders?: Prisma.PassportOrderCreateNestedManyWithoutRecipientInput
   submissions?: Prisma.SubmissionCreateNestedManyWithoutUserInput
   votes?: Prisma.VoteCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -742,6 +927,9 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -751,6 +939,8 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   receivedOrders?: Prisma.PassportOrderUncheckedCreateNestedManyWithoutRecipientInput
   submissions?: Prisma.SubmissionUncheckedCreateNestedManyWithoutUserInput
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -778,6 +968,9 @@ export type UserUpdateWithoutSessionsInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -787,6 +980,8 @@ export type UserUpdateWithoutSessionsInput = {
   receivedOrders?: Prisma.PassportOrderUpdateManyWithoutRecipientNestedInput
   submissions?: Prisma.SubmissionUpdateManyWithoutUserNestedInput
   votes?: Prisma.VoteUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -798,6 +993,9 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -807,6 +1005,8 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   receivedOrders?: Prisma.PassportOrderUncheckedUpdateManyWithoutRecipientNestedInput
   submissions?: Prisma.SubmissionUncheckedUpdateManyWithoutUserNestedInput
   votes?: Prisma.VoteUncheckedUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUncheckedUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOrganizerYSWSesInput = {
@@ -818,6 +1018,9 @@ export type UserCreateWithoutOrganizerYSWSesInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -827,6 +1030,8 @@ export type UserCreateWithoutOrganizerYSWSesInput = {
   receivedOrders?: Prisma.PassportOrderCreateNestedManyWithoutRecipientInput
   submissions?: Prisma.SubmissionCreateNestedManyWithoutUserInput
   votes?: Prisma.VoteCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOrganizerYSWSesInput = {
@@ -838,6 +1043,9 @@ export type UserUncheckedCreateWithoutOrganizerYSWSesInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -847,6 +1055,8 @@ export type UserUncheckedCreateWithoutOrganizerYSWSesInput = {
   receivedOrders?: Prisma.PassportOrderUncheckedCreateNestedManyWithoutRecipientInput
   submissions?: Prisma.SubmissionUncheckedCreateNestedManyWithoutUserInput
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOrganizerYSWSesInput = {
@@ -874,6 +1084,9 @@ export type UserUpdateWithoutOrganizerYSWSesInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -883,6 +1096,8 @@ export type UserUpdateWithoutOrganizerYSWSesInput = {
   receivedOrders?: Prisma.PassportOrderUpdateManyWithoutRecipientNestedInput
   submissions?: Prisma.SubmissionUpdateManyWithoutUserNestedInput
   votes?: Prisma.VoteUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOrganizerYSWSesInput = {
@@ -894,6 +1109,9 @@ export type UserUncheckedUpdateWithoutOrganizerYSWSesInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -903,6 +1121,8 @@ export type UserUncheckedUpdateWithoutOrganizerYSWSesInput = {
   receivedOrders?: Prisma.PassportOrderUncheckedUpdateManyWithoutRecipientNestedInput
   submissions?: Prisma.SubmissionUncheckedUpdateManyWithoutUserNestedInput
   votes?: Prisma.VoteUncheckedUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUncheckedUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOrgsInput = {
@@ -914,6 +1134,9 @@ export type UserCreateWithoutOrgsInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -923,6 +1146,8 @@ export type UserCreateWithoutOrgsInput = {
   receivedOrders?: Prisma.PassportOrderCreateNestedManyWithoutRecipientInput
   submissions?: Prisma.SubmissionCreateNestedManyWithoutUserInput
   votes?: Prisma.VoteCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOrgsInput = {
@@ -934,6 +1159,9 @@ export type UserUncheckedCreateWithoutOrgsInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -943,6 +1171,8 @@ export type UserUncheckedCreateWithoutOrgsInput = {
   receivedOrders?: Prisma.PassportOrderUncheckedCreateNestedManyWithoutRecipientInput
   submissions?: Prisma.SubmissionUncheckedCreateNestedManyWithoutUserInput
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOrgsInput = {
@@ -970,6 +1200,9 @@ export type UserUpdateWithoutOrgsInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -979,6 +1212,8 @@ export type UserUpdateWithoutOrgsInput = {
   receivedOrders?: Prisma.PassportOrderUpdateManyWithoutRecipientNestedInput
   submissions?: Prisma.SubmissionUpdateManyWithoutUserNestedInput
   votes?: Prisma.VoteUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOrgsInput = {
@@ -990,6 +1225,9 @@ export type UserUncheckedUpdateWithoutOrgsInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -999,6 +1237,8 @@ export type UserUncheckedUpdateWithoutOrgsInput = {
   receivedOrders?: Prisma.PassportOrderUncheckedUpdateManyWithoutRecipientNestedInput
   submissions?: Prisma.SubmissionUncheckedUpdateManyWithoutUserNestedInput
   votes?: Prisma.VoteUncheckedUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUncheckedUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCreatedOrdersInput = {
@@ -1010,6 +1250,9 @@ export type UserCreateWithoutCreatedOrdersInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -1019,6 +1262,8 @@ export type UserCreateWithoutCreatedOrdersInput = {
   receivedOrders?: Prisma.PassportOrderCreateNestedManyWithoutRecipientInput
   submissions?: Prisma.SubmissionCreateNestedManyWithoutUserInput
   votes?: Prisma.VoteCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCreatedOrdersInput = {
@@ -1030,6 +1275,9 @@ export type UserUncheckedCreateWithoutCreatedOrdersInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -1039,6 +1287,8 @@ export type UserUncheckedCreateWithoutCreatedOrdersInput = {
   receivedOrders?: Prisma.PassportOrderUncheckedCreateNestedManyWithoutRecipientInput
   submissions?: Prisma.SubmissionUncheckedCreateNestedManyWithoutUserInput
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCreatedOrdersInput = {
@@ -1055,6 +1305,9 @@ export type UserCreateWithoutReceivedOrdersInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -1064,6 +1317,8 @@ export type UserCreateWithoutReceivedOrdersInput = {
   createdOrders?: Prisma.PassportOrderCreateNestedManyWithoutUserInput
   submissions?: Prisma.SubmissionCreateNestedManyWithoutUserInput
   votes?: Prisma.VoteCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutReceivedOrdersInput = {
@@ -1075,6 +1330,9 @@ export type UserUncheckedCreateWithoutReceivedOrdersInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -1084,6 +1342,8 @@ export type UserUncheckedCreateWithoutReceivedOrdersInput = {
   createdOrders?: Prisma.PassportOrderUncheckedCreateNestedManyWithoutUserInput
   submissions?: Prisma.SubmissionUncheckedCreateNestedManyWithoutUserInput
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutReceivedOrdersInput = {
@@ -1111,6 +1371,9 @@ export type UserUpdateWithoutCreatedOrdersInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -1120,6 +1383,8 @@ export type UserUpdateWithoutCreatedOrdersInput = {
   receivedOrders?: Prisma.PassportOrderUpdateManyWithoutRecipientNestedInput
   submissions?: Prisma.SubmissionUpdateManyWithoutUserNestedInput
   votes?: Prisma.VoteUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedOrdersInput = {
@@ -1131,6 +1396,9 @@ export type UserUncheckedUpdateWithoutCreatedOrdersInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -1140,6 +1408,8 @@ export type UserUncheckedUpdateWithoutCreatedOrdersInput = {
   receivedOrders?: Prisma.PassportOrderUncheckedUpdateManyWithoutRecipientNestedInput
   submissions?: Prisma.SubmissionUncheckedUpdateManyWithoutUserNestedInput
   votes?: Prisma.VoteUncheckedUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUncheckedUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutReceivedOrdersInput = {
@@ -1162,6 +1432,9 @@ export type UserUpdateWithoutReceivedOrdersInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -1171,6 +1444,8 @@ export type UserUpdateWithoutReceivedOrdersInput = {
   createdOrders?: Prisma.PassportOrderUpdateManyWithoutUserNestedInput
   submissions?: Prisma.SubmissionUpdateManyWithoutUserNestedInput
   votes?: Prisma.VoteUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReceivedOrdersInput = {
@@ -1182,6 +1457,9 @@ export type UserUncheckedUpdateWithoutReceivedOrdersInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -1191,6 +1469,8 @@ export type UserUncheckedUpdateWithoutReceivedOrdersInput = {
   createdOrders?: Prisma.PassportOrderUncheckedUpdateManyWithoutUserNestedInput
   submissions?: Prisma.SubmissionUncheckedUpdateManyWithoutUserNestedInput
   votes?: Prisma.VoteUncheckedUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUncheckedUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSubmissionsInput = {
@@ -1202,6 +1482,9 @@ export type UserCreateWithoutSubmissionsInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -1211,6 +1494,8 @@ export type UserCreateWithoutSubmissionsInput = {
   createdOrders?: Prisma.PassportOrderCreateNestedManyWithoutUserInput
   receivedOrders?: Prisma.PassportOrderCreateNestedManyWithoutRecipientInput
   votes?: Prisma.VoteCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSubmissionsInput = {
@@ -1222,6 +1507,9 @@ export type UserUncheckedCreateWithoutSubmissionsInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -1231,6 +1519,8 @@ export type UserUncheckedCreateWithoutSubmissionsInput = {
   createdOrders?: Prisma.PassportOrderUncheckedCreateNestedManyWithoutUserInput
   receivedOrders?: Prisma.PassportOrderUncheckedCreateNestedManyWithoutRecipientInput
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSubmissionsInput = {
@@ -1258,6 +1548,9 @@ export type UserUpdateWithoutSubmissionsInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -1267,6 +1560,8 @@ export type UserUpdateWithoutSubmissionsInput = {
   createdOrders?: Prisma.PassportOrderUpdateManyWithoutUserNestedInput
   receivedOrders?: Prisma.PassportOrderUpdateManyWithoutRecipientNestedInput
   votes?: Prisma.VoteUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSubmissionsInput = {
@@ -1278,6 +1573,9 @@ export type UserUncheckedUpdateWithoutSubmissionsInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -1287,6 +1585,8 @@ export type UserUncheckedUpdateWithoutSubmissionsInput = {
   createdOrders?: Prisma.PassportOrderUncheckedUpdateManyWithoutUserNestedInput
   receivedOrders?: Prisma.PassportOrderUncheckedUpdateManyWithoutRecipientNestedInput
   votes?: Prisma.VoteUncheckedUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUncheckedUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutVotesInput = {
@@ -1298,6 +1598,9 @@ export type UserCreateWithoutVotesInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
@@ -1307,6 +1610,8 @@ export type UserCreateWithoutVotesInput = {
   createdOrders?: Prisma.PassportOrderCreateNestedManyWithoutUserInput
   receivedOrders?: Prisma.PassportOrderCreateNestedManyWithoutRecipientInput
   submissions?: Prisma.SubmissionCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutVotesInput = {
@@ -1318,6 +1623,9 @@ export type UserUncheckedCreateWithoutVotesInput = {
   slackId?: string | null
   hcaId?: string | null
   role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
@@ -1327,6 +1635,8 @@ export type UserUncheckedCreateWithoutVotesInput = {
   createdOrders?: Prisma.PassportOrderUncheckedCreateNestedManyWithoutUserInput
   receivedOrders?: Prisma.PassportOrderUncheckedCreateNestedManyWithoutRecipientInput
   submissions?: Prisma.SubmissionUncheckedCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutVotesInput = {
@@ -1354,6 +1664,9 @@ export type UserUpdateWithoutVotesInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
@@ -1363,6 +1676,8 @@ export type UserUpdateWithoutVotesInput = {
   createdOrders?: Prisma.PassportOrderUpdateManyWithoutUserNestedInput
   receivedOrders?: Prisma.PassportOrderUpdateManyWithoutRecipientNestedInput
   submissions?: Prisma.SubmissionUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutVotesInput = {
@@ -1374,6 +1689,9 @@ export type UserUncheckedUpdateWithoutVotesInput = {
   slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -1383,6 +1701,240 @@ export type UserUncheckedUpdateWithoutVotesInput = {
   createdOrders?: Prisma.PassportOrderUncheckedUpdateManyWithoutUserNestedInput
   receivedOrders?: Prisma.PassportOrderUncheckedUpdateManyWithoutRecipientNestedInput
   submissions?: Prisma.SubmissionUncheckedUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUncheckedUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutProjectsInput = {
+  id?: string
+  name?: string | null
+  email?: string | null
+  emailVerified?: Date | string | null
+  image?: string | null
+  slackId?: string | null
+  hcaId?: string | null
+  role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  orgs?: Prisma.OrgMemberCreateNestedManyWithoutUserInput
+  organizerYSWSes?: Prisma.OrganizerYSWSMembershipCreateNestedManyWithoutUserInput
+  createdOrders?: Prisma.PassportOrderCreateNestedManyWithoutUserInput
+  receivedOrders?: Prisma.PassportOrderCreateNestedManyWithoutRecipientInput
+  submissions?: Prisma.SubmissionCreateNestedManyWithoutUserInput
+  votes?: Prisma.VoteCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutProjectsInput = {
+  id?: string
+  name?: string | null
+  email?: string | null
+  emailVerified?: Date | string | null
+  image?: string | null
+  slackId?: string | null
+  hcaId?: string | null
+  role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  orgs?: Prisma.OrgMemberUncheckedCreateNestedManyWithoutUserInput
+  organizerYSWSes?: Prisma.OrganizerYSWSMembershipUncheckedCreateNestedManyWithoutUserInput
+  createdOrders?: Prisma.PassportOrderUncheckedCreateNestedManyWithoutUserInput
+  receivedOrders?: Prisma.PassportOrderUncheckedCreateNestedManyWithoutRecipientInput
+  submissions?: Prisma.SubmissionUncheckedCreateNestedManyWithoutUserInput
+  votes?: Prisma.VoteUncheckedCreateNestedManyWithoutUserInput
+  journalEntries?: Prisma.JournalEntryUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutProjectsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutProjectsInput, Prisma.UserUncheckedCreateWithoutProjectsInput>
+}
+
+export type UserUpsertWithoutProjectsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutProjectsInput, Prisma.UserUncheckedUpdateWithoutProjectsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutProjectsInput, Prisma.UserUncheckedCreateWithoutProjectsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutProjectsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutProjectsInput, Prisma.UserUncheckedUpdateWithoutProjectsInput>
+}
+
+export type UserUpdateWithoutProjectsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  orgs?: Prisma.OrgMemberUpdateManyWithoutUserNestedInput
+  organizerYSWSes?: Prisma.OrganizerYSWSMembershipUpdateManyWithoutUserNestedInput
+  createdOrders?: Prisma.PassportOrderUpdateManyWithoutUserNestedInput
+  receivedOrders?: Prisma.PassportOrderUpdateManyWithoutRecipientNestedInput
+  submissions?: Prisma.SubmissionUpdateManyWithoutUserNestedInput
+  votes?: Prisma.VoteUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutProjectsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  orgs?: Prisma.OrgMemberUncheckedUpdateManyWithoutUserNestedInput
+  organizerYSWSes?: Prisma.OrganizerYSWSMembershipUncheckedUpdateManyWithoutUserNestedInput
+  createdOrders?: Prisma.PassportOrderUncheckedUpdateManyWithoutUserNestedInput
+  receivedOrders?: Prisma.PassportOrderUncheckedUpdateManyWithoutRecipientNestedInput
+  submissions?: Prisma.SubmissionUncheckedUpdateManyWithoutUserNestedInput
+  votes?: Prisma.VoteUncheckedUpdateManyWithoutUserNestedInput
+  journalEntries?: Prisma.JournalEntryUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutJournalEntriesInput = {
+  id?: string
+  name?: string | null
+  email?: string | null
+  emailVerified?: Date | string | null
+  image?: string | null
+  slackId?: string | null
+  hcaId?: string | null
+  role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  orgs?: Prisma.OrgMemberCreateNestedManyWithoutUserInput
+  organizerYSWSes?: Prisma.OrganizerYSWSMembershipCreateNestedManyWithoutUserInput
+  createdOrders?: Prisma.PassportOrderCreateNestedManyWithoutUserInput
+  receivedOrders?: Prisma.PassportOrderCreateNestedManyWithoutRecipientInput
+  submissions?: Prisma.SubmissionCreateNestedManyWithoutUserInput
+  votes?: Prisma.VoteCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutJournalEntriesInput = {
+  id?: string
+  name?: string | null
+  email?: string | null
+  emailVerified?: Date | string | null
+  image?: string | null
+  slackId?: string | null
+  hcaId?: string | null
+  role?: $Enums.Role
+  hackatimeUid?: string | null
+  hackatimeLinkedAt?: Date | string | null
+  creditsSpent?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  orgs?: Prisma.OrgMemberUncheckedCreateNestedManyWithoutUserInput
+  organizerYSWSes?: Prisma.OrganizerYSWSMembershipUncheckedCreateNestedManyWithoutUserInput
+  createdOrders?: Prisma.PassportOrderUncheckedCreateNestedManyWithoutUserInput
+  receivedOrders?: Prisma.PassportOrderUncheckedCreateNestedManyWithoutRecipientInput
+  submissions?: Prisma.SubmissionUncheckedCreateNestedManyWithoutUserInput
+  votes?: Prisma.VoteUncheckedCreateNestedManyWithoutUserInput
+  projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutJournalEntriesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutJournalEntriesInput, Prisma.UserUncheckedCreateWithoutJournalEntriesInput>
+}
+
+export type UserUpsertWithoutJournalEntriesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutJournalEntriesInput, Prisma.UserUncheckedUpdateWithoutJournalEntriesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutJournalEntriesInput, Prisma.UserUncheckedCreateWithoutJournalEntriesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutJournalEntriesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutJournalEntriesInput, Prisma.UserUncheckedUpdateWithoutJournalEntriesInput>
+}
+
+export type UserUpdateWithoutJournalEntriesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  orgs?: Prisma.OrgMemberUpdateManyWithoutUserNestedInput
+  organizerYSWSes?: Prisma.OrganizerYSWSMembershipUpdateManyWithoutUserNestedInput
+  createdOrders?: Prisma.PassportOrderUpdateManyWithoutUserNestedInput
+  receivedOrders?: Prisma.PassportOrderUpdateManyWithoutRecipientNestedInput
+  submissions?: Prisma.SubmissionUpdateManyWithoutUserNestedInput
+  votes?: Prisma.VoteUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutJournalEntriesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  slackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hcaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  hackatimeUid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hackatimeLinkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditsSpent?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  orgs?: Prisma.OrgMemberUncheckedUpdateManyWithoutUserNestedInput
+  organizerYSWSes?: Prisma.OrganizerYSWSMembershipUncheckedUpdateManyWithoutUserNestedInput
+  createdOrders?: Prisma.PassportOrderUncheckedUpdateManyWithoutUserNestedInput
+  receivedOrders?: Prisma.PassportOrderUncheckedUpdateManyWithoutRecipientNestedInput
+  submissions?: Prisma.SubmissionUncheckedUpdateManyWithoutUserNestedInput
+  votes?: Prisma.VoteUncheckedUpdateManyWithoutUserNestedInput
+  projects?: Prisma.ProjectUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -1399,6 +1951,8 @@ export type UserCountOutputType = {
   receivedOrders: number
   submissions: number
   votes: number
+  projects: number
+  journalEntries: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1410,6 +1964,8 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   receivedOrders?: boolean | UserCountOutputTypeCountReceivedOrdersArgs
   submissions?: boolean | UserCountOutputTypeCountSubmissionsArgs
   votes?: boolean | UserCountOutputTypeCountVotesArgs
+  projects?: boolean | UserCountOutputTypeCountProjectsArgs
+  journalEntries?: boolean | UserCountOutputTypeCountJournalEntriesArgs
 }
 
 /**
@@ -1478,6 +2034,20 @@ export type UserCountOutputTypeCountVotesArgs<ExtArgs extends runtime.Types.Exte
   where?: Prisma.VoteWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountProjectsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ProjectWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountJournalEntriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.JournalEntryWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1488,6 +2058,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   slackId?: boolean
   hcaId?: boolean
   role?: boolean
+  hackatimeUid?: boolean
+  hackatimeLinkedAt?: boolean
+  creditsSpent?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
@@ -1498,6 +2071,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   receivedOrders?: boolean | Prisma.User$receivedOrdersArgs<ExtArgs>
   submissions?: boolean | Prisma.User$submissionsArgs<ExtArgs>
   votes?: boolean | Prisma.User$votesArgs<ExtArgs>
+  projects?: boolean | Prisma.User$projectsArgs<ExtArgs>
+  journalEntries?: boolean | Prisma.User$journalEntriesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1510,6 +2085,9 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   slackId?: boolean
   hcaId?: boolean
   role?: boolean
+  hackatimeUid?: boolean
+  hackatimeLinkedAt?: boolean
+  creditsSpent?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -1523,6 +2101,9 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   slackId?: boolean
   hcaId?: boolean
   role?: boolean
+  hackatimeUid?: boolean
+  hackatimeLinkedAt?: boolean
+  creditsSpent?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -1536,11 +2117,14 @@ export type UserSelectScalar = {
   slackId?: boolean
   hcaId?: boolean
   role?: boolean
+  hackatimeUid?: boolean
+  hackatimeLinkedAt?: boolean
+  creditsSpent?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "slackId" | "hcaId" | "role" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "slackId" | "hcaId" | "role" | "hackatimeUid" | "hackatimeLinkedAt" | "creditsSpent" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
@@ -1550,6 +2134,8 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   receivedOrders?: boolean | Prisma.User$receivedOrdersArgs<ExtArgs>
   submissions?: boolean | Prisma.User$submissionsArgs<ExtArgs>
   votes?: boolean | Prisma.User$votesArgs<ExtArgs>
+  projects?: boolean | Prisma.User$projectsArgs<ExtArgs>
+  journalEntries?: boolean | Prisma.User$journalEntriesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1566,6 +2152,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     receivedOrders: Prisma.$PassportOrderPayload<ExtArgs>[]
     submissions: Prisma.$SubmissionPayload<ExtArgs>[]
     votes: Prisma.$VotePayload<ExtArgs>[]
+    projects: Prisma.$ProjectPayload<ExtArgs>[]
+    journalEntries: Prisma.$JournalEntryPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1576,6 +2164,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     slackId: string | null
     hcaId: string | null
     role: $Enums.Role
+    hackatimeUid: string | null
+    hackatimeLinkedAt: Date | null
+    creditsSpent: number
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["user"]>
@@ -1980,6 +2571,8 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   receivedOrders<T extends Prisma.User$receivedOrdersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$receivedOrdersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PassportOrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   submissions<T extends Prisma.User$submissionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$submissionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SubmissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   votes<T extends Prisma.User$votesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$votesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$VotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  projects<T extends Prisma.User$projectsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$projectsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  journalEntries<T extends Prisma.User$journalEntriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$journalEntriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$JournalEntryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2017,6 +2610,9 @@ export interface UserFieldRefs {
   readonly slackId: Prisma.FieldRef<"User", 'String'>
   readonly hcaId: Prisma.FieldRef<"User", 'String'>
   readonly role: Prisma.FieldRef<"User", 'Role'>
+  readonly hackatimeUid: Prisma.FieldRef<"User", 'String'>
+  readonly hackatimeLinkedAt: Prisma.FieldRef<"User", 'DateTime'>
+  readonly creditsSpent: Prisma.FieldRef<"User", 'Int'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
 }
@@ -2601,6 +3197,54 @@ export type User$votesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs
   take?: number
   skip?: number
   distinct?: Prisma.VoteScalarFieldEnum | Prisma.VoteScalarFieldEnum[]
+}
+
+/**
+ * User.projects
+ */
+export type User$projectsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Project
+   */
+  select?: Prisma.ProjectSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Project
+   */
+  omit?: Prisma.ProjectOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProjectInclude<ExtArgs> | null
+  where?: Prisma.ProjectWhereInput
+  orderBy?: Prisma.ProjectOrderByWithRelationInput | Prisma.ProjectOrderByWithRelationInput[]
+  cursor?: Prisma.ProjectWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ProjectScalarFieldEnum | Prisma.ProjectScalarFieldEnum[]
+}
+
+/**
+ * User.journalEntries
+ */
+export type User$journalEntriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the JournalEntry
+   */
+  select?: Prisma.JournalEntrySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the JournalEntry
+   */
+  omit?: Prisma.JournalEntryOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.JournalEntryInclude<ExtArgs> | null
+  where?: Prisma.JournalEntryWhereInput
+  orderBy?: Prisma.JournalEntryOrderByWithRelationInput | Prisma.JournalEntryOrderByWithRelationInput[]
+  cursor?: Prisma.JournalEntryWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.JournalEntryScalarFieldEnum | Prisma.JournalEntryScalarFieldEnum[]
 }
 
 /**

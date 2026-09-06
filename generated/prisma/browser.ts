@@ -102,3 +102,13 @@ export type Submission = Prisma.SubmissionModel
  * 
  */
 export type Vote = Prisma.VoteModel
+/**
+ * Model Project
+ * 
+ */
+export type Project = Prisma.ProjectModel
+/**
+ * Model JournalEntry
+ * 
+ */
+export type JournalEntry = Prisma.JournalEntryModel
