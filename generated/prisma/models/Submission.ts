@@ -20,8 +20,20 @@ export type SubmissionModel = runtime.Types.Result.DefaultSelection<Prisma.$Subm
 
 export type AggregateSubmission = {
   _count: SubmissionCountAggregateOutputType | null
+  _avg: SubmissionAvgAggregateOutputType | null
+  _sum: SubmissionSumAggregateOutputType | null
   _min: SubmissionMinAggregateOutputType | null
   _max: SubmissionMaxAggregateOutputType | null
+}
+
+export type SubmissionAvgAggregateOutputType = {
+  hackatimeHours: number | null
+  creditsAwarded: number | null
+}
+
+export type SubmissionSumAggregateOutputType = {
+  hackatimeHours: number | null
+  creditsAwarded: number | null
 }
 
 export type SubmissionMinAggregateOutputType = {
@@ -35,6 +47,10 @@ export type SubmissionMinAggregateOutputType = {
   status: $Enums.SubmissionStatus | null
   createdAt: Date | null
   updatedAt: Date | null
+  reviewedById: string | null
+  reviewedAt: Date | null
+  hackatimeHours: number | null
+  creditsAwarded: number | null
 }
 
 export type SubmissionMaxAggregateOutputType = {
@@ -48,6 +64,10 @@ export type SubmissionMaxAggregateOutputType = {
   status: $Enums.SubmissionStatus | null
   createdAt: Date | null
   updatedAt: Date | null
+  reviewedById: string | null
+  reviewedAt: Date | null
+  hackatimeHours: number | null
+  creditsAwarded: number | null
 }
 
 export type SubmissionCountAggregateOutputType = {
@@ -61,9 +81,23 @@ export type SubmissionCountAggregateOutputType = {
   status: number
   createdAt: number
   updatedAt: number
+  reviewedById: number
+  reviewedAt: number
+  hackatimeHours: number
+  creditsAwarded: number
   _all: number
 }
 
+
+export type SubmissionAvgAggregateInputType = {
+  hackatimeHours?: true
+  creditsAwarded?: true
+}
+
+export type SubmissionSumAggregateInputType = {
+  hackatimeHours?: true
+  creditsAwarded?: true
+}
 
 export type SubmissionMinAggregateInputType = {
   id?: true
@@ -76,6 +110,10 @@ export type SubmissionMinAggregateInputType = {
   status?: true
   createdAt?: true
   updatedAt?: true
+  reviewedById?: true
+  reviewedAt?: true
+  hackatimeHours?: true
+  creditsAwarded?: true
 }
 
 export type SubmissionMaxAggregateInputType = {
@@ -89,6 +127,10 @@ export type SubmissionMaxAggregateInputType = {
   status?: true
   createdAt?: true
   updatedAt?: true
+  reviewedById?: true
+  reviewedAt?: true
+  hackatimeHours?: true
+  creditsAwarded?: true
 }
 
 export type SubmissionCountAggregateInputType = {
@@ -102,6 +144,10 @@ export type SubmissionCountAggregateInputType = {
   status?: true
   createdAt?: true
   updatedAt?: true
+  reviewedById?: true
+  reviewedAt?: true
+  hackatimeHours?: true
+  creditsAwarded?: true
   _all?: true
 }
 
@@ -143,6 +189,18 @@ export type SubmissionAggregateArgs<ExtArgs extends runtime.Types.Extensions.Int
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: SubmissionAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: SubmissionSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: SubmissionMinAggregateInputType
@@ -173,6 +231,8 @@ export type SubmissionGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inter
   take?: number
   skip?: number
   _count?: SubmissionCountAggregateInputType | true
+  _avg?: SubmissionAvgAggregateInputType
+  _sum?: SubmissionSumAggregateInputType
   _min?: SubmissionMinAggregateInputType
   _max?: SubmissionMaxAggregateInputType
 }
@@ -188,7 +248,13 @@ export type SubmissionGroupByOutputType = {
   status: $Enums.SubmissionStatus
   createdAt: Date
   updatedAt: Date
+  reviewedById: string | null
+  reviewedAt: Date | null
+  hackatimeHours: number | null
+  creditsAwarded: number | null
   _count: SubmissionCountAggregateOutputType | null
+  _avg: SubmissionAvgAggregateOutputType | null
+  _sum: SubmissionSumAggregateOutputType | null
   _min: SubmissionMinAggregateOutputType | null
   _max: SubmissionMaxAggregateOutputType | null
 }
@@ -222,9 +288,15 @@ export type SubmissionWhereInput = {
   status?: Prisma.EnumSubmissionStatusFilter<"Submission"> | $Enums.SubmissionStatus
   createdAt?: Prisma.DateTimeFilter<"Submission"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Submission"> | Date | string
+  reviewedById?: Prisma.StringNullableFilter<"Submission"> | string | null
+  reviewedAt?: Prisma.DateTimeNullableFilter<"Submission"> | Date | string | null
+  hackatimeHours?: Prisma.FloatNullableFilter<"Submission"> | number | null
+  creditsAwarded?: Prisma.IntNullableFilter<"Submission"> | number | null
   votes?: Prisma.VoteListRelationFilter
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   org?: Prisma.XOR<Prisma.OrgNullableScalarRelationFilter, Prisma.OrgWhereInput> | null
+  reviewer?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  creditTransactions?: Prisma.CreditTransactionListRelationFilter
 }
 
 export type SubmissionOrderByWithRelationInput = {
@@ -238,9 +310,15 @@ export type SubmissionOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  reviewedById?: Prisma.SortOrderInput | Prisma.SortOrder
+  reviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  hackatimeHours?: Prisma.SortOrderInput | Prisma.SortOrder
+  creditsAwarded?: Prisma.SortOrderInput | Prisma.SortOrder
   votes?: Prisma.VoteOrderByRelationAggregateInput
   user?: Prisma.UserOrderByWithRelationInput
   org?: Prisma.OrgOrderByWithRelationInput
+  reviewer?: Prisma.UserOrderByWithRelationInput
+  creditTransactions?: Prisma.CreditTransactionOrderByRelationAggregateInput
 }
 
 export type SubmissionWhereUniqueInput = Prisma.AtLeast<{
@@ -257,9 +335,15 @@ export type SubmissionWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.EnumSubmissionStatusFilter<"Submission"> | $Enums.SubmissionStatus
   createdAt?: Prisma.DateTimeFilter<"Submission"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Submission"> | Date | string
+  reviewedById?: Prisma.StringNullableFilter<"Submission"> | string | null
+  reviewedAt?: Prisma.DateTimeNullableFilter<"Submission"> | Date | string | null
+  hackatimeHours?: Prisma.FloatNullableFilter<"Submission"> | number | null
+  creditsAwarded?: Prisma.IntNullableFilter<"Submission"> | number | null
   votes?: Prisma.VoteListRelationFilter
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   org?: Prisma.XOR<Prisma.OrgNullableScalarRelationFilter, Prisma.OrgWhereInput> | null
+  reviewer?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  creditTransactions?: Prisma.CreditTransactionListRelationFilter
 }, "id">
 
 export type SubmissionOrderByWithAggregationInput = {
@@ -273,9 +357,15 @@ export type SubmissionOrderByWithAggregationInput = {
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  reviewedById?: Prisma.SortOrderInput | Prisma.SortOrder
+  reviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  hackatimeHours?: Prisma.SortOrderInput | Prisma.SortOrder
+  creditsAwarded?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.SubmissionCountOrderByAggregateInput
+  _avg?: Prisma.SubmissionAvgOrderByAggregateInput
   _max?: Prisma.SubmissionMaxOrderByAggregateInput
   _min?: Prisma.SubmissionMinOrderByAggregateInput
+  _sum?: Prisma.SubmissionSumOrderByAggregateInput
 }
 
 export type SubmissionScalarWhereWithAggregatesInput = {
@@ -292,6 +382,10 @@ export type SubmissionScalarWhereWithAggregatesInput = {
   status?: Prisma.EnumSubmissionStatusWithAggregatesFilter<"Submission"> | $Enums.SubmissionStatus
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Submission"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Submission"> | Date | string
+  reviewedById?: Prisma.StringNullableWithAggregatesFilter<"Submission"> | string | null
+  reviewedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Submission"> | Date | string | null
+  hackatimeHours?: Prisma.FloatNullableWithAggregatesFilter<"Submission"> | number | null
+  creditsAwarded?: Prisma.IntNullableWithAggregatesFilter<"Submission"> | number | null
 }
 
 export type SubmissionCreateInput = {
@@ -303,9 +397,14 @@ export type SubmissionCreateInput = {
   status?: $Enums.SubmissionStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  reviewedAt?: Date | string | null
+  hackatimeHours?: number | null
+  creditsAwarded?: number | null
   votes?: Prisma.VoteCreateNestedManyWithoutSubmissionInput
   user: Prisma.UserCreateNestedOneWithoutSubmissionsInput
   org?: Prisma.OrgCreateNestedOneWithoutSubmissionsInput
+  reviewer?: Prisma.UserCreateNestedOneWithoutReviewedSubmissionsInput
+  creditTransactions?: Prisma.CreditTransactionCreateNestedManyWithoutSubmissionInput
 }
 
 export type SubmissionUncheckedCreateInput = {
@@ -319,7 +418,12 @@ export type SubmissionUncheckedCreateInput = {
   status?: $Enums.SubmissionStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  reviewedById?: string | null
+  reviewedAt?: Date | string | null
+  hackatimeHours?: number | null
+  creditsAwarded?: number | null
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutSubmissionInput
+  creditTransactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutSubmissionInput
 }
 
 export type SubmissionUpdateInput = {
@@ -331,9 +435,14 @@ export type SubmissionUpdateInput = {
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUpdateManyWithoutSubmissionNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutSubmissionsNestedInput
   org?: Prisma.OrgUpdateOneWithoutSubmissionsNestedInput
+  reviewer?: Prisma.UserUpdateOneWithoutReviewedSubmissionsNestedInput
+  creditTransactions?: Prisma.CreditTransactionUpdateManyWithoutSubmissionNestedInput
 }
 
 export type SubmissionUncheckedUpdateInput = {
@@ -347,7 +456,12 @@ export type SubmissionUncheckedUpdateInput = {
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUncheckedUpdateManyWithoutSubmissionNestedInput
+  creditTransactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutSubmissionNestedInput
 }
 
 export type SubmissionCreateManyInput = {
@@ -361,6 +475,10 @@ export type SubmissionCreateManyInput = {
   status?: $Enums.SubmissionStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  reviewedById?: string | null
+  reviewedAt?: Date | string | null
+  hackatimeHours?: number | null
+  creditsAwarded?: number | null
 }
 
 export type SubmissionUpdateManyMutationInput = {
@@ -372,6 +490,9 @@ export type SubmissionUpdateManyMutationInput = {
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type SubmissionUncheckedUpdateManyInput = {
@@ -385,6 +506,10 @@ export type SubmissionUncheckedUpdateManyInput = {
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type SubmissionListRelationFilter = {
@@ -408,6 +533,15 @@ export type SubmissionCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  reviewedById?: Prisma.SortOrder
+  reviewedAt?: Prisma.SortOrder
+  hackatimeHours?: Prisma.SortOrder
+  creditsAwarded?: Prisma.SortOrder
+}
+
+export type SubmissionAvgOrderByAggregateInput = {
+  hackatimeHours?: Prisma.SortOrder
+  creditsAwarded?: Prisma.SortOrder
 }
 
 export type SubmissionMaxOrderByAggregateInput = {
@@ -421,6 +555,10 @@ export type SubmissionMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  reviewedById?: Prisma.SortOrder
+  reviewedAt?: Prisma.SortOrder
+  hackatimeHours?: Prisma.SortOrder
+  creditsAwarded?: Prisma.SortOrder
 }
 
 export type SubmissionMinOrderByAggregateInput = {
@@ -434,11 +572,32 @@ export type SubmissionMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  reviewedById?: Prisma.SortOrder
+  reviewedAt?: Prisma.SortOrder
+  hackatimeHours?: Prisma.SortOrder
+  creditsAwarded?: Prisma.SortOrder
+}
+
+export type SubmissionSumOrderByAggregateInput = {
+  hackatimeHours?: Prisma.SortOrder
+  creditsAwarded?: Prisma.SortOrder
 }
 
 export type SubmissionScalarRelationFilter = {
   is?: Prisma.SubmissionWhereInput
   isNot?: Prisma.SubmissionWhereInput
+}
+
+export type SubmissionNullableScalarRelationFilter = {
+  is?: Prisma.SubmissionWhereInput | null
+  isNot?: Prisma.SubmissionWhereInput | null
+}
+
+export type SubmissionCreateNestedManyWithoutReviewerInput = {
+  create?: Prisma.XOR<Prisma.SubmissionCreateWithoutReviewerInput, Prisma.SubmissionUncheckedCreateWithoutReviewerInput> | Prisma.SubmissionCreateWithoutReviewerInput[] | Prisma.SubmissionUncheckedCreateWithoutReviewerInput[]
+  connectOrCreate?: Prisma.SubmissionCreateOrConnectWithoutReviewerInput | Prisma.SubmissionCreateOrConnectWithoutReviewerInput[]
+  createMany?: Prisma.SubmissionCreateManyReviewerInputEnvelope
+  connect?: Prisma.SubmissionWhereUniqueInput | Prisma.SubmissionWhereUniqueInput[]
 }
 
 export type SubmissionCreateNestedManyWithoutUserInput = {
@@ -448,11 +607,32 @@ export type SubmissionCreateNestedManyWithoutUserInput = {
   connect?: Prisma.SubmissionWhereUniqueInput | Prisma.SubmissionWhereUniqueInput[]
 }
 
+export type SubmissionUncheckedCreateNestedManyWithoutReviewerInput = {
+  create?: Prisma.XOR<Prisma.SubmissionCreateWithoutReviewerInput, Prisma.SubmissionUncheckedCreateWithoutReviewerInput> | Prisma.SubmissionCreateWithoutReviewerInput[] | Prisma.SubmissionUncheckedCreateWithoutReviewerInput[]
+  connectOrCreate?: Prisma.SubmissionCreateOrConnectWithoutReviewerInput | Prisma.SubmissionCreateOrConnectWithoutReviewerInput[]
+  createMany?: Prisma.SubmissionCreateManyReviewerInputEnvelope
+  connect?: Prisma.SubmissionWhereUniqueInput | Prisma.SubmissionWhereUniqueInput[]
+}
+
 export type SubmissionUncheckedCreateNestedManyWithoutUserInput = {
   create?: Prisma.XOR<Prisma.SubmissionCreateWithoutUserInput, Prisma.SubmissionUncheckedCreateWithoutUserInput> | Prisma.SubmissionCreateWithoutUserInput[] | Prisma.SubmissionUncheckedCreateWithoutUserInput[]
   connectOrCreate?: Prisma.SubmissionCreateOrConnectWithoutUserInput | Prisma.SubmissionCreateOrConnectWithoutUserInput[]
   createMany?: Prisma.SubmissionCreateManyUserInputEnvelope
   connect?: Prisma.SubmissionWhereUniqueInput | Prisma.SubmissionWhereUniqueInput[]
+}
+
+export type SubmissionUpdateManyWithoutReviewerNestedInput = {
+  create?: Prisma.XOR<Prisma.SubmissionCreateWithoutReviewerInput, Prisma.SubmissionUncheckedCreateWithoutReviewerInput> | Prisma.SubmissionCreateWithoutReviewerInput[] | Prisma.SubmissionUncheckedCreateWithoutReviewerInput[]
+  connectOrCreate?: Prisma.SubmissionCreateOrConnectWithoutReviewerInput | Prisma.SubmissionCreateOrConnectWithoutReviewerInput[]
+  upsert?: Prisma.SubmissionUpsertWithWhereUniqueWithoutReviewerInput | Prisma.SubmissionUpsertWithWhereUniqueWithoutReviewerInput[]
+  createMany?: Prisma.SubmissionCreateManyReviewerInputEnvelope
+  set?: Prisma.SubmissionWhereUniqueInput | Prisma.SubmissionWhereUniqueInput[]
+  disconnect?: Prisma.SubmissionWhereUniqueInput | Prisma.SubmissionWhereUniqueInput[]
+  delete?: Prisma.SubmissionWhereUniqueInput | Prisma.SubmissionWhereUniqueInput[]
+  connect?: Prisma.SubmissionWhereUniqueInput | Prisma.SubmissionWhereUniqueInput[]
+  update?: Prisma.SubmissionUpdateWithWhereUniqueWithoutReviewerInput | Prisma.SubmissionUpdateWithWhereUniqueWithoutReviewerInput[]
+  updateMany?: Prisma.SubmissionUpdateManyWithWhereWithoutReviewerInput | Prisma.SubmissionUpdateManyWithWhereWithoutReviewerInput[]
+  deleteMany?: Prisma.SubmissionScalarWhereInput | Prisma.SubmissionScalarWhereInput[]
 }
 
 export type SubmissionUpdateManyWithoutUserNestedInput = {
@@ -466,6 +646,20 @@ export type SubmissionUpdateManyWithoutUserNestedInput = {
   connect?: Prisma.SubmissionWhereUniqueInput | Prisma.SubmissionWhereUniqueInput[]
   update?: Prisma.SubmissionUpdateWithWhereUniqueWithoutUserInput | Prisma.SubmissionUpdateWithWhereUniqueWithoutUserInput[]
   updateMany?: Prisma.SubmissionUpdateManyWithWhereWithoutUserInput | Prisma.SubmissionUpdateManyWithWhereWithoutUserInput[]
+  deleteMany?: Prisma.SubmissionScalarWhereInput | Prisma.SubmissionScalarWhereInput[]
+}
+
+export type SubmissionUncheckedUpdateManyWithoutReviewerNestedInput = {
+  create?: Prisma.XOR<Prisma.SubmissionCreateWithoutReviewerInput, Prisma.SubmissionUncheckedCreateWithoutReviewerInput> | Prisma.SubmissionCreateWithoutReviewerInput[] | Prisma.SubmissionUncheckedCreateWithoutReviewerInput[]
+  connectOrCreate?: Prisma.SubmissionCreateOrConnectWithoutReviewerInput | Prisma.SubmissionCreateOrConnectWithoutReviewerInput[]
+  upsert?: Prisma.SubmissionUpsertWithWhereUniqueWithoutReviewerInput | Prisma.SubmissionUpsertWithWhereUniqueWithoutReviewerInput[]
+  createMany?: Prisma.SubmissionCreateManyReviewerInputEnvelope
+  set?: Prisma.SubmissionWhereUniqueInput | Prisma.SubmissionWhereUniqueInput[]
+  disconnect?: Prisma.SubmissionWhereUniqueInput | Prisma.SubmissionWhereUniqueInput[]
+  delete?: Prisma.SubmissionWhereUniqueInput | Prisma.SubmissionWhereUniqueInput[]
+  connect?: Prisma.SubmissionWhereUniqueInput | Prisma.SubmissionWhereUniqueInput[]
+  update?: Prisma.SubmissionUpdateWithWhereUniqueWithoutReviewerInput | Prisma.SubmissionUpdateWithWhereUniqueWithoutReviewerInput[]
+  updateMany?: Prisma.SubmissionUpdateManyWithWhereWithoutReviewerInput | Prisma.SubmissionUpdateManyWithWhereWithoutReviewerInput[]
   deleteMany?: Prisma.SubmissionScalarWhereInput | Prisma.SubmissionScalarWhereInput[]
 }
 
@@ -529,6 +723,14 @@ export type EnumSubmissionStatusFieldUpdateOperationsInput = {
   set?: $Enums.SubmissionStatus
 }
 
+export type NullableFloatFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type SubmissionCreateNestedOneWithoutVotesInput = {
   create?: Prisma.XOR<Prisma.SubmissionCreateWithoutVotesInput, Prisma.SubmissionUncheckedCreateWithoutVotesInput>
   connectOrCreate?: Prisma.SubmissionCreateOrConnectWithoutVotesInput
@@ -543,6 +745,68 @@ export type SubmissionUpdateOneRequiredWithoutVotesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.SubmissionUpdateToOneWithWhereWithoutVotesInput, Prisma.SubmissionUpdateWithoutVotesInput>, Prisma.SubmissionUncheckedUpdateWithoutVotesInput>
 }
 
+export type SubmissionCreateNestedOneWithoutCreditTransactionsInput = {
+  create?: Prisma.XOR<Prisma.SubmissionCreateWithoutCreditTransactionsInput, Prisma.SubmissionUncheckedCreateWithoutCreditTransactionsInput>
+  connectOrCreate?: Prisma.SubmissionCreateOrConnectWithoutCreditTransactionsInput
+  connect?: Prisma.SubmissionWhereUniqueInput
+}
+
+export type SubmissionUpdateOneWithoutCreditTransactionsNestedInput = {
+  create?: Prisma.XOR<Prisma.SubmissionCreateWithoutCreditTransactionsInput, Prisma.SubmissionUncheckedCreateWithoutCreditTransactionsInput>
+  connectOrCreate?: Prisma.SubmissionCreateOrConnectWithoutCreditTransactionsInput
+  upsert?: Prisma.SubmissionUpsertWithoutCreditTransactionsInput
+  disconnect?: Prisma.SubmissionWhereInput | boolean
+  delete?: Prisma.SubmissionWhereInput | boolean
+  connect?: Prisma.SubmissionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.SubmissionUpdateToOneWithWhereWithoutCreditTransactionsInput, Prisma.SubmissionUpdateWithoutCreditTransactionsInput>, Prisma.SubmissionUncheckedUpdateWithoutCreditTransactionsInput>
+}
+
+export type SubmissionCreateWithoutReviewerInput = {
+  id?: string
+  title: string
+  description?: string | null
+  url?: string | null
+  image?: string | null
+  status?: $Enums.SubmissionStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  reviewedAt?: Date | string | null
+  hackatimeHours?: number | null
+  creditsAwarded?: number | null
+  votes?: Prisma.VoteCreateNestedManyWithoutSubmissionInput
+  user: Prisma.UserCreateNestedOneWithoutSubmissionsInput
+  org?: Prisma.OrgCreateNestedOneWithoutSubmissionsInput
+  creditTransactions?: Prisma.CreditTransactionCreateNestedManyWithoutSubmissionInput
+}
+
+export type SubmissionUncheckedCreateWithoutReviewerInput = {
+  id?: string
+  userId: string
+  orgId?: string | null
+  title: string
+  description?: string | null
+  url?: string | null
+  image?: string | null
+  status?: $Enums.SubmissionStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  reviewedAt?: Date | string | null
+  hackatimeHours?: number | null
+  creditsAwarded?: number | null
+  votes?: Prisma.VoteUncheckedCreateNestedManyWithoutSubmissionInput
+  creditTransactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutSubmissionInput
+}
+
+export type SubmissionCreateOrConnectWithoutReviewerInput = {
+  where: Prisma.SubmissionWhereUniqueInput
+  create: Prisma.XOR<Prisma.SubmissionCreateWithoutReviewerInput, Prisma.SubmissionUncheckedCreateWithoutReviewerInput>
+}
+
+export type SubmissionCreateManyReviewerInputEnvelope = {
+  data: Prisma.SubmissionCreateManyReviewerInput | Prisma.SubmissionCreateManyReviewerInput[]
+  skipDuplicates?: boolean
+}
+
 export type SubmissionCreateWithoutUserInput = {
   id?: string
   title: string
@@ -552,8 +816,13 @@ export type SubmissionCreateWithoutUserInput = {
   status?: $Enums.SubmissionStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  reviewedAt?: Date | string | null
+  hackatimeHours?: number | null
+  creditsAwarded?: number | null
   votes?: Prisma.VoteCreateNestedManyWithoutSubmissionInput
   org?: Prisma.OrgCreateNestedOneWithoutSubmissionsInput
+  reviewer?: Prisma.UserCreateNestedOneWithoutReviewedSubmissionsInput
+  creditTransactions?: Prisma.CreditTransactionCreateNestedManyWithoutSubmissionInput
 }
 
 export type SubmissionUncheckedCreateWithoutUserInput = {
@@ -566,7 +835,12 @@ export type SubmissionUncheckedCreateWithoutUserInput = {
   status?: $Enums.SubmissionStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  reviewedById?: string | null
+  reviewedAt?: Date | string | null
+  hackatimeHours?: number | null
+  creditsAwarded?: number | null
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutSubmissionInput
+  creditTransactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutSubmissionInput
 }
 
 export type SubmissionCreateOrConnectWithoutUserInput = {
@@ -577,6 +851,42 @@ export type SubmissionCreateOrConnectWithoutUserInput = {
 export type SubmissionCreateManyUserInputEnvelope = {
   data: Prisma.SubmissionCreateManyUserInput | Prisma.SubmissionCreateManyUserInput[]
   skipDuplicates?: boolean
+}
+
+export type SubmissionUpsertWithWhereUniqueWithoutReviewerInput = {
+  where: Prisma.SubmissionWhereUniqueInput
+  update: Prisma.XOR<Prisma.SubmissionUpdateWithoutReviewerInput, Prisma.SubmissionUncheckedUpdateWithoutReviewerInput>
+  create: Prisma.XOR<Prisma.SubmissionCreateWithoutReviewerInput, Prisma.SubmissionUncheckedCreateWithoutReviewerInput>
+}
+
+export type SubmissionUpdateWithWhereUniqueWithoutReviewerInput = {
+  where: Prisma.SubmissionWhereUniqueInput
+  data: Prisma.XOR<Prisma.SubmissionUpdateWithoutReviewerInput, Prisma.SubmissionUncheckedUpdateWithoutReviewerInput>
+}
+
+export type SubmissionUpdateManyWithWhereWithoutReviewerInput = {
+  where: Prisma.SubmissionScalarWhereInput
+  data: Prisma.XOR<Prisma.SubmissionUpdateManyMutationInput, Prisma.SubmissionUncheckedUpdateManyWithoutReviewerInput>
+}
+
+export type SubmissionScalarWhereInput = {
+  AND?: Prisma.SubmissionScalarWhereInput | Prisma.SubmissionScalarWhereInput[]
+  OR?: Prisma.SubmissionScalarWhereInput[]
+  NOT?: Prisma.SubmissionScalarWhereInput | Prisma.SubmissionScalarWhereInput[]
+  id?: Prisma.StringFilter<"Submission"> | string
+  userId?: Prisma.StringFilter<"Submission"> | string
+  orgId?: Prisma.StringNullableFilter<"Submission"> | string | null
+  title?: Prisma.StringFilter<"Submission"> | string
+  description?: Prisma.StringNullableFilter<"Submission"> | string | null
+  url?: Prisma.StringNullableFilter<"Submission"> | string | null
+  image?: Prisma.StringNullableFilter<"Submission"> | string | null
+  status?: Prisma.EnumSubmissionStatusFilter<"Submission"> | $Enums.SubmissionStatus
+  createdAt?: Prisma.DateTimeFilter<"Submission"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Submission"> | Date | string
+  reviewedById?: Prisma.StringNullableFilter<"Submission"> | string | null
+  reviewedAt?: Prisma.DateTimeNullableFilter<"Submission"> | Date | string | null
+  hackatimeHours?: Prisma.FloatNullableFilter<"Submission"> | number | null
+  creditsAwarded?: Prisma.IntNullableFilter<"Submission"> | number | null
 }
 
 export type SubmissionUpsertWithWhereUniqueWithoutUserInput = {
@@ -595,22 +905,6 @@ export type SubmissionUpdateManyWithWhereWithoutUserInput = {
   data: Prisma.XOR<Prisma.SubmissionUpdateManyMutationInput, Prisma.SubmissionUncheckedUpdateManyWithoutUserInput>
 }
 
-export type SubmissionScalarWhereInput = {
-  AND?: Prisma.SubmissionScalarWhereInput | Prisma.SubmissionScalarWhereInput[]
-  OR?: Prisma.SubmissionScalarWhereInput[]
-  NOT?: Prisma.SubmissionScalarWhereInput | Prisma.SubmissionScalarWhereInput[]
-  id?: Prisma.StringFilter<"Submission"> | string
-  userId?: Prisma.StringFilter<"Submission"> | string
-  orgId?: Prisma.StringNullableFilter<"Submission"> | string | null
-  title?: Prisma.StringFilter<"Submission"> | string
-  description?: Prisma.StringNullableFilter<"Submission"> | string | null
-  url?: Prisma.StringNullableFilter<"Submission"> | string | null
-  image?: Prisma.StringNullableFilter<"Submission"> | string | null
-  status?: Prisma.EnumSubmissionStatusFilter<"Submission"> | $Enums.SubmissionStatus
-  createdAt?: Prisma.DateTimeFilter<"Submission"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"Submission"> | Date | string
-}
-
 export type SubmissionCreateWithoutOrgInput = {
   id?: string
   title: string
@@ -620,8 +914,13 @@ export type SubmissionCreateWithoutOrgInput = {
   status?: $Enums.SubmissionStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  reviewedAt?: Date | string | null
+  hackatimeHours?: number | null
+  creditsAwarded?: number | null
   votes?: Prisma.VoteCreateNestedManyWithoutSubmissionInput
   user: Prisma.UserCreateNestedOneWithoutSubmissionsInput
+  reviewer?: Prisma.UserCreateNestedOneWithoutReviewedSubmissionsInput
+  creditTransactions?: Prisma.CreditTransactionCreateNestedManyWithoutSubmissionInput
 }
 
 export type SubmissionUncheckedCreateWithoutOrgInput = {
@@ -634,7 +933,12 @@ export type SubmissionUncheckedCreateWithoutOrgInput = {
   status?: $Enums.SubmissionStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  reviewedById?: string | null
+  reviewedAt?: Date | string | null
+  hackatimeHours?: number | null
+  creditsAwarded?: number | null
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutSubmissionInput
+  creditTransactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutSubmissionInput
 }
 
 export type SubmissionCreateOrConnectWithoutOrgInput = {
@@ -672,8 +976,13 @@ export type SubmissionCreateWithoutVotesInput = {
   status?: $Enums.SubmissionStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  reviewedAt?: Date | string | null
+  hackatimeHours?: number | null
+  creditsAwarded?: number | null
   user: Prisma.UserCreateNestedOneWithoutSubmissionsInput
   org?: Prisma.OrgCreateNestedOneWithoutSubmissionsInput
+  reviewer?: Prisma.UserCreateNestedOneWithoutReviewedSubmissionsInput
+  creditTransactions?: Prisma.CreditTransactionCreateNestedManyWithoutSubmissionInput
 }
 
 export type SubmissionUncheckedCreateWithoutVotesInput = {
@@ -687,6 +996,11 @@ export type SubmissionUncheckedCreateWithoutVotesInput = {
   status?: $Enums.SubmissionStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  reviewedById?: string | null
+  reviewedAt?: Date | string | null
+  hackatimeHours?: number | null
+  creditsAwarded?: number | null
+  creditTransactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutSubmissionInput
 }
 
 export type SubmissionCreateOrConnectWithoutVotesInput = {
@@ -714,8 +1028,13 @@ export type SubmissionUpdateWithoutVotesInput = {
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   user?: Prisma.UserUpdateOneRequiredWithoutSubmissionsNestedInput
   org?: Prisma.OrgUpdateOneWithoutSubmissionsNestedInput
+  reviewer?: Prisma.UserUpdateOneWithoutReviewedSubmissionsNestedInput
+  creditTransactions?: Prisma.CreditTransactionUpdateManyWithoutSubmissionNestedInput
 }
 
 export type SubmissionUncheckedUpdateWithoutVotesInput = {
@@ -729,6 +1048,115 @@ export type SubmissionUncheckedUpdateWithoutVotesInput = {
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  creditTransactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutSubmissionNestedInput
+}
+
+export type SubmissionCreateWithoutCreditTransactionsInput = {
+  id?: string
+  title: string
+  description?: string | null
+  url?: string | null
+  image?: string | null
+  status?: $Enums.SubmissionStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  reviewedAt?: Date | string | null
+  hackatimeHours?: number | null
+  creditsAwarded?: number | null
+  votes?: Prisma.VoteCreateNestedManyWithoutSubmissionInput
+  user: Prisma.UserCreateNestedOneWithoutSubmissionsInput
+  org?: Prisma.OrgCreateNestedOneWithoutSubmissionsInput
+  reviewer?: Prisma.UserCreateNestedOneWithoutReviewedSubmissionsInput
+}
+
+export type SubmissionUncheckedCreateWithoutCreditTransactionsInput = {
+  id?: string
+  userId: string
+  orgId?: string | null
+  title: string
+  description?: string | null
+  url?: string | null
+  image?: string | null
+  status?: $Enums.SubmissionStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  reviewedById?: string | null
+  reviewedAt?: Date | string | null
+  hackatimeHours?: number | null
+  creditsAwarded?: number | null
+  votes?: Prisma.VoteUncheckedCreateNestedManyWithoutSubmissionInput
+}
+
+export type SubmissionCreateOrConnectWithoutCreditTransactionsInput = {
+  where: Prisma.SubmissionWhereUniqueInput
+  create: Prisma.XOR<Prisma.SubmissionCreateWithoutCreditTransactionsInput, Prisma.SubmissionUncheckedCreateWithoutCreditTransactionsInput>
+}
+
+export type SubmissionUpsertWithoutCreditTransactionsInput = {
+  update: Prisma.XOR<Prisma.SubmissionUpdateWithoutCreditTransactionsInput, Prisma.SubmissionUncheckedUpdateWithoutCreditTransactionsInput>
+  create: Prisma.XOR<Prisma.SubmissionCreateWithoutCreditTransactionsInput, Prisma.SubmissionUncheckedCreateWithoutCreditTransactionsInput>
+  where?: Prisma.SubmissionWhereInput
+}
+
+export type SubmissionUpdateToOneWithWhereWithoutCreditTransactionsInput = {
+  where?: Prisma.SubmissionWhereInput
+  data: Prisma.XOR<Prisma.SubmissionUpdateWithoutCreditTransactionsInput, Prisma.SubmissionUncheckedUpdateWithoutCreditTransactionsInput>
+}
+
+export type SubmissionUpdateWithoutCreditTransactionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  votes?: Prisma.VoteUpdateManyWithoutSubmissionNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutSubmissionsNestedInput
+  org?: Prisma.OrgUpdateOneWithoutSubmissionsNestedInput
+  reviewer?: Prisma.UserUpdateOneWithoutReviewedSubmissionsNestedInput
+}
+
+export type SubmissionUncheckedUpdateWithoutCreditTransactionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  orgId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  votes?: Prisma.VoteUncheckedUpdateManyWithoutSubmissionNestedInput
+}
+
+export type SubmissionCreateManyReviewerInput = {
+  id?: string
+  userId: string
+  orgId?: string | null
+  title: string
+  description?: string | null
+  url?: string | null
+  image?: string | null
+  status?: $Enums.SubmissionStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  reviewedAt?: Date | string | null
+  hackatimeHours?: number | null
+  creditsAwarded?: number | null
 }
 
 export type SubmissionCreateManyUserInput = {
@@ -741,6 +1169,62 @@ export type SubmissionCreateManyUserInput = {
   status?: $Enums.SubmissionStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  reviewedById?: string | null
+  reviewedAt?: Date | string | null
+  hackatimeHours?: number | null
+  creditsAwarded?: number | null
+}
+
+export type SubmissionUpdateWithoutReviewerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  votes?: Prisma.VoteUpdateManyWithoutSubmissionNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutSubmissionsNestedInput
+  org?: Prisma.OrgUpdateOneWithoutSubmissionsNestedInput
+  creditTransactions?: Prisma.CreditTransactionUpdateManyWithoutSubmissionNestedInput
+}
+
+export type SubmissionUncheckedUpdateWithoutReviewerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  orgId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  votes?: Prisma.VoteUncheckedUpdateManyWithoutSubmissionNestedInput
+  creditTransactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutSubmissionNestedInput
+}
+
+export type SubmissionUncheckedUpdateManyWithoutReviewerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  orgId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type SubmissionUpdateWithoutUserInput = {
@@ -752,8 +1236,13 @@ export type SubmissionUpdateWithoutUserInput = {
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUpdateManyWithoutSubmissionNestedInput
   org?: Prisma.OrgUpdateOneWithoutSubmissionsNestedInput
+  reviewer?: Prisma.UserUpdateOneWithoutReviewedSubmissionsNestedInput
+  creditTransactions?: Prisma.CreditTransactionUpdateManyWithoutSubmissionNestedInput
 }
 
 export type SubmissionUncheckedUpdateWithoutUserInput = {
@@ -766,7 +1255,12 @@ export type SubmissionUncheckedUpdateWithoutUserInput = {
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUncheckedUpdateManyWithoutSubmissionNestedInput
+  creditTransactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutSubmissionNestedInput
 }
 
 export type SubmissionUncheckedUpdateManyWithoutUserInput = {
@@ -779,6 +1273,10 @@ export type SubmissionUncheckedUpdateManyWithoutUserInput = {
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type SubmissionCreateManyOrgInput = {
@@ -791,6 +1289,10 @@ export type SubmissionCreateManyOrgInput = {
   status?: $Enums.SubmissionStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  reviewedById?: string | null
+  reviewedAt?: Date | string | null
+  hackatimeHours?: number | null
+  creditsAwarded?: number | null
 }
 
 export type SubmissionUpdateWithoutOrgInput = {
@@ -802,8 +1304,13 @@ export type SubmissionUpdateWithoutOrgInput = {
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUpdateManyWithoutSubmissionNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutSubmissionsNestedInput
+  reviewer?: Prisma.UserUpdateOneWithoutReviewedSubmissionsNestedInput
+  creditTransactions?: Prisma.CreditTransactionUpdateManyWithoutSubmissionNestedInput
 }
 
 export type SubmissionUncheckedUpdateWithoutOrgInput = {
@@ -816,7 +1323,12 @@ export type SubmissionUncheckedUpdateWithoutOrgInput = {
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUncheckedUpdateManyWithoutSubmissionNestedInput
+  creditTransactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutSubmissionNestedInput
 }
 
 export type SubmissionUncheckedUpdateManyWithoutOrgInput = {
@@ -829,6 +1341,10 @@ export type SubmissionUncheckedUpdateManyWithoutOrgInput = {
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 
@@ -838,10 +1354,12 @@ export type SubmissionUncheckedUpdateManyWithoutOrgInput = {
 
 export type SubmissionCountOutputType = {
   votes: number
+  creditTransactions: number
 }
 
 export type SubmissionCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   votes?: boolean | SubmissionCountOutputTypeCountVotesArgs
+  creditTransactions?: boolean | SubmissionCountOutputTypeCountCreditTransactionsArgs
 }
 
 /**
@@ -861,6 +1379,13 @@ export type SubmissionCountOutputTypeCountVotesArgs<ExtArgs extends runtime.Type
   where?: Prisma.VoteWhereInput
 }
 
+/**
+ * SubmissionCountOutputType without action
+ */
+export type SubmissionCountOutputTypeCountCreditTransactionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CreditTransactionWhereInput
+}
+
 
 export type SubmissionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -873,9 +1398,15 @@ export type SubmissionSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   status?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  reviewedById?: boolean
+  reviewedAt?: boolean
+  hackatimeHours?: boolean
+  creditsAwarded?: boolean
   votes?: boolean | Prisma.Submission$votesArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   org?: boolean | Prisma.Submission$orgArgs<ExtArgs>
+  reviewer?: boolean | Prisma.Submission$reviewerArgs<ExtArgs>
+  creditTransactions?: boolean | Prisma.Submission$creditTransactionsArgs<ExtArgs>
   _count?: boolean | Prisma.SubmissionCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["submission"]>
 
@@ -890,8 +1421,13 @@ export type SubmissionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   status?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  reviewedById?: boolean
+  reviewedAt?: boolean
+  hackatimeHours?: boolean
+  creditsAwarded?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   org?: boolean | Prisma.Submission$orgArgs<ExtArgs>
+  reviewer?: boolean | Prisma.Submission$reviewerArgs<ExtArgs>
 }, ExtArgs["result"]["submission"]>
 
 export type SubmissionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -905,8 +1441,13 @@ export type SubmissionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   status?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  reviewedById?: boolean
+  reviewedAt?: boolean
+  hackatimeHours?: boolean
+  creditsAwarded?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   org?: boolean | Prisma.Submission$orgArgs<ExtArgs>
+  reviewer?: boolean | Prisma.Submission$reviewerArgs<ExtArgs>
 }, ExtArgs["result"]["submission"]>
 
 export type SubmissionSelectScalar = {
@@ -920,22 +1461,30 @@ export type SubmissionSelectScalar = {
   status?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  reviewedById?: boolean
+  reviewedAt?: boolean
+  hackatimeHours?: boolean
+  creditsAwarded?: boolean
 }
 
-export type SubmissionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "orgId" | "title" | "description" | "url" | "image" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["submission"]>
+export type SubmissionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "orgId" | "title" | "description" | "url" | "image" | "status" | "createdAt" | "updatedAt" | "reviewedById" | "reviewedAt" | "hackatimeHours" | "creditsAwarded", ExtArgs["result"]["submission"]>
 export type SubmissionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   votes?: boolean | Prisma.Submission$votesArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   org?: boolean | Prisma.Submission$orgArgs<ExtArgs>
+  reviewer?: boolean | Prisma.Submission$reviewerArgs<ExtArgs>
+  creditTransactions?: boolean | Prisma.Submission$creditTransactionsArgs<ExtArgs>
   _count?: boolean | Prisma.SubmissionCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type SubmissionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   org?: boolean | Prisma.Submission$orgArgs<ExtArgs>
+  reviewer?: boolean | Prisma.Submission$reviewerArgs<ExtArgs>
 }
 export type SubmissionIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   org?: boolean | Prisma.Submission$orgArgs<ExtArgs>
+  reviewer?: boolean | Prisma.Submission$reviewerArgs<ExtArgs>
 }
 
 export type $SubmissionPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -944,6 +1493,8 @@ export type $SubmissionPayload<ExtArgs extends runtime.Types.Extensions.Internal
     votes: Prisma.$VotePayload<ExtArgs>[]
     user: Prisma.$UserPayload<ExtArgs>
     org: Prisma.$OrgPayload<ExtArgs> | null
+    reviewer: Prisma.$UserPayload<ExtArgs> | null
+    creditTransactions: Prisma.$CreditTransactionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -956,6 +1507,10 @@ export type $SubmissionPayload<ExtArgs extends runtime.Types.Extensions.Internal
     status: $Enums.SubmissionStatus
     createdAt: Date
     updatedAt: Date
+    reviewedById: string | null
+    reviewedAt: Date | null
+    hackatimeHours: number | null
+    creditsAwarded: number | null
   }, ExtArgs["result"]["submission"]>
   composites: {}
 }
@@ -1353,6 +1908,8 @@ export interface Prisma__SubmissionClient<T, Null = never, ExtArgs extends runti
   votes<T extends Prisma.Submission$votesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Submission$votesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$VotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   org<T extends Prisma.Submission$orgArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Submission$orgArgs<ExtArgs>>): Prisma.Prisma__OrgClient<runtime.Types.Result.GetResult<Prisma.$OrgPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  reviewer<T extends Prisma.Submission$reviewerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Submission$reviewerArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  creditTransactions<T extends Prisma.Submission$creditTransactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Submission$creditTransactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CreditTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1392,6 +1949,10 @@ export interface SubmissionFieldRefs {
   readonly status: Prisma.FieldRef<"Submission", 'SubmissionStatus'>
   readonly createdAt: Prisma.FieldRef<"Submission", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Submission", 'DateTime'>
+  readonly reviewedById: Prisma.FieldRef<"Submission", 'String'>
+  readonly reviewedAt: Prisma.FieldRef<"Submission", 'DateTime'>
+  readonly hackatimeHours: Prisma.FieldRef<"Submission", 'Float'>
+  readonly creditsAwarded: Prisma.FieldRef<"Submission", 'Int'>
 }
     
 
@@ -1833,6 +2394,49 @@ export type Submission$orgArgs<ExtArgs extends runtime.Types.Extensions.Internal
    */
   include?: Prisma.OrgInclude<ExtArgs> | null
   where?: Prisma.OrgWhereInput
+}
+
+/**
+ * Submission.reviewer
+ */
+export type Submission$reviewerArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
+}
+
+/**
+ * Submission.creditTransactions
+ */
+export type Submission$creditTransactionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CreditTransaction
+   */
+  select?: Prisma.CreditTransactionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CreditTransaction
+   */
+  omit?: Prisma.CreditTransactionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CreditTransactionInclude<ExtArgs> | null
+  where?: Prisma.CreditTransactionWhereInput
+  orderBy?: Prisma.CreditTransactionOrderByWithRelationInput | Prisma.CreditTransactionOrderByWithRelationInput[]
+  cursor?: Prisma.CreditTransactionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CreditTransactionScalarFieldEnum | Prisma.CreditTransactionScalarFieldEnum[]
 }
 
 /**

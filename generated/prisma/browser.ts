@@ -112,3 +112,18 @@ export type Project = Prisma.ProjectModel
  * 
  */
 export type JournalEntry = Prisma.JournalEntryModel
+/**
+ * Model CreditTransaction
+ * 
+ */
+export type CreditTransaction = Prisma.CreditTransactionModel
+/**
+ * Model ShopItem
+ * 
+ */
+export type ShopItem = Prisma.ShopItemModel
+/**
+ * Model ShopOrder
+ * 
+ */
+export type ShopOrder = Prisma.ShopOrderModel

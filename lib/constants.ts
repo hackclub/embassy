@@ -8,6 +8,8 @@ export const API_KEY_BYTES = 24;
 export const RECIPIENT_TOKEN_BYTES = 32;
 export const JWT_MAX_AGE_DAYS = 30;
 
+export const CREDITS_PER_HOUR = 10 as const;
+
 export const RATE_LIMITS = {
   auth: { windowMs: 15 * 60 * 1000, maxRequests: 10 },
   orders: { windowMs: 60 * 1000, maxRequests: 30 },
@@ -59,6 +61,7 @@ export const SUBMISSION_STATUSES = ["DRAFT", "SUBMITTED", "REJECTED"] as const;
 export const ORG_ROLES = ["OWNER", "ORGANIZER"] as const;
 
 export const USER_ROLES = ["PARTICIPANT", "ORGANIZER", "ADMIN", "SUPERADMIN"] as const;
+
 
 export const ROLE_RANK = {
   PARTICIPANT: 0,

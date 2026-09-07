@@ -69,7 +69,10 @@ export const ModelName = {
   Submission: 'Submission',
   Vote: 'Vote',
   Project: 'Project',
-  JournalEntry: 'JournalEntry'
+  JournalEntry: 'JournalEntry',
+  CreditTransaction: 'CreditTransaction',
+  ShopItem: 'ShopItem',
+  ShopOrder: 'ShopOrder'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -99,7 +102,8 @@ export const UserScalarFieldEnum = {
   role: 'role',
   hackatimeUid: 'hackatimeUid',
   hackatimeLinkedAt: 'hackatimeLinkedAt',
-  creditsSpent: 'creditsSpent',
+  hackatimeTokenEncrypted: 'hackatimeTokenEncrypted',
+  creditsBalance: 'creditsBalance',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -331,7 +335,11 @@ export const SubmissionScalarFieldEnum = {
   image: 'image',
   status: 'status',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  reviewedById: 'reviewedById',
+  reviewedAt: 'reviewedAt',
+  hackatimeHours: 'hackatimeHours',
+  creditsAwarded: 'creditsAwarded'
 } as const
 
 export type SubmissionScalarFieldEnum = (typeof SubmissionScalarFieldEnum)[keyof typeof SubmissionScalarFieldEnum]
@@ -373,6 +381,51 @@ export const JournalEntryScalarFieldEnum = {
 } as const
 
 export type JournalEntryScalarFieldEnum = (typeof JournalEntryScalarFieldEnum)[keyof typeof JournalEntryScalarFieldEnum]
+
+
+export const CreditTransactionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  amount: 'amount',
+  type: 'type',
+  submissionId: 'submissionId',
+  shopOrderId: 'shopOrderId',
+  description: 'description',
+  createdAt: 'createdAt'
+} as const
+
+export type CreditTransactionScalarFieldEnum = (typeof CreditTransactionScalarFieldEnum)[keyof typeof CreditTransactionScalarFieldEnum]
+
+
+export const ShopItemScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  imageUrl: 'imageUrl',
+  price: 'price',
+  category: 'category',
+  stock: 'stock',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ShopItemScalarFieldEnum = (typeof ShopItemScalarFieldEnum)[keyof typeof ShopItemScalarFieldEnum]
+
+
+export const ShopOrderScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  itemId: 'itemId',
+  quantity: 'quantity',
+  creditsSpent: 'creditsSpent',
+  status: 'status',
+  note: 'note',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ShopOrderScalarFieldEnum = (typeof ShopOrderScalarFieldEnum)[keyof typeof ShopOrderScalarFieldEnum]
 
 
 export const SortOrder = {
