@@ -173,6 +173,7 @@ async function main() {
       price: 50,
       category: "passport",
       stock: 100,
+      maxPerUser: 1,
     },
     {
       name: "Hack Club ID Card",
@@ -180,6 +181,7 @@ async function main() {
       price: 30,
       category: "id",
       stock: 200,
+      maxPerUser: 1,
     },
     {
       name: "Sticker Pack",
@@ -187,6 +189,7 @@ async function main() {
       price: 10,
       category: "swag",
       stock: -1, // infinite
+      maxPerUser: -1,
     },
     {
       name: "Lanyard",
@@ -194,6 +197,7 @@ async function main() {
       price: 15,
       category: "accessory",
       stock: 50,
+      maxPerUser: -1,
     },
   ];
   for (const item of shopItems) {

@@ -1,7 +1,20 @@
-const ENCRYPTION_KEY_BASE64 = process.env.PII_ENCRYPTION_KEY!;
+function getEncryptionKeyBase64(): string {
+  const key = process.env.PII_ENCRYPTION_KEY ?? "";
+  if (!key) {
+    throw new Error(
+      "PII_ENCRYPTION_KEY is not set. Encrypting PII (Hackatime tokens, recipient details) needs a 16/24/32-byte AES-GCM key encoded as base64."
+    );
+  }
+  return key;
+}
 
 async function getCryptoKey(): Promise<CryptoKey> {
-  const keyData = Buffer.from(ENCRYPTION_KEY_BASE64, "base64");
+  const keyData = Buffer.from(getEncryptionKeyBase64(), "base64");
+  if (![16, 24, 32].includes(keyData.length)) {
+    throw new Error(
+      `PII_ENCRYPTION_KEY must decode to 16, 24, or 32 bytes (got ${keyData.length}).`
+    );
+  }
   return crypto.subtle.importKey("raw", keyData, { name: "AES-GCM" }, false, [
     "encrypt",
     "decrypt",

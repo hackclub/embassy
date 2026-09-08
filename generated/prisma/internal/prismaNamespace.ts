@@ -2376,6 +2376,7 @@ export const ProjectScalarFieldEnum = {
   description: 'description',
   githubUrl: 'githubUrl',
   demoUrl: 'demoUrl',
+  hackatimeProject: 'hackatimeProject',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -2419,6 +2420,7 @@ export const ShopItemScalarFieldEnum = {
   price: 'price',
   category: 'category',
   stock: 'stock',
+  maxPerUser: 'maxPerUser',
   isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

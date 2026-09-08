@@ -9,7 +9,7 @@ import {
   type MeFormState,
 } from "@/app/actions/me";
 
-const inputClass = "w-full rounded-xl border-2 border-govuk-black px-3 py-2 text-base";
+const inputClass = "w-full rounded-sm border-2 border-govuk-black px-3 py-2 text-base";
 
 export type ProjectCardData = {
   id: string;
@@ -17,6 +17,7 @@ export type ProjectCardData = {
   description: string | null;
   githubUrl: string | null;
   demoUrl: string | null;
+  hackatimeProject: string | null;
   journalEntries: { id: string; title: string; content: string; entryDate: string }[];
 };
 
@@ -37,9 +38,9 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
       >
         <div className="flex items-start justify-between gap-3">
           <h3 className="text-lg font-bold leading-tight">{project.title}</h3>
-          <span className="game-box__plus shrink-0 !h-8 !w-8 !text-lg" aria-hidden="true">
+          {/*<span className="game-box__plus shrink-0 !h-8 !w-8 !text-lg" aria-hidden="true">
             +
-          </span>
+          </span>*/}
         </div>
         {project.description && (
           <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-govuk-grey-4">
@@ -48,7 +49,7 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
         )}
         <p className="mt-3 text-sm font-semibold text-govuk-blue">
           {project.journalEntries.length}{" "}
-          {project.journalEntries.length === 1 ? "entry" : "entries"} — tap to journal
+          {project.journalEntries.length === 1 ? "entry" : "entries"} | tap to journal
         </p>
       </button>
 
@@ -122,6 +123,7 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
                   description: project.description ?? undefined,
                   githubUrl: project.githubUrl ?? undefined,
                   demoUrl: project.demoUrl ?? undefined,
+                  hackatimeProject: project.hackatimeProject,
                 }}
                 onSuccess={() => setOpen(false)}
               />

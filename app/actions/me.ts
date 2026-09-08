@@ -5,8 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { generateRecipientToken, getCurrentUserWithRole } from "@/lib/org";
-import { getHackatimeHours } from "@/lib/hackatime";
-import { PASSPORT_PRICE_CREDITS, availableCredits } from "@/lib/credits";
+import { buyItemInTx, ShopError } from "@/lib/services/shop.service";
 
 export type MeFormState = { error?: string; ok?: string } | undefined;
 
@@ -24,20 +23,25 @@ const projectSchema = z.object({
     .trim()
     .min(2, "Enter a title (at least 2 characters)")
     .max(80, "Title is too long (maximum 80 characters)"),
-  description: z.string().trim().max(1000, "Description is too long (maximum 1000 characters)").optional(),
+  description: z
+    .string()
+    .trim()
+    .max(1000, "Description is too long (maximum 1000 characters)")
+    .optional(),
   githubUrl: z
     .string()
     .trim()
-    .regex(
-      /^https:\/\/(github\.com|gitlab\.com)\//,
-      "Code URL must start with https://github.com/ or https://gitlab.com/"
-    )
     .optional(),
   demoUrl: z
     .string()
     .trim()
     .regex(/^https:\/\//, "Demo URL must start with https://")
     .max(500, "Demo URL is too long")
+    .optional(),
+  hackatimeProject: z
+    .string()
+    .trim()
+    .max(120, "Hackatime project name is too long")
     .optional(),
 });
 
@@ -61,9 +65,12 @@ async function createProjectData(formData: FormData) {
     description: optionalString(formData.get("description")),
     githubUrl: optionalString(formData.get("githubUrl")),
     demoUrl: optionalString(formData.get("demoUrl")),
+    hackatimeProject: optionalString(formData.get("hackatimeProject")),
   });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid project details." } as const;
+    return {
+      error: parsed.error.issues[0]?.message ?? "Invalid project details.",
+    } as const;
   }
   return {
     data: {
@@ -71,13 +78,14 @@ async function createProjectData(formData: FormData) {
       description: parsed.data.description ?? null,
       githubUrl: parsed.data.githubUrl ?? null,
       demoUrl: parsed.data.demoUrl ?? null,
+      hackatimeProject: parsed.data.hackatimeProject ?? null,
     },
   } as const;
 }
 
 export async function createProjectAction(
   _prev: MeFormState,
-  formData: FormData
+  formData: FormData,
 ): Promise<MeFormState> {
   const user = await getCurrentUserWithRole();
   if (!user) redirect(SIGNIN_URL);
@@ -96,7 +104,7 @@ export async function createProjectAction(
 
 export async function updateProjectAction(
   _prev: MeFormState,
-  formData: FormData
+  formData: FormData,
 ): Promise<MeFormState> {
   const user = await getCurrentUserWithRole();
   if (!user) redirect(SIGNIN_URL);
@@ -149,10 +157,15 @@ async function createJournalData(formData: FormData) {
     content: formData.get("content"),
   });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid journal entry." } as const;
+    return {
+      error: parsed.error.issues[0]?.message ?? "Invalid journal entry.",
+    } as const;
   }
   const project = await prisma.project.findFirst({
-    where: { id: parsed.data.projectId, userId: (await getCurrentUserWithRole())?.id },
+    where: {
+      id: parsed.data.projectId,
+      userId: (await getCurrentUserWithRole())?.id,
+    },
     select: { id: true },
   });
   if (!project) return { error: "Project not found." } as const;
@@ -168,7 +181,7 @@ async function createJournalData(formData: FormData) {
 
 export async function createJournalAction(
   _prev: MeFormState,
-  formData: FormData
+  formData: FormData,
 ): Promise<MeFormState> {
   const user = await getCurrentUserWithRole();
   if (!user) redirect(SIGNIN_URL);
@@ -187,7 +200,7 @@ export async function createJournalAction(
 
 export async function updateJournalAction(
   _prev: MeFormState,
-  formData: FormData
+  formData: FormData,
 ): Promise<MeFormState> {
   const user = await getCurrentUserWithRole();
   if (!user) redirect(SIGNIN_URL);
@@ -207,7 +220,9 @@ export async function updateJournalAction(
     content: formData.get("content"),
   });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid journal entry." };
+    return {
+      error: parsed.error.issues[0]?.message ?? "Invalid journal entry.",
+    };
   }
 
   const project = await prisma.project.findFirst({
@@ -253,17 +268,23 @@ export type ShopFormState =
   | { error?: string; ok?: string; trackUrl?: string }
   | undefined;
 
-async function ensureShopOrg(): Promise<{ orgId: string; yswsId: string }> {
-  const org = await prisma.org.upsert({
-    where: { slug: "whoami-shop" },
-    create: { name: "whoami shop", slug: "whoami-shop" },
+const SHOP_ORG_SLUG = "whoami-shop";
+
+type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
+async function ensureShopOrg(
+  tx: Tx,
+): Promise<{ orgId: string; yswsId: string }> {
+  const org = await tx.org.upsert({
+    where: { slug: SHOP_ORG_SLUG },
+    create: { name: "whoami shop", slug: SHOP_ORG_SLUG },
     update: {},
   });
-  const ysws = await prisma.ySWS.upsert({
-    where: { slug: "whoami-shop" },
+  const ysws = await tx.ySWS.upsert({
+    where: { slug: SHOP_ORG_SLUG },
     create: {
       name: "whoami shop",
-      slug: "whoami-shop",
+      slug: SHOP_ORG_SLUG,
       isActive: true,
       orgId: org.id,
     },
@@ -272,42 +293,39 @@ async function ensureShopOrg(): Promise<{ orgId: string; yswsId: string }> {
   return { orgId: org.id, yswsId: ysws.id };
 }
 
-export async function buyPassportAction(
+const PASSPORT_CATEGORY = "passport";
+
+export async function buyShopItemAction(
   _prev: ShopFormState,
-  formData: FormData
+  formData: FormData,
 ): Promise<ShopFormState> {
-  if (String(formData.get("intent") ?? "") !== "passport") {
-    return { error: "Invalid submission." };
+  const rawItemId = formData.get("itemId");
+  if (typeof rawItemId !== "string" || !rawItemId) {
+    return { error: "Missing item." };
   }
+  const rawQuantity = formData.get("quantity");
+  const quantity =
+    typeof rawQuantity === "string" && /^\d+$/.test(rawQuantity)
+      ? Number(rawQuantity)
+      : 1;
 
   const user = await getCurrentUserWithRole();
   if (!user) redirect("/api/auth/signin?callbackUrl=/me/shop");
 
-  const account = await prisma.user.findUnique({
-    where: { id: user.id },
-    select: { hackatimeUid: true, creditsSpent: true, name: true, email: true },
+  const item = await prisma.shopItem.findUnique({
+    where: { id: rawItemId },
   });
-  if (!account) return { error: "Account not found. Try signing in again." };
-
-  if (!account.hackatimeUid) {
-    return {
-      error: "Link Hackatime first — you need credits to buy the passport.",
-    };
+  if (!item || !item.isActive) {
+    return { error: "That item isn't available right now." };
   }
 
-  const hours = await getHackatimeHours(user.id);
-  if (hours === null) {
-    return { error: "Could not fetch your credit balance. Try again in a minute." };
+  const isPassport = item.category === PASSPORT_CATEGORY;
+
+  if (isPassport && quantity !== 1) {
+    return { error: "You can only buy one passport at a time." };
   }
 
-  const credits = availableCredits(hours, account.creditsSpent);
-  if (credits === null || credits < PASSPORT_PRICE_CREDITS) {
-    return {
-      error: `Not enough credits — you have ${credits ?? 0}, the passport costs ${PASSPORT_PRICE_CREDITS}.`,
-    };
-  }
-
-  try {
+  if (isPassport) {
     const activeOrderCount = await prisma.passportOrder.count({
       where: {
         recipientUserId: user.id,
@@ -317,55 +335,86 @@ export async function buyPassportAction(
     if (activeOrderCount > 0) {
       return { error: "You already have a passport on the way." };
     }
+  }
 
-    const { orgId, yswsId } = await ensureShopOrg();
-    const recipientToken = generateRecipientToken();
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      let passport: {
+        orderId: string;
+        recipientToken: string;
+      } | null = null;
 
-    const order = await prisma.passportOrder.create({
-      data: {
-        orgId,
-        yswsId,
-        totalQuantity: 1,
-        currentState: "RECIPIENT_DETAILS_RECEIVED",
-        status: "PENDING",
-        createdFrom: "shop",
-        createdByUserId: user.id,
-        recipientUserId: user.id,
-        recipientName: account.name ?? account.email ?? "whoami user",
-        recipientEmail: account.email ?? "",
-        recipientToken,
-        recipients: {
-          create: {
-            email: account.email ?? "",
-            name: account.name ?? "",
-            userId: user.id,
+      if (isPassport) {
+        const { orgId, yswsId } = await ensureShopOrg(tx);
+
+        const recipientToken = generateRecipientToken();
+        const order = await tx.passportOrder.create({
+          data: {
+            orgId,
+            yswsId,
+            totalQuantity: 1,
+            currentState: "RECIPIENT_DETAILS_RECEIVED",
+            status: "PENDING",
+            createdFrom: "shop",
+            createdByUserId: user.id,
+            recipientUserId: user.id,
+            recipientName: user.name ?? user.email ?? "whoami user",
+            recipientEmail: user.email ?? "",
+            recipientToken,
+            recipients: {
+              create: {
+                email: user.email ?? "",
+                name: user.name ?? "",
+                userId: user.id,
+              },
+            },
+            note: `Purchased from the whoami shop for ${item.price} credits.`,
           },
-        },
-        note: `Purchased from the whoami shop for ${PASSPORT_PRICE_CREDITS} credits.`,
-      },
-    });
+          select: { id: true },
+        });
+        await tx.orderEvent.create({
+          data: {
+            orderId: order.id,
+            eventType: "ORDER_CREATED",
+            status: "PENDING",
+            newState: "RECIPIENT_DETAILS_RECEIVED",
+            actor: user.id,
+            actorType: "RECIPIENT",
+            description: `${item.name} purchased from the whoami shop`,
+          },
+        });
+        passport = { orderId: order.id, recipientToken };
+      }
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { creditsSpent: { increment: PASSPORT_PRICE_CREDITS } },
-    });
+      const shop = await buyItemInTx(
+        tx,
+        user.id,
+        item.id,
+        quantity,
+        `Bought ${quantity} × ${item.name}`,
+      );
 
-    await prisma.orderEvent.create({
-      data: {
-        orderId: order.id,
-        eventType: "ORDER_CREATED",
-        status: "PENDING",
-        newState: "RECIPIENT_DETAILS_RECEIVED",
-        actor: user.id,
-        actorType: "RECIPIENT",
-        description: "Passport purchased from the whoami shop",
-      },
+      return {
+        passport,
+        shopOrderId: shop.orderId,
+      };
     });
 
     revalidatePath("/me/shop");
     revalidatePath("/me");
-    return { ok: "Passport ordered!", trackUrl: `/track/${recipientToken}` };
-  } catch {
+
+    const total = item.price * quantity;
+    return result.passport
+      ? {
+          ok: `${item.name} ordered — you spent ${total} credits.`,
+          trackUrl: `/track/${result.passport.recipientToken}`,
+        }
+      : { ok: `${item.name} purchased — you spent ${total} credits.` };
+  } catch (err) {
+    if (err instanceof ShopError) return { error: err.message };
+    if ((err as { code?: string } | null)?.code === "INSUFFICIENT_CREDITS") {
+      return { error: "You don't have enough credits for this." };
+    }
     return { error: "Something went wrong. Try again." };
   }
 }

@@ -1,11 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { isBypassUser } from "@/lib/bypass";
+import { encryptPII, decryptPII } from "@/lib/encryption";
 
 const HACKATIME = {
   authorizeUrl: "https://hackatime.hackclub.com/oauth/authorize",
   tokenUrl: "https://hackatime.hackclub.com/oauth/token",
   meUrl: "https://hackatime.hackclub.com/api/v1/authenticated/me",
   hoursUrl: "https://hackatime.hackclub.com/api/v1/authenticated/hours",
+  projectsUrl: "https://hackatime.hackclub.com/api/v1/authenticated/projects",
 } as const;
 
 export const HACKATIME_STATE_COOKIE = "hackatime_oauth_state";
@@ -105,11 +107,38 @@ export async function fetchTotalHours(token: string): Promise<number | null> {
   }
 }
 
+const IGNORED_PROJECTS = new Set(["<<LAST_PROJECT>>", "Other"]);
+
+export async function fetchProjects(
+  token: string
+): Promise<string[] | null> {
+  try {
+    const res = await fetch(HACKATIME.projectsUrl, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      projects?: Array<{ name?: unknown; archived?: unknown }>;
+    };
+    if (!Array.isArray(data.projects)) return null;
+    const names = data.projects
+      .filter((p) => !p.archived && typeof p.name === "string")
+      .map((p) => (p.name as string).trim())
+      .filter((n) => n.length > 0 && !IGNORED_PROJECTS.has(n));
+    return [...new Set(names)].sort((a, b) => a.localeCompare(b));
+  } catch {
+    return null;
+  }
+}
+
 export async function linkUser(
   userId: string,
   hackatimeUid: string,
   token: { access_token: string }
 ): Promise<void> {
+  // Encrypt at rest — never keep the raw Hackatime token in the DB.
+  const accessToken = await encryptPII(token.access_token);
   await prisma.$transaction(async (tx) => {
     const existing = await tx.account.findUnique({
       where: {
@@ -132,7 +161,7 @@ export async function linkUser(
       update: {
         userId,
         type: "oauth",
-        access_token: token.access_token,
+        access_token: accessToken,
         token_type: "Bearer",
         scope: "profile read",
       },
@@ -141,7 +170,7 @@ export async function linkUser(
         type: "oauth",
         provider: "hackatime",
         providerAccountId: hackatimeUid,
-        access_token: token.access_token,
+        access_token: accessToken,
         token_type: "Bearer",
         scope: "profile read",
       },
@@ -149,11 +178,19 @@ export async function linkUser(
     // User.hackatimeUid is unique — release it from any previous owner first.
     await tx.user.updateMany({
       where: { hackatimeUid, NOT: { id: userId } },
-      data: { hackatimeUid: null, hackatimeLinkedAt: null },
+      data: {
+        hackatimeUid: null,
+        hackatimeLinkedAt: null,
+        hackatimeTokenEncrypted: null,
+      },
     });
     await tx.user.update({
       where: { id: userId },
-      data: { hackatimeUid, hackatimeLinkedAt: new Date() },
+      data: {
+        hackatimeUid,
+        hackatimeLinkedAt: new Date(),
+        hackatimeTokenEncrypted: accessToken,
+      },
     });
   });
 }
@@ -163,9 +200,10 @@ export async function getLinkedAccount(
 ): Promise<{ hackatimeUid: string; accessToken: string } | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { hackatimeUid: true },
+    select: { hackatimeUid: true, hackatimeTokenEncrypted: true },
   });
   if (!user?.hackatimeUid) return null;
+
   const account = await prisma.account.findUnique({
     where: {
       provider_providerAccountId: {
@@ -174,8 +212,22 @@ export async function getLinkedAccount(
       },
     },
   });
-  if (!account?.access_token) return null;
-  return { hackatimeUid: user.hackatimeUid, accessToken: account.access_token };
+
+  // Prefer the dedicated field; fall back to the account row (may be legacy
+  // plaintext from before encryption, so decrypt-when-possible).
+  const stored = user.hackatimeTokenEncrypted || account?.access_token || null;
+  if (!stored) return null;
+
+  let accessToken: string;
+  try {
+    // May be legacy plaintext from before encryption, so decrypt-when-possible.
+    const plain = await decryptPII(stored);
+    accessToken = plain || stored;
+  } catch {
+    return null;
+  }
+  if (!accessToken) return null;
+  return { hackatimeUid: user.hackatimeUid, accessToken };
 }
 
 export async function unlinkUser(userId: string): Promise<void> {
@@ -183,7 +235,11 @@ export async function unlinkUser(userId: string): Promise<void> {
     prisma.account.deleteMany({ where: { userId, provider: "hackatime" } }),
     prisma.user.update({
       where: { id: userId },
-      data: { hackatimeUid: null, hackatimeLinkedAt: null },
+      data: {
+        hackatimeUid: null,
+        hackatimeLinkedAt: null,
+        hackatimeTokenEncrypted: null,
+      },
     }),
   ]);
 }

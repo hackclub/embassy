@@ -32,7 +32,7 @@ export default async function JournalPage() {
       ) : entries.length === 0 ? (
         <div className="game-box text-center">
           <p className="text-govuk-grey-4">
-            No entries yet — tap a project card to write your first devlog.
+            No journals yet, tap a project card to write your first devlog.
           </p>
         </div>
       ) : (

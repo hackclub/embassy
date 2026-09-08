@@ -27,7 +27,9 @@
   --dashboard-header-height: 100px;
   --sidebar-sticky-offset: calc(var(--header-height) + 1rem);
   --admin-sidebar-sticky-offset: calc(var(--admin-header-height) + 1rem);
-  --dashboard-sidebar-sticky-offset: calc(var(--dashboard-header-height) + 1rem);
+  --dashboard-sidebar-sticky-offset: calc(
+    var(--dashboard-header-height) + 1rem
+  );
 }
 
 @theme inline {
@@ -736,7 +738,7 @@ details[open] .faq-answer {
 .game-box {
   background: #fffef5;
   border: 3px dotted #b5b09a;
-  border-radius: 24px;
+  border-radius: 12px;
   padding: 1.25rem;
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import {
   createProjectAction,
   updateProjectAction,
@@ -14,11 +14,13 @@ interface ProjectFormProps {
     description?: string;
     githubUrl?: string;
     demoUrl?: string;
+    hackatimeProject?: string | null;
   };
   onSuccess?: () => void;
 }
 
-const inputClass = "w-full rounded-xl border-2 border-govuk-black px-3 py-2 text-base";
+const inputClass =
+  "w-full rounded-sm border-2 border-govuk-black px-3 py-2 text-base";
 
 export default function ProjectForm({
   projectId,
@@ -27,19 +29,102 @@ export default function ProjectForm({
 }: ProjectFormProps) {
   const [state, formAction, pending] = useActionState<MeFormState, FormData>(
     projectId ? updateProjectAction : createProjectAction,
-    undefined
+    undefined,
   );
+
+  const [title, setTitle] = useState(defaultValues?.title ?? "");
+  const [linkedHackatime, setLinkedHackatime] = useState(
+    defaultValues?.hackatimeProject ?? null,
+  );
+  const [hackatimeProjects, setHackatimeProjects] = useState<string[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/hackatime/projects")
+      .then((res) => (res.ok ? res.json() : Promise.resolve({ projects: [] })))
+      .then((data: { projects?: string[] }) => {
+        if (cancelled) return;
+        setHackatimeProjects(data.projects ?? []);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setLoadingProjects(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (state?.ok) onSuccess?.();
   }, [state, onSuccess]);
 
+  const options =
+    linkedHackatime && !hackatimeProjects.includes(linkedHackatime)
+      ? [linkedHackatime, ...hackatimeProjects]
+      : hackatimeProjects;
+
+  const showProjectPicker =
+    !loadingProjects && (options.length > 0 || Boolean(linkedHackatime));
+
   return (
     <form action={formAction} className="space-y-4" noValidate>
       {projectId && <input type="hidden" name="projectId" value={projectId} />}
 
+      {loadingProjects ? (
+        <div>
+          <span className="mb-2 block font-bold">
+            Hackatime project{" "}
+            <span className="font-normal text-govuk-grey-4">
+              (pick one and the title fills in)
+            </span>
+          </span>
+          <select
+            disabled
+            aria-busy="true"
+            className={`${inputClass} text-govuk-grey-4`}
+          >
+            <option value="">Loading hackatime projects…</option>
+          </select>
+        </div>
+      ) : showProjectPicker ? (
+        <div>
+          <label
+            htmlFor={`project-hackatime-${projectId ?? "new"}`}
+            className="mb-2 block font-bold"
+          >
+            Hackatime project{" "}
+            <span className="font-normal text-govuk-grey-4">
+              (you can choose this later)
+            </span>
+          </label>
+          <select
+            id={`project-hackatime-${projectId ?? "new"}`}
+            name="hackatimeProject"
+            value={linkedHackatime ?? ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setLinkedHackatime(value || null);
+              if (value) setTitle(value);
+            }}
+            className={inputClass}
+          >
+            <option value="">-- None Selected --</option>
+            {options.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+
       <div>
-        <label htmlFor={`project-title-${projectId ?? "new"}`} className="mb-2 block font-bold">
+        <label
+          htmlFor={`project-title-${projectId ?? "new"}`}
+          className="mb-2 block font-bold"
+        >
           Project title
         </label>
         <input
@@ -47,7 +132,8 @@ export default function ProjectForm({
           name="title"
           type="text"
           required
-          defaultValue={defaultValues?.title}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           className={inputClass}
         />
       </div>
@@ -57,7 +143,10 @@ export default function ProjectForm({
           htmlFor={`project-description-${projectId ?? "new"}`}
           className="mb-2 block font-bold"
         >
-          Description <span className="font-normal text-govuk-grey-4">(optional)</span>
+          Description{" "}
+          <span className="font-normal text-govuk-grey-4">
+            (you can add one later)
+          </span>
         </label>
         <textarea
           id={`project-description-${projectId ?? "new"}`}
@@ -75,7 +164,7 @@ export default function ProjectForm({
         >
           Code URL{" "}
           <span className="font-normal text-govuk-grey-4">
-            (GitHub or GitLab — optional, you can add it later)
+            (GitHub, Gitlab, etc. repositoy; you can add it later)
           </span>
         </label>
         <input
@@ -89,8 +178,14 @@ export default function ProjectForm({
       </div>
 
       <div>
-        <label htmlFor={`project-demo-${projectId ?? "new"}`} className="mb-2 block font-bold">
-          Demo URL <span className="font-normal text-govuk-grey-4">(optional)</span>
+        <label
+          htmlFor={`project-demo-${projectId ?? "new"}`}
+          className="mb-2 block font-bold"
+        >
+          Demo URL{" "}
+          <span className="font-normal text-govuk-grey-4">
+            (you can add one later)
+          </span>
         </label>
         <input
           id={`project-demo-${projectId ?? "new"}`}
@@ -103,7 +198,10 @@ export default function ProjectForm({
       </div>
 
       {state?.error && (
-        <p role="alert" className="border-l-4 border-hc-red px-3 py-2 font-semibold">
+        <p
+          role="alert"
+          className="border-l-4 border-hc-red px-3 py-2 font-semibold"
+        >
           {state.error}
         </p>
       )}

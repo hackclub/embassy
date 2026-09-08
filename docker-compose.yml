@@ -72,10 +72,14 @@ services:
       PORT: "3000"
       HOSTNAME: 0.0.0.0
       DATABASE_URL: postgresql://whoami:whoami@whoami-postgres:5432/whoami?schema=public
-      AUTH_URL: https://lucky-badger-82.k.hackclub.dev
+      AUTH_URL: http://localhost:3000
       AUTH_SECRET: ${AUTH_SECRET:-}
       AUTH_HCA_CLIENT_ID: ${AUTH_HCA_CLIENT_ID:-}
       AUTH_HCA_CLIENT_SECRET: ${AUTH_HCA_CLIENT_SECRET:-}
+      PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:-}
+      AUTH_HACKATIME_CLIENT_ID: ${AUTH_HACKATIME_CLIENT_ID:-}
+      AUTH_HACKATIME_CLIENT_SECRET: ${AUTH_HACKATIME_CLIENT_SECRET:-}
+      SUPERADMIN_EMAILS: ${SUPERADMIN_EMAILS:-}
       REDIS_URL: redis://whoami-redis:6379
     command: >
       sh -c "bun node_modules/prisma/build/index.js migrate deploy &&

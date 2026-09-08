@@ -2,7 +2,10 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithRole } from "@/lib/org";
 import { isHackatimeConfigured, getHackatimeHours } from "@/lib/hackatime";
-import { availableCredits } from "@/lib/credits";
+import {
+  getBalance,
+  getTransactionHistory,
+} from "@/lib/services/credits.service";
 import ProjectCard from "./ProjectCard";
 import NewProjectButton from "./NewProjectButton";
 import type { ProjectCardData } from "./ProjectCard";
@@ -30,7 +33,9 @@ function TaskRow({
       >
         ✓
       </span>
-      <span className={`text-sm leading-snug ${done ? "text-govuk-grey-4 line-through" : "font-semibold"}`}>
+      <span
+        className={`text-sm leading-snug ${done ? "text-govuk-grey-4 line-through" : "font-semibold"}`}
+      >
         {children}
       </span>
     </span>
@@ -39,13 +44,15 @@ function TaskRow({
   return (
     <li className="py-1.5">
       {href && !done ? (
-        <Link href={href} className="block rounded-xl px-1 py-1 hover:bg-white">
+        <Link href={href} className="block rounded-sm px-1 py-1 hover:bg-white">
           {label}
         </Link>
       ) : (
         <div className="px-1 py-1">{label}</div>
       )}
-      {hint && !done && <p className="ml-9 text-xs text-govuk-grey-4">{hint}</p>}
+      {hint && !done && (
+        <p className="ml-9 text-xs text-govuk-grey-4">{hint}</p>
+      )}
     </li>
   );
 }
@@ -63,7 +70,7 @@ export default async function MeHome({
   const configured = isHackatimeConfigured();
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { hackatimeUid: true, creditsSpent: true, name: true },
+    select: { hackatimeUid: true, name: true },
   });
   const linked = Boolean(dbUser?.hackatimeUid);
 
@@ -71,15 +78,31 @@ export default async function MeHome({
     where: { userId: user.id },
     orderBy: { updatedAt: "desc" },
     include: {
-      journalEntries: { orderBy: { entryDate: "desc" }, select: { id: true, title: true, content: true, entryDate: true } },
+      journalEntries: {
+        orderBy: { entryDate: "desc" },
+        select: { id: true, title: true, content: true, entryDate: true },
+      },
     },
   });
 
-  let credits: number | null = null;
-  if (configured && linked) {
-    const hours = await getHackatimeHours(user.id);
-    credits = availableCredits(hours, dbUser?.creditsSpent ?? 0);
-  }
+  const credits = await getBalance(user.id);
+
+  const [submissions, transactions, hours] = await Promise.all([
+    prisma.submission.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        hackatimeHours: true,
+        creditsAwarded: true,
+        createdAt: true,
+      },
+    }),
+    getTransactionHistory(user.id, 10),
+    linked ? getHackatimeHours(user.id) : Promise.resolve(null),
+  ]);
 
   const projectCount = projects.length;
   const hasPassport = await prisma.passportOrder.count({
@@ -92,6 +115,7 @@ export default async function MeHome({
     description: p.description,
     githubUrl: p.githubUrl,
     demoUrl: p.demoUrl,
+    hackatimeProject: p.hackatimeProject,
     journalEntries: p.journalEntries.map((e) => ({
       id: e.id,
       title: e.title,
@@ -115,17 +139,15 @@ export default async function MeHome({
           </h1>
           <p className="mt-1 text-govuk-grey-4">{user.email}</p>
         </div>
-        {credits !== null && (
-          <span
-            className="game-box inline-flex items-center gap-2 !rounded-full !py-2 font-bold"
-            aria-label={`${credits} credits`}
-          >
-            <span aria-hidden="true" className="text-lg text-[#00a85d]">
-              ●
-            </span>
-            {credits} credits
+        <span
+          className="game-box inline-flex items-center gap-2 rounded-full! py-2! font-bold"
+          aria-label={`${credits} credits`}
+        >
+          <span aria-hidden="true" className="text-lg text-[#00a85d]">
+            ●
           </span>
-        )}
+          {credits} credits
+        </span>
         {linked && (
           <form action="/api/hackatime/unlink" method="post">
             <button
@@ -139,13 +161,19 @@ export default async function MeHome({
       </div>
 
       {hackatime === "linked" && (
-        <div className="govuk-notification-banner govuk-notification-banner--success mb-6" role="alert">
+        <div
+          className="govuk-notification-banner govuk-notification-banner--success mb-6"
+          role="alert"
+        >
           <p className="font-bold">Hackatime linked</p>
           <p>Your credits are ready to spend in the shop.</p>
         </div>
       )}
       {hackatime === "unlinked" && (
-        <div className="govuk-notification-banner govuk-notification-banner--success mb-6" role="alert">
+        <div
+          className="govuk-notification-banner govuk-notification-banner--success mb-6"
+          role="alert"
+        >
           <p className="font-bold">Hackatime unlinked</p>
           <p>Your Hackatime account has been disconnected.</p>
         </div>
@@ -156,8 +184,8 @@ export default async function MeHome({
           {projectCount === 0 ? (
             <div className="game-box flex flex-col items-center gap-4 py-12 text-center">
               <p className="max-w-sm text-govuk-grey-4">
-                Projects are where your work lives — add one, then keep a journal
-                on it as you build.
+                Projects are where your work lives — add one, then keep a
+                journal on it as you build.
               </p>
               <NewProjectButton />
             </div>
@@ -175,31 +203,63 @@ export default async function MeHome({
           )}
         </section>
 
-        <aside aria-label="Getting started" className="self-start lg:sticky lg:top-20">
+        <aside
+          aria-label="Getting started"
+          className="self-start lg:sticky lg:top-20"
+        >
           <div className="game-box">
             <h2 className="mb-2 font-extrabold uppercase tracking-wide text-govuk-grey-4">
               Getting started
             </h2>
-            <ul className="divide-y-2 divide-dashed divide-govuk-grey-2" role="list">
+            <ul
+              className="divide-y-2 divide-dashed divide-govuk-grey-2"
+              role="list"
+            >
               <TaskRow
                 done={tasksDone.hackatime}
                 href={linked ? undefined : "/api/hackatime/authorize"}
-                hint={linked ? undefined : configured ? "Optional — unlocks the shop." : undefined}
+                hint={
+                  linked
+                    ? undefined
+                    : configured
+                      ? "Optional, unlocks the shop."
+                      : undefined
+                }
               >
-                <a href={linked ? undefined : "/api/hackatime/authorize"} className={linked ? undefined : "text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"}>
-                  Link Hackatime (optional)
+                <a
+                  href={linked ? undefined : "/api/hackatime/authorize"}
+                  className={
+                    linked
+                      ? undefined
+                      : "text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
+                  }
+                >
+                  Link Hackatime
                 </a>
               </TaskRow>
-              <TaskRow done={tasksDone.project} hint={tasksDone.project ? undefined : "Use the green button."}>
+              <TaskRow
+                done={tasksDone.project}
+                hint={tasksDone.project ? undefined : "Use the green button."}
+              >
                 Add a project
               </TaskRow>
-              <TaskRow done={projectCards.some((p) => p.journalEntries.length > 0)} href={tasksDone.project ? "/me/projects" : undefined} hint={projectCards.some((p) => p.journalEntries.length > 0) ? undefined : "Tap a project card to journal."}>
+              <TaskRow
+                done={projectCards.some((p) => p.journalEntries.length > 0)}
+                href={tasksDone.project ? "/me/projects" : undefined}
+                hint={
+                  projectCards.some((p) => p.journalEntries.length > 0)
+                    ? undefined
+                    : "Tap a project card to journal."
+                }
+              >
                 Write a journal entry
               </TaskRow>
               <TaskRow
                 done={tasksDone.passport}
                 href="/me/shop"
-                hint={tasksDone.passport ? undefined : "Spend credits in the shop."}
+                hint={
+                  tasksDone.passport ? undefined : "Spend credits in the shop."
+                }
               >
                 Claim your passport
               </TaskRow>
@@ -213,6 +273,101 @@ export default async function MeHome({
           )}
         </aside>
       </div>
+
+      {submissions.length > 0 && (
+        <section className="mt-10">
+          <h2 className="mb-4 text-xl font-bold">Your submissions</h2>
+          <ul className="space-y-0" role="list">
+            {submissions.map((s) => (
+              <li
+                key={s.id}
+                className="flex flex-wrap items-center justify-between gap-3 border-t border-govuk-grey-2 py-3 last:border-b"
+              >
+                <div>
+                  <p className="font-semibold">{s.title}</p>
+                  <p className="text-sm text-govuk-grey-4">
+                    {new Intl.DateTimeFormat("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    }).format(s.createdAt)}
+                    {s.creditsAwarded !== null &&
+                      ` · earned ${s.creditsAwarded} credits`}
+                  </p>
+                </div>
+                <span
+                  className={`govuk-tag ${
+                    s.status === "ACCEPTED"
+                      ? "govuk-tag--green"
+                      : s.status === "REJECTED"
+                        ? "govuk-tag--grey"
+                        : "govuk-tag--blue"
+                  }`}
+                >
+                  {s.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {(linked && hours !== null) || transactions.length > 0 ? (
+        <section className="mt-10 grid gap-8 lg:grid-cols-2">
+          {linked && hours !== null && (
+            <div className="game-box">
+              <h2 className="mb-2 font-extrabold uppercase tracking-wide text-govuk-grey-4">
+                Hackatime
+              </h2>
+              <p className="text-3xl font-bold">{hours}h</p>
+              <p className="mt-1 text-sm text-govuk-grey-4">
+                total tracked time
+              </p>
+              <Link
+                href="https://hackatime.hackclub.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-block text-sm font-semibold text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
+              >
+                View on Hackatime →
+              </Link>
+            </div>
+          )}
+          {transactions.length > 0 && (
+            <div className="game-box">
+              <h2 className="mb-2 font-extrabold uppercase tracking-wide text-govuk-grey-4">
+                Recent activity
+              </h2>
+              <ul
+                className="divide-y-2 divide-dashed divide-govuk-grey-2"
+                role="list"
+              >
+                {transactions.map((t) => (
+                  <li
+                    key={t.id}
+                    className="flex items-center justify-between gap-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold">
+                        {t.description ?? "Credits"}
+                      </p>
+                      <p className="text-xs text-govuk-grey-4">{t.type}</p>
+                    </div>
+                    <span
+                      className={`shrink-0 text-sm font-extrabold ${
+                        t.amount > 0 ? "text-[#00a85d]" : "text-hc-red"
+                      }`}
+                    >
+                      {t.amount > 0 ? "+" : ""}
+                      {t.amount}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      ) : null}
     </>
   );
 }

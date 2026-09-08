@@ -2,12 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithRole } from "@/lib/org";
-import { getHackatimeHours, isHackatimeConfigured } from "@/lib/hackatime";
+import { isHackatimeConfigured } from "@/lib/hackatime";
+import { getBalance } from "@/lib/services/credits.service";
 import PageHeader from "@/app/components/PageHeader";
 import StatusBadge from "@/app/components/StatusBadge";
 import { mapOrderStateToVariant } from "@/app/components/status-variant";
-import BuyPassportForm from "./BuyPassportForm";
-import { PASSPORT_PRICE_CREDITS } from "@/lib/credits";
+import BuyItemForm from "./BuyItemForm";
 
 const ACTIVE_STATES = ["DELIVERED", "CANCELLED", "ERROR"];
 
@@ -41,6 +41,8 @@ const BANNER_MESSAGES: Record<string, { title: string; text: string; variant: Ba
   },
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ShopPage({
   searchParams,
 }: {
@@ -54,27 +56,30 @@ export default async function ShopPage({
 
   const account = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { hackatimeUid: true, creditsSpent: true },
+    select: { hackatimeUid: true },
   });
   const linked = Boolean(account?.hackatimeUid);
   const configured = isHackatimeConfigured();
 
-  let credits: number | null = null;
-  let hoursFetchFailed = false;
-  if (configured && linked && account) {
-    const hours = await getHackatimeHours(user.id);
-    if (hours === null) {
-      hoursFetchFailed = true;
-    } else {
-      credits = Math.max(0, Math.floor(hours) - account.creditsSpent);
-    }
-  }
+  const [items, balance, orders, ownedByItem] = await Promise.all([
+    prisma.shopItem.findMany({
+      where: { isActive: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    getBalance(user.id),
+    prisma.passportOrder.findMany({
+      where: { recipientUserId: user.id },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, currentState: true, recipientToken: true, createdAt: true },
+    }),
+    prisma.shopOrder.groupBy({
+      by: ["itemId"],
+      where: { userId: user.id, status: { not: "CANCELLED" } },
+      _sum: { quantity: true },
+    }),
+  ]);
 
-  const orders = await prisma.passportOrder.findMany({
-    where: { recipientUserId: user.id },
-    orderBy: { createdAt: "desc" },
-    select: { id: true, currentState: true, recipientToken: true, createdAt: true },
-  });
+  const ownedMap = new Map(ownedByItem.map((r) => [r.itemId, r._sum.quantity ?? 0]));
 
   const hasActiveOrder = orders.some((o) => !ACTIVE_STATES.includes(o.currentState));
 
@@ -89,81 +94,74 @@ export default async function ShopPage({
         </div>
       )}
 
-      <div className="flex flex-col gap-8 sm:flex-row">
-        <div className="flex-shrink-0">
-          <Image
-            src="/passport.png"
-            alt="Hack Club Passport"
-            width={220}
-            height={220}
-            style={{ width: 220, height: "auto" }}
-            className="rounded border border-govuk-grey-2"
-            priority
-          />
-        </div>
-        <div className="min-w-0 flex-1">
-          <h2 className="mb-2 text-2xl font-bold">Hack Club Passport</h2>
-          <p className="mb-4 leading-relaxed">
-            A real, physical passport you can earn by building things. It ships to
-            you, and you can fill it with stamps from Hack Club YSWSs as you ship
-            projects.
-          </p>
-          <div className="govuk-inset">
-            <p className="text-3xl font-bold">{PASSPORT_PRICE_CREDITS} credits</p>
-            <p className="mt-1 text-govuk-grey-4">
-              Yours to earn, one project at a time.
-            </p>
-          </div>
-        </div>
+      <div className="govuk-inset mb-8 flex flex-wrap items-center justify-between gap-4">
+        <p className="text-2xl font-bold">You have {balance} credits</p>
+        {configured && !linked && (
+          <a href="/api/hackatime/authorize" className="govuk-button">
+            Link Hackatime
+          </a>
+        )}
       </div>
 
-      {configured ? (
-        linked ? (
-          <div className="govuk-inset mt-8">
-            {hoursFetchFailed ? (
-              <p>Could not fetch your credit balance right now. Try refreshing in a minute.</p>
-            ) : (
-              <>
-                <p className="text-2xl font-bold">You have {credits ?? 0} credits</p>
-                {credits !== null && credits < PASSPORT_PRICE_CREDITS && (
-                  <div className="govuk-warning-text mt-4">
-                    <span className="govuk-warning-text__icon" aria-hidden="true">!</span>
-                    <strong className="govuk-warning-text__text">
-                      You need {PASSPORT_PRICE_CREDITS - credits} more credit
-                      {PASSPORT_PRICE_CREDITS - credits === 1 ? "" : "s"} to claim a passport.
-                    </strong>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="govuk-notification-banner govuk-notification-banner--warning mt-8" role="alert">
-            <p className="font-bold">Link Hackatime to buy</p>
-            <p>
-              Linking Hackatime is optional, but you need credits to buy the
-              passport.
-            </p>
-            <a href="/api/hackatime/authorize" className="govuk-button mt-3">
-              Link Hackatime
-            </a>
-          </div>
-        )
-      ) : (
-        <div className="govuk-inset mt-8">
-          <span className="govuk-tag govuk-tag--grey">Hackatime linking not configured</span>
-          <p className="mt-2 text-govuk-grey-4">
-            Buying is unavailable on this deployment.
-          </p>
+      {items.length === 0 ? (
+        <div className="game-box py-12 text-center">
+          <p className="text-govuk-grey-4">Nothing in the shop right now — check back soon.</p>
         </div>
-      )}
-
-      {configured && linked && (
-        <div className="mt-8">
-          <BuyPassportForm
-            disabled={hasActiveOrder || (credits !== null && credits < PASSPORT_PRICE_CREDITS)}
-            hint={hasActiveOrder ? "You already have a passport on the way." : undefined}
-          />
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item) => {
+            const inStock = item.stock === null || item.stock < 0 || item.stock > 0;
+            const soldOut = item.stock !== null && item.stock >= 0 && item.stock <= 0;
+            const owned = ownedMap.get(item.id) ?? 0;
+            return (
+              <div key={item.id} className="game-box flex flex-col">
+                <div className="mb-3 aspect-4/3 overflow-hidden rounded border border-govuk-grey-2 bg-white">
+                  {item.imageUrl ? (
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.name}
+                      width={400}
+                      height={300}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      className="rounded"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-sm font-bold text-govuk-grey-4">
+                      {item.name}
+                    </div>
+                  )}
+                </div>
+                <h2 className="mb-1 text-xl font-bold">{item.name}</h2>
+                {item.description && (
+                  <p className="mb-2 text-sm leading-relaxed text-govuk-grey-4">{item.description}</p>
+                )}
+                <div className="mb-3 flex items-center gap-2 text-sm">
+                  <span className="font-extrabold">{item.price} credits</span>
+                  {soldOut ? (
+                    <span className="govuk-tag govuk-tag--grey">Sold out</span>
+                  ) : inStock ? (
+                    <span className="govuk-tag govuk-tag--blue">In stock</span>
+                  ) : null}
+                  {owned > 0 && (
+                    <span className="govuk-tag govuk-tag--grey">You own {owned}</span>
+                  )}
+                </div>
+                <div className="mt-auto">
+                  <BuyItemForm
+                    itemId={item.id}
+                    itemName={item.name}
+                    price={item.price}
+                    balance={balance}
+                    maxPerUser={item.maxPerUser}
+                    owned={owned}
+                    inStock={inStock}
+                    requiresPassport={item.category === "passport"}
+                    hasActiveOrder={item.category === "passport" && hasActiveOrder}
+                  />
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 

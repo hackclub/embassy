@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/org";
+import { getHackatimeHours } from "@/lib/hackatime";
 
 const submitSchema = z.object({
   title: z.string().trim().min(2, "Add a title").max(80, "Title is too long"),
@@ -39,6 +40,10 @@ export async function submitProjectAction(
     where: { userId: user.id },
   });
 
+  // Snapshot the user's tracked hours so the reviewer can award credits
+  // against a consistent number (live hours may change later).
+  const hackatimeHours = await getHackatimeHours(user.id);
+
   await prisma.submission.create({
     data: {
       userId: user.id,
@@ -46,6 +51,7 @@ export async function submitProjectAction(
       title: parsed.data.title,
       description: parsed.data.description ?? null,
       url: parsed.data.url || null,
+      hackatimeHours,
     },
   });
 

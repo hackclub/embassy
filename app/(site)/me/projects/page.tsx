@@ -22,6 +22,7 @@ export default async function ProjectsPage() {
     description: p.description,
     githubUrl: p.githubUrl,
     demoUrl: p.demoUrl,
+    hackatimeProject: p.hackatimeProject,
     journalEntries: p.journalEntries.map((e) => ({
       id: e.id,
       title: e.title,

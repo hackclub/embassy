@@ -18,6 +18,8 @@ export default function MobileSidebar({ role }: { role: string }) {
   const items: NavItem[] = [
     { href: "/admin", label: "Overview", match: (p) => p === "/admin" },
     { href: "/admin/orders", label: "Passport orders" },
+    { href: "/admin/shop", label: "Shop" },
+    { href: "/admin/submissions", label: "Submissions" },
     { href: "/admin/yswses", label: "YSWSes" },
     { href: "/admin/organizers", label: "Organizers" },
     { href: "/admin/users", label: "Users & roles" },
