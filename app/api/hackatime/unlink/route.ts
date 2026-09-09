@@ -1,15 +1,15 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/org";
-import { unlinkUser } from "@/lib/hackatime";
+import { getBaseUrl, unlinkUser } from "@/lib/hackatime";
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.redirect(
-      new URL("/api/auth/signin?callbackUrl=%2Fme", request.url)
+      new URL("/api/auth/signin?callbackUrl=%2Fme", getBaseUrl())
     );
   }
 
   await unlinkUser(user.id);
-  return NextResponse.redirect(new URL("/me?hackatime=unlinked", request.url));
+  return NextResponse.redirect(new URL("/me?hackatime=unlinked", getBaseUrl()));
 }
