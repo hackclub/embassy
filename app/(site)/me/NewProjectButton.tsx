@@ -1,56 +1,59 @@
 "use client";
 
-import { useState } from "react";
-import ProjectForm from "./ProjectForm";
+import React from "react";
+import { Plus } from "lucide-react";
 
-export default function NewProjectButton() {
-  const [open, setOpen] = useState(false);
+interface AddPersonButtonProps {
+  className?: string;
+}
 
+export default function AddPersonButton({
+  className = "",
+}: AddPersonButtonProps) {
   return (
-    <>
-      <button type="button" onClick={() => setOpen(true)} className="btn-game" aria-haspopup="dialog">
-        <svg viewBox="0 0 96 96" fill="none" aria-hidden="true" className="h-10 w-10">
-          <circle cx="38" cy="28" r="14" fill="#F7F9E8" stroke="#293500" strokeWidth="8" />
-          <path
-            d="M16 76c0-13 9.8-22 22-22s22 9 22 22"
-            fill="#F7F9E8"
-            stroke="#293500"
-            strokeWidth="8"
-            strokeLinecap="round"
-          />
-          <path d="M74 44v24M62 56h24" stroke="#293500" strokeWidth="8" strokeLinecap="round" />
-        </svg>
-        New project
-      </button>
-
-      {open && (
-        <div
-          className="game-popup-backdrop"
-          onClick={() => setOpen(false)}
-          role="presentation"
-        >
-          <div
-            className="game-popup"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Add a project"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between gap-4">
-              <h2 className="text-xl font-bold">Add a project</h2>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="text-2xl leading-none text-govuk-grey-4 hover:text-govuk-black"
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-            <ProjectForm onSuccess={() => setOpen(false)} />
-          </div>
-        </div>
-      )}
-    </>
+    <button
+      type="button"
+      aria-label="Add project"
+      className={`group relative flex items-center justify-center transition-transform duration-75 ease-out active:translate-y-[2px] active:shadow-none ${className}`}
+      style={{
+        width: "80px",
+        height: "40px",
+        borderRadius: "12px",
+        background: "#00703c",
+        position: "relative",
+        overflow: "hidden",
+        cursor: "pointer",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "18px",
+          borderRadius: "58px",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: "2px",
+          left: "10px",
+          right: "10px",
+          height: "20px",
+          borderRadius: "58px",
+          filter: "blur(1px)",
+          pointerEvents: "none",
+        }}
+      />
+      <Plus
+        size={22}
+        strokeWidth={3}
+        color="white"
+        className="relative z-10 transition-transform duration-150 ease-out group-active:scale-75"
+      />
+    </button>
   );
 }
