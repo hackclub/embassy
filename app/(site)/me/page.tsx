@@ -2,10 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithRole } from "@/lib/org";
 import { isHackatimeConfigured, getHackatimeHours } from "@/lib/hackatime";
-import {
-  getBalance,
-  getTransactionHistory,
-} from "@/lib/services/credits.service";
+import { getTransactionHistory } from "@/lib/services/credits.service";
 import ProjectCard from "./ProjectCard";
 import NewProjectButton from "./NewProjectButton";
 import type { ProjectCardData } from "./ProjectCard";
@@ -85,8 +82,6 @@ export default async function MeHome({
     },
   });
 
-  const credits = await getBalance(user.id);
-
   const [submissions, transactions, hours] = await Promise.all([
     prisma.submission.findMany({
       where: { userId: user.id },
@@ -105,9 +100,13 @@ export default async function MeHome({
   ]);
 
   const projectCount = projects.length;
-  const hasPassport = await prisma.passportOrder.count({
-    where: { recipientUserId: user.id },
-  });
+
+  const recentEntries = projects
+    .flatMap((p) =>
+      p.journalEntries.map((e) => ({ ...e, projectTitle: p.title })),
+    )
+    .sort((a, b) => b.entryDate.getTime() - a.entryDate.getTime())
+    .slice(0, 4);
 
   const projectCards: ProjectCardData[] = projects.map((p) => ({
     id: p.id,
@@ -127,7 +126,6 @@ export default async function MeHome({
   const tasksDone = {
     hackatime: linked,
     project: projectCount > 0,
-    passport: hasPassport > 0,
   };
 
   return (
@@ -139,25 +137,6 @@ export default async function MeHome({
           </h1>
           <p className="mt-1 text-govuk-grey-4">{user.email}</p>
         </div>
-        <span
-          className="game-box inline-flex items-center gap-2 rounded-full! py-2! font-bold"
-          aria-label={`${credits} credits`}
-        >
-          <span aria-hidden="true" className="text-lg text-[#00a85d]">
-            ●
-          </span>
-          {credits} credits
-        </span>
-        {linked && (
-          <form action="/api/hackatime/unlink" method="post">
-            <button
-              type="submit"
-              className="text-sm font-semibold text-govuk-grey-4 underline underline-offset-4 hover:text-govuk-black"
-            >
-              Unlink Hackatime
-            </button>
-          </form>
-        )}
       </div>
 
       {hackatime === "linked" && (
@@ -252,15 +231,6 @@ export default async function MeHome({
               >
                 Write a journal entry
               </TaskRow>
-              <TaskRow
-                done={tasksDone.passport}
-                href="/me/shop"
-                hint={
-                  tasksDone.passport ? undefined : "Spend credits in the shop."
-                }
-              >
-                Claim your passport
-              </TaskRow>
             </ul>
           </div>
 
@@ -271,6 +241,41 @@ export default async function MeHome({
           )}
         </aside>
       </div>
+
+      {recentEntries.length > 0 && (
+        <section className="mt-10" aria-label="Recent journal entries">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <h2 className="text-xl font-bold">Recent journal entries</h2>
+            <Link
+              href="/me/journal"
+              className="text-sm font-semibold text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
+            >
+              View all →
+            </Link>
+          </div>
+          <ul className="grid gap-4 sm:grid-cols-2" role="list">
+            {recentEntries.map((entry) => (
+              <li key={entry.id} className="game-box">
+                <p className="text-xs font-bold uppercase tracking-wide text-govuk-grey-4">
+                  {entry.projectTitle}
+                </p>
+                <h3 className="mt-1 font-bold leading-tight">{entry.title}</h3>
+                <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-govuk-grey-4">
+                  {entry.content.replace(/[#*_>`~\[\]()]/g, "").slice(0, 160)}
+                  {entry.content.length > 160 ? "…" : ""}
+                </p>
+                <p className="mt-3 text-xs text-govuk-grey-4">
+                  {new Intl.DateTimeFormat("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  }).format(entry.entryDate)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {submissions.length > 0 && (
         <section className="mt-10">

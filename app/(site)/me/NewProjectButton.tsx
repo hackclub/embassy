@@ -16,10 +16,11 @@ export default function AddPersonButton({
       aria-label="Add project"
       className={`group relative flex items-center justify-center transition-transform duration-75 ease-out active:translate-y-[2px] active:shadow-none ${className}`}
       style={{
-        width: "80px",
+        width: "40px",
         height: "40px",
-        borderRadius: "12px",
-        background: "#00703c",
+        borderRadius: "40px",
+        background: "#ff902f",
+
         position: "relative",
         overflow: "hidden",
         cursor: "pointer",

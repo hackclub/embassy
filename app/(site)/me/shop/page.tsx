@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Coins } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithRole } from "@/lib/org";
 import { isHackatimeConfigured } from "@/lib/hackatime";
@@ -95,7 +96,10 @@ export default async function ShopPage({
       )}
 
       <div className="govuk-inset mb-8 flex flex-wrap items-center justify-between gap-4">
-        <p className="text-2xl font-bold">You have {balance} credits</p>
+        <p className="flex items-center gap-2 text-2xl font-bold">
+          <Coins size={22} aria-hidden="true" className="text-[#00a85d]" />
+          You have {balance} credits
+        </p>
         {configured && !linked && (
           <a href="/api/hackatime/authorize" className="govuk-button">
             Link Hackatime

@@ -41,7 +41,10 @@ export default async function JournalPage() {
             Journals live on projects. Add a project first, then tap its card to
             write entries.
           </p>
-          <Link href="/me/projects" className="govuk-button">
+          <Link
+            href="/me/projects"
+            className="govuk-button !bg-[#ff902f] !shadow-none"
+          >
             Go to projects
           </Link>
         </div>
@@ -54,7 +57,11 @@ export default async function JournalPage() {
       ) : (
         <ul className="space-y-6" role="list">
           {entryData.map((entry) => (
-            <JournalEntryCard key={entry.id} entry={entry} projects={projects} />
+            <JournalEntryCard
+              key={entry.id}
+              entry={entry}
+              projects={projects}
+            />
           ))}
         </ul>
       )}

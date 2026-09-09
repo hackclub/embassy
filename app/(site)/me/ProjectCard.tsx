@@ -236,6 +236,10 @@ function NewEntryForm({ project }: { project: ProjectCardData }) {
     createJournalAction,
     undefined
   );
+  const [content, setContent] = useState("");
+  const [touched, setTouched] = useState(false);
+  const contentLength = content.trim().length;
+  const tooShort = touched && contentLength < 10;
 
   return (
     <div className="mt-6 border-t-2 border-dashed border-govuk-grey-2 pt-4">
@@ -261,16 +265,30 @@ function NewEntryForm({ project }: { project: ProjectCardData }) {
             name="content"
             rows={5}
             required
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            onBlur={() => setTouched(true)}
             placeholder={"- shipped the login flow\n- fixed **two** bugs"}
-            className={`${inputClass} font-mono text-sm`}
+            className={`${inputClass} font-mono text-sm ${
+              tooShort ? "border-hc-red border-4" : ""
+            }`}
           />
+          {contentLength > 0 && contentLength < 10 && (
+            <p id={`entry-content-error-${project.id}`} className="mt-2 text-sm font-semibold text-hc-red">
+              {10 - contentLength} more character{10 - contentLength === 1 ? "" : "s"} needed
+            </p>
+          )}
         </div>
         {state?.error && (
           <p role="alert" className="border-l-4 border-hc-red px-3 py-2 font-semibold">
             {state.error}
           </p>
         )}
-        <button type="submit" disabled={pending} className="govuk-button">
+        <button
+          type="submit"
+          disabled={pending || contentLength < 10}
+          className="govuk-button"
+        >
           {pending ? "Adding..." : "Add entry"}
         </button>
       </form>

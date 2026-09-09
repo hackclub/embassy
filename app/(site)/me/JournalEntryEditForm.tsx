@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { updateJournalAction, type MeFormState } from "@/app/actions/me";
 
 const inputClass = "w-full border-2 border-govuk-black px-3 py-2 text-base";
@@ -28,6 +28,10 @@ export default function JournalEntryEditForm({
     updateJournalAction,
     undefined,
   );
+  const [content, setContent] = useState(entry.content);
+  const [touched, setTouched] = useState(false);
+  const contentLength = content.trim().length;
+  const tooShort = touched && contentLength < 10;
 
   useEffect(() => {
     if (state?.ok) onSaved();
@@ -93,9 +97,16 @@ export default function JournalEntryEditForm({
           name="content"
           rows={8}
           required
-          defaultValue={entry.content}
-          className={inputClass}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          onBlur={() => setTouched(true)}
+          className={`${inputClass} ${tooShort ? "border-hc-red border-4" : ""}`}
         />
+        {contentLength > 0 && contentLength < 10 && (
+          <p className="mt-2 text-sm font-semibold text-hc-red">
+            {10 - contentLength} more character{10 - contentLength === 1 ? "" : "s"} needed
+          </p>
+        )}
       </div>
 
       {state?.error && (
@@ -105,7 +116,11 @@ export default function JournalEntryEditForm({
       )}
 
       <div className="flex items-center gap-3">
-        <button type="submit" disabled={pending} className="govuk-button">
+        <button
+          type="submit"
+          disabled={pending || contentLength < 10}
+          className="govuk-button"
+        >
           {pending ? "Saving..." : "Save changes"}
         </button>
         <button
