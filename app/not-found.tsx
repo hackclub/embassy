@@ -29,12 +29,6 @@ export default function NotFound() {
             >
               Go to homepage
             </Link>
-            <Link
-              href="/dashboard"
-              className="govuk-button govuk-button--secondary"
-            >
-              Go to dashboard
-            </Link>
           </div>
         </div>
       </main>

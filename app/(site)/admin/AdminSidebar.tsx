@@ -15,6 +15,8 @@ export default function AdminSidebar({ role }: { role: string }) {
   const items: NavItem[] = [
     { href: "/admin", label: "Overview", match: (p) => p === "/admin" },
     { href: "/admin/orders", label: "Passport orders" },
+    { href: "/admin/shop", label: "Shop" },
+    { href: "/admin/submissions", label: "Submissions" },
     { href: "/admin/yswses", label: "YSWSes" },
     { href: "/admin/organizers", label: "Organizers" },
     { href: "/admin/users", label: "Users & roles" },
@@ -26,7 +28,10 @@ export default function AdminSidebar({ role }: { role: string }) {
 
   return (
     <aside className="hidden lg:block">
-      <nav className="sticky top-[var(--admin-sidebar-sticky-offset)]" aria-label="Admin navigation">
+      <nav
+        className="sticky top-(--admin-sidebar-sticky-offset)"
+        aria-label="Admin navigation"
+      >
         <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-govuk-grey-4">
           Administration
         </h2>

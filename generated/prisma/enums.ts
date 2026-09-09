@@ -77,7 +77,8 @@ export type ActorType = (typeof ActorType)[keyof typeof ActorType]
 export const SubmissionStatus = {
   DRAFT: 'DRAFT',
   SUBMITTED: 'SUBMITTED',
-  REJECTED: 'REJECTED'
+  REJECTED: 'REJECTED',
+  ACCEPTED: 'ACCEPTED'
 } as const
 
 export type SubmissionStatus = (typeof SubmissionStatus)[keyof typeof SubmissionStatus]
@@ -89,3 +90,22 @@ export const OrgRole = {
 } as const
 
 export type OrgRole = (typeof OrgRole)[keyof typeof OrgRole]
+
+
+export const CreditTransactionType = {
+  EARNED: 'EARNED',
+  SPENT: 'SPENT',
+  ADJUSTED: 'ADJUSTED',
+  REFUNDED: 'REFUNDED'
+} as const
+
+export type CreditTransactionType = (typeof CreditTransactionType)[keyof typeof CreditTransactionType]
+
+
+export const ShopOrderStatus = {
+  PENDING: 'PENDING',
+  FULFILLED: 'FULFILLED',
+  CANCELLED: 'CANCELLED'
+} as const
+
+export type ShopOrderStatus = (typeof ShopOrderStatus)[keyof typeof ShopOrderStatus]

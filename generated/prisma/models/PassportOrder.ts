@@ -810,14 +810,6 @@ export type PassportOrderUncheckedUpdateManyWithoutYswsNestedInput = {
   deleteMany?: Prisma.PassportOrderScalarWhereInput | Prisma.PassportOrderScalarWhereInput[]
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type EnumOrderTransitionFieldUpdateOperationsInput = {
   set?: $Enums.OrderTransition
 }

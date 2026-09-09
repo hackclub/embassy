@@ -25,6 +25,8 @@
     "prisma": "7.10.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "zod": "^4.5.4"
   },
   "devDependencies": {

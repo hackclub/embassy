@@ -1,5 +1,5 @@
 import { prisma } from "../prisma";
-import { generateRecipientToken, generateApiKey } from "../org";
+import { generateRecipientToken, generateApiKeyWithHash } from "../org";
 import { auditLog } from "../audit";
 import { getRequestId } from "../request-id";
 import { createEmailDelivery } from "./email.service";
@@ -213,10 +213,10 @@ export async function regenerateApiKey(yswsId: string, actorId: string) {
   const ysws = await prisma.ySWS.findUnique({ where: { id: yswsId } });
   if (!ysws) throw new Error("YSWS not found");
 
-  const newKey = generateApiKey();
+  const { key, hash } = await generateApiKeyWithHash();
   await prisma.ySWS.update({
     where: { id: yswsId },
-    data: { apiKeyHash: newKey },
+    data: { apiKeyHash: hash, apiKeyDisplay: key.slice(-4) },
   });
 
   await auditLog({
@@ -229,5 +229,5 @@ export async function regenerateApiKey(yswsId: string, actorId: string) {
     requestId: await getRequestId(),
   });
 
-  return newKey;
+  return key;
 }

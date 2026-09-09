@@ -62,26 +62,40 @@ enum SubmissionStatus {
   DRAFT
   SUBMITTED
   REJECTED
+  ACCEPTED
 }
 
 model User {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   name          String?
-  email         String?  @unique
+  email         String?   @unique
   emailVerified DateTime?
   image         String?
-  slackId       String?  @unique
-  hcaId         String?  @unique
-  role          Role     @default(PARTICIPANT)
+  slackId       String?   @unique
+  hcaId         String?   @unique
+  role          Role      @default(PARTICIPANT)
 
-  accounts           Account[]
-  sessions           Session[]
-  orgs               OrgMember[]
-  organizerYSWSes    OrganizerYSWSMembership[]
-  createdOrders      PassportOrder[] @relation("CreatedOrders")
-  receivedOrders     PassportOrder[] @relation("RecipientOrders")
-  submissions        Submission[]
-  votes              Vote[]
+  hackatimeUid            String?   @unique
+  hackatimeLinkedAt       DateTime?
+  hackatimeTokenEncrypted String?
+
+  creditsBalance Int @default(0)
+
+  accounts        Account[]
+  sessions        Session[]
+  orgs            OrgMember[]
+  organizerYSWSes OrganizerYSWSMembership[]
+
+  createdOrders       PassportOrder[]     @relation("CreatedOrders")
+  receivedOrders      PassportOrder[]     @relation("RecipientOrders")
+  reviewedSubmissions Submission[]        @relation("ReviewedSubmissions")
+  creditTransactions  CreditTransaction[]
+  shopOrders          ShopOrder[]
+
+  submissions    Submission[]
+  votes          Vote[]
+  projects       Project[]
+  journalEntries JournalEntry[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -108,8 +122,8 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
+  id           String @id @default(cuid())
+  sessionToken String @unique
   userId       String
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -124,32 +138,32 @@ model VerificationToken {
 }
 
 model Org {
-  id          String   @id @default(cuid())
+  id          String      @id @default(cuid())
   name        String
-  slug        String   @unique
+  slug        String      @unique
   description String?
   color       String?
   members     OrgMember[]
 
-  ysws        YSWS[] @relation("OrgYSWS")
-  orders      PassportOrder[]
+  ysws            YSWS[]                    @relation("OrgYSWS")
+  orders          PassportOrder[]
   organizerYSWSes OrganizerYSWSMembership[]
-  submissions Submission[]
+  submissions     Submission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model OrganizerYSWSMembership {
-  id          String  @id @default(cuid())
-  orgId       String
-  userId      String
-  yswsId      String
-  role        OrgRole @default(ORGANIZER)
+  id     String  @id @default(cuid())
+  orgId  String
+  userId String
+  yswsId String
+  role   OrgRole @default(ORGANIZER)
 
-  org     Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ysws  YSWS     @relation(fields: [yswsId], references: [id], onDelete: Cascade)
+  org  Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ysws YSWS @relation(fields: [yswsId], references: [id], onDelete: Cascade)
 
   @@unique([orgId, userId, yswsId])
   @@index([userId])
@@ -162,7 +176,7 @@ model YSWS {
   slug            String    @unique
   apiKeyHash      String?   @unique
   apiKeyPrefix    String?   @unique // First 8 chars for fast lookup
-  apiKeyDisplay   String?   // Last 4 chars for display only
+  apiKeyDisplay   String? // Last 4 chars for display only
   apiKeyExpiresAt DateTime?
   apiKeyScopes    String[]  @default(["orders:write"])
   apiKeyLastUsed  DateTime?
@@ -170,10 +184,10 @@ model YSWS {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  org                     Org  @relation("OrgYSWS", fields: [orgId], references: [id], onDelete: Cascade)
-  orgId                   String
-  organizerMemberships    OrganizerYSWSMembership[]
-  orders                  PassportOrder[]
+  org                  Org                       @relation("OrgYSWS", fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                String
+  organizerMemberships OrganizerYSWSMembership[]
+  orders               PassportOrder[]
 
   @@index([apiKeyPrefix])
 }
@@ -197,30 +211,30 @@ model OrgMember {
 }
 
 model PassportOrder {
-  id                      String      @id @default(cuid())
-  orgId                   String
-  yswsId                  String
-  totalQuantity           Int
-  currentState            OrderTransition @default(AWAITING_RECIPIENT_DETAILS)
-  status                  OrderStatus     @default(PENDING)
-  note                    String?
-  createdByUserId         String?
-  recipientUserId         String?
-  createdFrom             String
+  id              String          @id @default(cuid())
+  orgId           String
+  yswsId          String
+  totalQuantity   Int
+  currentState    OrderTransition @default(AWAITING_RECIPIENT_DETAILS)
+  status          OrderStatus     @default(PENDING)
+  note            String?
+  createdByUserId String?
+  recipientUserId String?
+  createdFrom     String
 
-  recipientName           String?
-  recipientEmail          String?
-  recipientToken          String?   @unique
-  archivedAt              DateTime?
+  recipientName  String?
+  recipientEmail String?
+  recipientToken String?   @unique
+  archivedAt     DateTime?
 
-  org           Org                @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  ysws          YSWS               @relation(fields: [yswsId], references: [id], onDelete: Cascade)
-  user          User?              @relation("CreatedOrders", fields: [createdByUserId], references: [id], onDelete: SetNull)
-  recipient     User?              @relation("RecipientOrders", fields: [recipientUserId], references: [id], onDelete: SetNull)
-  recipients    PassportRecipient[]
-  versions      PassportVersion[]
-  shipments     Shipment[]
-  events        OrderEvent[]
+  org        Org                 @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  ysws       YSWS                @relation(fields: [yswsId], references: [id], onDelete: Cascade)
+  user       User?               @relation("CreatedOrders", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  recipient  User?               @relation("RecipientOrders", fields: [recipientUserId], references: [id], onDelete: SetNull)
+  recipients PassportRecipient[]
+  versions   PassportVersion[]
+  shipments  Shipment[]
+  events     OrderEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -239,35 +253,35 @@ model PassportOrder {
 }
 
 model PassportRecipient {
-  id              String  @id @default(cuid())
-  orderId         String
-  email           String
-  name            String?
-  userId          String?
-  addressLine1    String?
-  addressLine2    String?
-  city            String?
-  stateProvince   String?
-  postalCode      String?
-  country         String?   // ISO 3166-1 alpha-2
-  dateOfBirth     DateTime?
+  id               String    @id @default(cuid())
+  orderId          String
+  email            String
+  name             String?
+  userId           String?
+  addressLine1     String?
+  addressLine2     String?
+  city             String?
+  stateProvince    String?
+  postalCode       String?
+  country          String? // ISO 3166-1 alpha-2
+  dateOfBirth      DateTime?
   emergencyContact String?
-  photoUrl        String?
+  photoUrl         String?
 
-  order  PassportOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order PassportOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([orderId, email])
   @@index([orderId])
   @@index([email])
-  @@unique([orderId, email])
 }
 
 model PassportVersion {
-  id          String  @id @default(cuid())
+  id        String   @id @default(cuid())
   orderId   String
-  version Int
+  version   Int
   data      Json?
   createdBy String
   createdAt DateTime @default(now())
@@ -279,15 +293,15 @@ model PassportVersion {
 }
 
 model Shipment {
-  id              String  @id @default(cuid())
-  orderId         String
+  id             String    @id @default(cuid())
+  orderId        String
   trackingNumber String?
-  carrier         String?
-  status          String?
-  shippedAt       DateTime?
-  deliveredAt     DateTime?
-  recipientEmail  String?
-  note            String?
+  carrier        String?
+  status         String?
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  recipientEmail String?
+  note           String?
 
   order PassportOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
@@ -298,17 +312,17 @@ model Shipment {
 }
 
 model OrderEvent {
-  id              String      @id @default(cuid())
-  orderId         String
-  eventType       EventType
-  status          OrderStatus?
-  previousState   OrderTransition?
-  newState        OrderTransition
-  actor           String
-  actorType       ActorType
-  description     String?
-  metadata        Json?
-  createdAt       DateTime   @default(now())
+  id            String           @id @default(cuid())
+  orderId       String
+  eventType     EventType
+  status        OrderStatus?
+  previousState OrderTransition?
+  newState      OrderTransition
+  actor         String
+  actorType     ActorType
+  description   String?
+  metadata      Json?
+  createdAt     DateTime         @default(now())
 
   order PassportOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
@@ -318,34 +332,34 @@ model OrderEvent {
 }
 
 model AuditLog {
-  id              String   @id @default(cuid())
-  entityType      String
-  entityId        String
-  action          String
-  actor           String
-  actorType       ActorType
-  beforeValue     Json?
-  afterValue      Json?
-  ipAddress       String?
-  userAgent       String?
-  requestId       String?
-  description     String?
-  createdAt       DateTime @default(now())
+  id          String    @id @default(cuid())
+  entityType  String
+  entityId    String
+  action      String
+  actor       String
+  actorType   ActorType
+  beforeValue Json?
+  afterValue  Json?
+  ipAddress   String?
+  userAgent   String?
+  requestId   String?
+  description String?
+  createdAt   DateTime  @default(now())
 
   @@index([entityType, entityId, createdAt])
 }
 
 model EmailDelivery {
-  id              String  @id @default(cuid())
-  orderId         String?
-  recipientEmail  String
-  eventType       EventType
-  status          String    // "sent" | "failed" | "retrying" | "pending"
-  attempts        Int      @default(0)
-  lastAttemptAt   DateTime?
-  sentAt          DateTime?
-  errorMessage    String?
-  createdAt       DateTime @default(now())
+  id             String    @id @default(cuid())
+  orderId        String?
+  recipientEmail String
+  eventType      EventType
+  status         String // "sent" | "failed" | "retrying" | "pending"
+  attempts       Int       @default(0)
+  lastAttemptAt  DateTime?
+  sentAt         DateTime?
+  errorMessage   String?
+  createdAt      DateTime  @default(now())
 
   @@index([recipientEmail])
   @@index([eventType])
@@ -354,36 +368,147 @@ model EmailDelivery {
 }
 
 model Submission {
-  id          String             @id @default(cuid())
+  id          String           @id @default(cuid())
   userId      String
   orgId       String?
   title       String
   description String?
   url         String?
   image       String?
-  status      SubmissionStatus   @default(SUBMITTED)
+  status      SubmissionStatus @default(SUBMITTED)
   votes       Vote[]
 
-  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  org         Org?               @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org  Org? @relation(fields: [orgId], references: [id], onDelete: SetNull)
 
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reviewedById String?
+  reviewedAt   DateTime?
+
+  reviewer           User?               @relation("ReviewedSubmissions", fields: [reviewedById], references: [id], onDelete: SetNull)
+  creditTransactions CreditTransaction[]
+
+  hackatimeHours Float?
+  creditsAwarded Int?
 
   @@index([userId])
   @@index([orgId])
 }
 
 model Vote {
-  id           String       @id @default(cuid())
+  id           String @id @default(cuid())
   submissionId String
   userId       String
 
-  submission   Submission   @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt    DateTime     @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([submissionId, userId])
   @@index([userId])
+}
+
+model Project {
+  id          String  @id @default(cuid())
+  userId      String
+  title            String
+  description      String?
+  githubUrl        String?
+  demoUrl          String?
+  hackatimeProject String?
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  journalEntries JournalEntry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model JournalEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  content   String
+  entryDate DateTime
+  projectId String?
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([projectId])
+}
+
+enum CreditTransactionType {
+  EARNED
+  SPENT
+  ADJUSTED
+  REFUNDED
+}
+
+model CreditTransaction {
+  id           String                @id @default(cuid())
+  userId       String
+  amount       Int // + earn, - spend
+  type         CreditTransactionType
+  submissionId String?
+  shopOrderId  String?
+  description  String?
+  createdAt    DateTime              @default(now())
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  submission Submission? @relation(fields: [submissionId], references: [id], onDelete: SetNull)
+  shopOrder  ShopOrder?  @relation(fields: [shopOrderId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([submissionId])
+  @@index([shopOrderId])
+}
+
+model ShopItem {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  imageUrl    String?
+  price       Int
+  category    String?
+  stock       Int? // null or -1 = unlimited
+  maxPerUser  Int         @default(-1) // -1 = unlimited
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  shopOrders  ShopOrder[]
+}
+
+enum ShopOrderStatus {
+  PENDING
+  FULFILLED
+  CANCELLED
+}
+
+model ShopOrder {
+  id           String          @id @default(cuid())
+  userId       String
+  itemId       String
+  quantity     Int             @default(1)
+  creditsSpent Int
+  status       ShopOrderStatus @default(PENDING)
+  note         String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item               ShopItem            @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  creditTransactions CreditTransaction[]
+
+  @@index([userId])
+  @@index([itemId])
 }

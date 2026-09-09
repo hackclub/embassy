@@ -166,7 +166,50 @@ async function main() {
     },
   });
   console.log(`Audit log created`);
-
+  const shopItems = [
+    {
+      name: "Hack Club Passport",
+      description: "Physical Hack Club Passport",
+      price: 50,
+      category: "passport",
+      stock: 100,
+      maxPerUser: 1,
+    },
+    {
+      name: "Hack Club ID Card",
+      description: "It's \"Official\"",
+      price: 30,
+      category: "id",
+      stock: 200,
+      maxPerUser: 1,
+    },
+    {
+      name: "Sticker Pack",
+      description: "Freshly baked stickers",
+      price: 10,
+      category: "swag",
+      stock: -1, // infinite
+      maxPerUser: -1,
+    },
+    {
+      name: "Lanyard",
+      description: "Hang em.",
+      price: 15,
+      category: "accessory",
+      stock: 50,
+      maxPerUser: -1,
+    },
+  ];
+  for (const item of shopItems) {
+    const existing = await prisma.shopItem.findFirst({ where: { name: item.name } });
+    if (existing) {
+      await prisma.shopItem.update({ where: { id: existing.id }, data: item });
+    } else {
+      await prisma.shopItem.create({ data: item });
+    }
+    console.log(`Shop item ensured: ${item.name}`);
+  }
+    
   console.log("\nDatabase seed completed successfully!");
   console.log("\nTest accounts created:");
   console.log(`  Superadmin: ${superadminEmail} (SUPERADMIN)`);

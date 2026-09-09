@@ -16,6 +16,30 @@ const envSchema = z.object({
   // Redis / Valkey (for feedback, rate limiting)
   REDIS_URL: z.string().default("redis://127.0.0.1:6379"),
 
+  // PII encryption (for Hackatime tokens etc.) — AES-GCM key, base64, 16/24/32 bytes
+  PII_ENCRYPTION_KEY: z
+    .string()
+    .default("")
+    .superRefine((value, ctx) => {
+      if (value === "") return;
+      let bytes = 0;
+      try {
+        bytes = Buffer.from(value, "base64").length;
+      } catch {
+        bytes = 0;
+      }
+      if (![16, 24, 32].includes(bytes)) {
+        ctx.addIssue({
+          code: "custom",
+          message: `PII_ENCRYPTION_KEY must decode to 16, 24, or 32 bytes (got ${bytes}).`,
+        });
+      }
+    }),
+
+  // Hackatime OAuth (optional — the link flow is disabled until both are set)
+  AUTH_HACKATIME_CLIENT_ID: z.string().min(1).optional(),
+  AUTH_HACKATIME_CLIENT_SECRET: z.string().min(1).optional(),
+
   // Email (provider interface)
   EMAIL_PROVIDER: z.enum(["mailpit", "loops"]).default("mailpit"),
   MAILPIT_URL: z.string().url().default("http://127.0.0.1:8025"),

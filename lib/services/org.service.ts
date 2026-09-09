@@ -1,5 +1,5 @@
 import { prisma } from "../prisma";
-import { hasRole, isSuperadminEmail, generateApiKey } from "../org";
+import { hasRole, isSuperadminEmail, generateApiKeyWithHash } from "../org";
 import { auditLog } from "../audit";
 import { getRequestId } from "../request-id";
 import type { Role, OrgRole } from "../../generated/prisma/enums";
@@ -90,7 +90,7 @@ export async function createOrgWithYSWS(input: {
       data: {
         name: org.name,
         slug: org.slug,
-        apiKeyHash: generateApiKey(),
+        apiKeyHash: (await generateApiKeyWithHash()).hash,
         isActive: true,
         orgId: org.id,
       },
@@ -285,8 +285,11 @@ export async function regenerateYSWSApiKey(yswsId: string, actorId: string) {
   const ysws = await prisma.ySWS.findUnique({ where: { id: yswsId } });
   if (!ysws) throw new Error("YSWS not found");
 
-  const newKey = generateApiKey();
-  await prisma.ySWS.update({ where: { id: yswsId }, data: { apiKeyHash: newKey } });
+  const { key, hash } = await generateApiKeyWithHash();
+  await prisma.ySWS.update({
+    where: { id: yswsId },
+    data: { apiKeyHash: hash, apiKeyDisplay: key.slice(-4) },
+  });
 
   await auditLog({
     entityType: "YSWS",
@@ -298,7 +301,7 @@ export async function regenerateYSWSApiKey(yswsId: string, actorId: string) {
     requestId: await getRequestId(),
   });
 
-  return newKey;
+  return key;
 }
 
 export async function setUserRole(email: string, role: Role, actorId: string) {

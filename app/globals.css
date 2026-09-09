@@ -27,7 +27,9 @@
   --dashboard-header-height: 100px;
   --sidebar-sticky-offset: calc(var(--header-height) + 1rem);
   --admin-sidebar-sticky-offset: calc(var(--admin-header-height) + 1rem);
-  --dashboard-sidebar-sticky-offset: calc(var(--dashboard-header-height) + 1rem);
+  --dashboard-sidebar-sticky-offset: calc(
+    var(--dashboard-header-height) + 1rem
+  );
 }
 
 @theme inline {
@@ -589,4 +591,202 @@ details[open] .faq-answer {
   height: 90px;
   object-fit: contain;
   border-radius: 0;
+}
+
+/* ---- /me game aesthetic ---- */
+
+/* Markdown rendering for /me journal entries */
+.journal-markdown h1,
+.journal-markdown h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+}
+.journal-markdown h1:first-child,
+.journal-markdown h2:first-child,
+.journal-markdown h3:first-child,
+.journal-markdown h4:first-child,
+.journal-markdown h5:first-child,
+.journal-markdown h6:first-child,
+.journal-markdown p:first-child {
+  margin-top: 0;
+}
+.journal-markdown h3,
+.journal-markdown h4,
+.journal-markdown h5,
+.journal-markdown h6 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+}
+.journal-markdown p {
+  margin: 0.5rem 0;
+  line-height: 1.625;
+}
+.journal-markdown a {
+  color: var(--govuk-blue);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.journal-markdown a:hover {
+  color: var(--govuk-blue-hover);
+}
+.journal-markdown ul {
+  list-style: disc;
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+.journal-markdown ol {
+  list-style: decimal;
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+.journal-markdown li {
+  margin: 0.25rem 0;
+}
+.journal-markdown :not(pre) > code {
+  background: var(--govuk-grey-1);
+  border: 1px solid var(--govuk-grey-2);
+  padding: 0 0.25rem;
+  border-radius: 0.25rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.875rem;
+}
+.journal-markdown pre {
+  background: var(--govuk-black);
+  color: var(--govuk-white);
+  padding: 1rem;
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.875rem;
+  margin: 0.75rem 0;
+}
+.journal-markdown pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  font-size: inherit;
+}
+.journal-markdown blockquote {
+  border-left: 4px solid var(--govuk-blue);
+  padding-left: 1rem;
+  margin: 0.75rem 0;
+  color: var(--govuk-grey-4);
+  font-style: italic;
+}
+.journal-markdown hr {
+  border: none;
+  border-top: 1px solid var(--govuk-grey-2);
+  margin: 1rem 0;
+}
+.journal-markdown table {
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+}
+.journal-markdown th,
+.journal-markdown td {
+  border: 1px solid var(--govuk-grey-2);
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+}
+.journal-markdown th {
+  background: var(--govuk-grey-1);
+  font-weight: 700;
+}
+
+/* Big playful game button — only for important actions */
+.btn-game {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #00d875;
+  color: #293500;
+  font-weight: 800;
+  font-size: 1rem;
+  border: 8px solid #ffffff;
+  border-radius: 40px;
+  padding: 0.5rem 1.75rem 0.5rem 1.25rem;
+  box-shadow:
+    0 6px 0 0 #00a85d,
+    0 10px 14px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.1s ease;
+}
+.btn-game:hover {
+  background: #06e580;
+  transform: translateY(-1px);
+}
+.btn-game:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 0 #00a85d;
+}
+.btn-game:focus-visible {
+  outline: 3px solid var(--govuk-focus);
+  outline-offset: 2px;
+}
+.btn-game:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Dotted game-style container */
+.game-box {
+  background: #fffef5;
+  border: 3px dotted #b5b09a;
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+/* Round plus button */
+.game-box__plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  background: #00d875;
+  color: #293500;
+  font-size: 1.5rem;
+  font-weight: 800;
+  border: 4px solid #ffffff;
+  box-shadow: 0 3px 0 0 #00a85d;
+  line-height: 1;
+}
+
+/* Game modal */
+.game-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(41, 53, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+.game-popup {
+  background: #ffffff;
+  border: 3px dotted #b5b09a;
+  border-radius: 24px;
+  max-width: 34rem;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 1.5rem;
+  box-shadow: 0 10px 0 0 rgba(0, 0, 0, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-game,
+  .btn-game:hover,
+  .btn-game:active {
+    transform: none;
+    transition: none;
+  }
 }

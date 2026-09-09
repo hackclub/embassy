@@ -170,7 +170,7 @@ export default function AdminActivityClient({
             className: "w-32",
             render: (e: EventRow) => (
               <>
-                <span className="font-mono text-xs">{e.actor.slice(0, 8)}…</span>
+                <span className="font-mono text-xs">{e.actor.slice(0, 8)}...</span>
                 <span className="block text-xs text-govuk-grey-4">{e.actorType ?? "—"}</span>
               </>
             ),

@@ -23,7 +23,7 @@ if [[ "$BASE" == https:* ]]; then
     fail "X-Frame-Options header missing (Caddy not applying headers?)"
   fi
 else
-  echo "  skip (local URL — headers are Caddy's job)"
+  echo "  skip (local URL — headers are Caddy's job)" 
 fi
 
 echo "→ rate limiting"
