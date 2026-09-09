@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "*.hackclub.com" },
+      { protocol: "https", hostname: "*.hackclub-assets.com" }, // cdn and stuff
       { protocol: "https", hostname: "avatars.githubusercontent.com" },
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
     ],
