@@ -6,6 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { generateApiKey, generateApiKeyWithHash, getCurrentUserWithRole, hasRole, isSuperadminEmail } from "@/lib/org";
 import { verifyYSWSAccess } from "@/lib/ysws-context";
+import { adjustCredits } from "@/lib/services/credits.service";
 import type { Role } from "../../generated/prisma/client";
 
 const addOrganizerSchema = z.object({
@@ -233,5 +234,65 @@ export async function issuePassportAdminAction(
     ok: linkedUser
       ? `Order created for ${linkedUser.name ?? email}.`
       : `Order created for ${parsed.data.recipientName} (${email}).`,
+  };
+}
+
+const adjustCreditsSchema = z.object({
+  userId: z.string().min(1, "Missing user"),
+  amount: z
+    .string()
+    .trim()
+    .regex(/^-?\d+$/, "Enter a whole number (positive to add, negative to remove)")
+    .transform(Number),
+  description: z
+    .string()
+    .trim()
+    .min(2, "Add a short note for the credit history")
+    .max(200, "Note is too long"),
+});
+
+export async function adjustCreditsAction(
+  _prev: AdminFormState,
+  formData: FormData
+): Promise<AdminFormState> {
+  const actor = await getCurrentUserWithRole();
+  if (!actor) redirect("/api/auth/signin?callbackUrl=/admin");
+  if (!hasRole(actor.role, "ADMIN")) {
+    return { error: "Admins and superadmins can adjust credits." };
+  }
+
+  const parsed = adjustCreditsSchema.safeParse({
+    userId: formData.get("userId"),
+    amount: formData.get("amount"),
+    description: formData.get("description"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid details." };
+  }
+
+  const target = await prisma.user.findUnique({
+    where: { id: parsed.data.userId },
+    select: { id: true, name: true, email: true },
+  });
+  if (!target) return { error: "No account found with that id." };
+
+  const { amount } = parsed.data;
+  if (amount === 0) return { error: "Amount cannot be zero." };
+
+  const sign = amount > 0 ? "+" : "";
+  const note = `${actor.name ?? actor.email ?? "admin"}: ${parsed.data.description}`;
+
+  try {
+    await adjustCredits(target.id, amount, note);
+  } catch (e) {
+    if ((e as { code?: string } | null)?.code === "INSUFFICIENT_CREDITS") {
+      return { error: "That would take the balance below zero." };
+    }
+    return { error: "Something went wrong adjusting credits." };
+  }
+
+  revalidatePath(`/admin/users/${target.id}`);
+  return {
+    ok: `${sign}${amount} credits applied to ${target.name ?? target.email}.`,
   };
 }

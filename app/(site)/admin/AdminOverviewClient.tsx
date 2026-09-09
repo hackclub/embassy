@@ -310,7 +310,7 @@ export default function AdminOverviewClient({
                 sortable: true,
                 render: (e: EventRow) => (
                   <Link href={`/admin/orders/${e.orderId}`} className="font-mono text-sm hover:underline">
-                    {e.orderId.slice(0, 8)}…
+                    {e.orderId.slice(0, 8)}...
                   </Link>
                 ),
               },

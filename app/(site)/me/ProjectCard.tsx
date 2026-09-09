@@ -6,6 +6,7 @@ import JournalMarkdown from "./JournalMarkdown";
 import {
   createJournalAction,
   deleteJournalAction,
+  deleteProjectAction,
   type MeFormState,
 } from "@/app/actions/me";
 
@@ -116,17 +117,41 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
             </div>
 
             {editing ? (
-              <ProjectForm
-                projectId={project.id}
-                defaultValues={{
-                  title: project.title,
-                  description: project.description ?? undefined,
-                  githubUrl: project.githubUrl ?? undefined,
-                  demoUrl: project.demoUrl ?? undefined,
-                  hackatimeProject: project.hackatimeProject,
-                }}
-                onSuccess={() => setOpen(false)}
-              />
+              <>
+                <ProjectForm
+                  projectId={project.id}
+                  defaultValues={{
+                    title: project.title,
+                    description: project.description ?? undefined,
+                    githubUrl: project.githubUrl ?? undefined,
+                    demoUrl: project.demoUrl ?? undefined,
+                    hackatimeProject: project.hackatimeProject,
+                  }}
+                  onSuccess={() => setOpen(false)}
+                />
+                <form
+                  action={async (formData) => {
+                    if (
+                      !window.confirm(
+                        `Delete "${project.title}"? This also deletes its ${project.journalEntries.length} journal ${project.journalEntries.length === 1 ? "entry" : "entries"}.`,
+                      )
+                    ) {
+                      return;
+                    }
+                    await deleteProjectAction(formData);
+                    setOpen(false);
+                  }}
+                  className="mt-4 border-t-2 border-dashed border-govuk-grey-2 pt-3"
+                >
+                  <input type="hidden" name="projectId" value={project.id} />
+                  <button
+                    type="submit"
+                    className="text-sm font-semibold text-hc-red underline underline-offset-4 hover:opacity-80"
+                  >
+                    Delete project
+                  </button>
+                </form>
+              </>
             ) : (
               <JournalPanel project={project} />
             )}

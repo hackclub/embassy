@@ -1,19 +1,35 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithRole } from "@/lib/org";
-import JournalMarkdown from "../JournalMarkdown";
+import JournalEntryCard from "../JournalEntryCard";
 
 export default async function JournalPage() {
   const user = await getCurrentUserWithRole();
   if (!user) return null;
 
-  const entries = await prisma.journalEntry.findMany({
-    where: { userId: user.id },
-    orderBy: { entryDate: "desc" },
-    include: { project: { select: { id: true, title: true } } },
-  });
+  const [entries, projects] = await Promise.all([
+    prisma.journalEntry.findMany({
+      where: { userId: user.id },
+      orderBy: { entryDate: "desc" },
+      include: { project: { select: { id: true, title: true } } },
+    }),
+    prisma.project.findMany({
+      where: { userId: user.id },
+      orderBy: { updatedAt: "desc" },
+      select: { id: true, title: true },
+    }),
+  ]);
 
-  const projectCount = await prisma.project.count({ where: { userId: user.id } });
+  const projectCount = projects.length;
+
+  const entryData = entries.map((e) => ({
+    id: e.id,
+    title: e.title,
+    content: e.content,
+    entryDate: e.entryDate.toISOString().slice(0, 10),
+    projectId: e.projectId,
+    project: e.project ? { id: e.project.id, title: e.project.title } : null,
+  }));
 
   return (
     <div>
@@ -37,28 +53,8 @@ export default async function JournalPage() {
         </div>
       ) : (
         <ul className="space-y-6" role="list">
-          {entries.map((entry) => (
-            <li key={entry.id} className="game-box !p-5">
-              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-lg font-bold leading-tight">{entry.title}</h2>
-                <span className="text-sm text-govuk-grey-4">
-                  {new Intl.DateTimeFormat("en-GB", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  }).format(entry.entryDate)}
-                </span>
-              </div>
-              {entry.project && (
-                <Link
-                  href="/me/projects"
-                  className="govuk-tag govuk-tag--grey mb-3 inline-block text-xs"
-                >
-                  {entry.project.title}
-                </Link>
-              )}
-              <JournalMarkdown content={entry.content} />
-            </li>
+          {entryData.map((entry) => (
+            <JournalEntryCard key={entry.id} entry={entry} projects={projects} />
           ))}
         </ul>
       )}

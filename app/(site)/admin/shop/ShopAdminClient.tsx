@@ -239,7 +239,7 @@ function ItemFields({ item }: { item?: ItemRow }) {
         <input
           id="category"
           name="category"
-          placeholder="swag, tech, passport…"
+          placeholder="swag, tech, passport..."
           defaultValue={item?.category ?? ""}
           className="w-full border-2 border-govuk-black px-3 py-2 text-base"
         />
@@ -282,7 +282,7 @@ function ItemFields({ item }: { item?: ItemRow }) {
           id="imageUrl"
           name="imageUrl"
           type="url"
-          placeholder="https://…"
+          placeholder="https://..."
           defaultValue={item?.imageUrl ?? ""}
           className="w-full border-2 border-govuk-black px-3 py-2 text-base"
         />

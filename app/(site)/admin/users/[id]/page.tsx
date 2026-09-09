@@ -9,12 +9,24 @@ import StatusBadge from "@/app/components/StatusBadge";
 import { mapUserRoleToVariant } from "@/app/components/status-variant";
 import ServerTable from "@/app/components/ServerTable";
 import Link from "next/link";
+import AdjustCreditsForm from "./AdjustCreditsForm";
+import { getBalance, getTransactionHistory } from "@/lib/services/credits.service";
 
 function dateLabel(d: Date) {
   return new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
     month: "short",
     year: "numeric",
+  }).format(d);
+}
+
+function dateTimeLabel(d: Date) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   }).format(d);
 }
 
@@ -60,6 +72,11 @@ export default async function AdminUserDetailPage({
   }
 
   const globalRoles = targetUser.role ? [targetUser.role] : [];
+
+  const [balance, transactions] = await Promise.all([
+    getBalance(id),
+    getTransactionHistory(id, 10),
+  ]);
 
   return (
     <>
@@ -167,6 +184,56 @@ export default async function AdminUserDetailPage({
             </Section>
           )}
 
+          {/* Credit history */}
+          {transactions.length > 0 && (
+            <Section
+              title="Credit history"
+              description="Latest 10 movements on this balance."
+              divider={false}
+            >
+              <ServerTable
+                columns={[
+                  {
+                    key: "amount",
+                    header: "Amount",
+                    className: "w-28",
+                    render: (t: typeof transactions[0]) => (
+                      <span
+                        className={`font-extrabold ${
+                          t.amount > 0 ? "text-govuk-green" : "text-hc-red"
+                        }`}
+                      >
+                        {t.amount > 0 ? "+" : ""}
+                        {t.amount}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: "type",
+                    header: "Type",
+                    className: "w-28",
+                    render: (t: typeof transactions[0]) => t.type,
+                  },
+                  {
+                    key: "description",
+                    header: "Note",
+                    render: (t: typeof transactions[0]) =>
+                      t.description ?? "&mdash;",
+                  },
+                  {
+                    key: "created",
+                    header: "Created",
+                    className: "w-40 whitespace-nowrap",
+                    render: (t: typeof transactions[0]) => dateTimeLabel(t.createdAt),
+                  },
+                ]}
+                data={transactions}
+                rowKey="id"
+                emptyMessage="No credit movements yet."
+              />
+            </Section>
+          )}
+
           {/* Created orders */}
           {targetUser.createdOrders.length > 0 && (
             <Section title="Created orders" description="Latest 10 orders created by this user." divider={false}>
@@ -227,6 +294,10 @@ export default async function AdminUserDetailPage({
                 </Link>
               )}
             </div>
+          </Section>
+
+          <Section title="Credits" divider={false}>
+            <AdjustCreditsForm userId={id} balance={balance} />
           </Section>
         </aside>
       </div>

@@ -184,8 +184,7 @@ export default async function MeHome({
           {projectCount === 0 ? (
             <div className="game-box flex flex-col items-center gap-4 py-12 text-center">
               <p className="max-w-sm text-govuk-grey-4">
-                Projects are where your work lives — add one, then keep a
-                journal on it as you build.
+                Get started by adding a project!
               </p>
               <NewProjectButton />
             </div>
@@ -222,12 +221,11 @@ export default async function MeHome({
                   linked
                     ? undefined
                     : configured
-                      ? "Optional, unlocks the shop."
+                      ? ""
                       : undefined
                 }
               >
-                <a
-                  href={linked ? undefined : "/api/hackatime/authorize"}
+                <span
                   className={
                     linked
                       ? undefined
@@ -235,7 +233,7 @@ export default async function MeHome({
                   }
                 >
                   Link Hackatime
-                </a>
+                </span>
               </TaskRow>
               <TaskRow
                 done={tasksDone.project}
