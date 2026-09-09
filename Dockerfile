@@ -29,8 +29,8 @@ RUN bunx prisma generate
 # Stage 4: Build the application
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=prisma /app/generated ./generated
 COPY . .
+COPY --from=prisma /app/generated ./generated
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN bun run build
 
