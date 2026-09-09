@@ -3,12 +3,13 @@ import { getCurrentUser } from "@/lib/org";
 import {
   exchangeCodeForToken,
   fetchMe,
+  getBaseUrl,
   HACKATIME_STATE_COOKIE,
   linkUser,
 } from "@/lib/hackatime";
 
 function redirectTo(request: NextRequest, status: string): NextResponse {
-  const res = NextResponse.redirect(new URL(`/me?hackatime=${status}`, request.url));
+  const res = NextResponse.redirect(new URL(`/me?hackatime=${status}`, getBaseUrl()));
   res.cookies.delete(HACKATIME_STATE_COOKIE);
   return res;
 }
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.redirect(
-      new URL("/api/auth/signin?callbackUrl=%2Fme", request.url)
+      new URL("/api/auth/signin?callbackUrl=%2Fme", getBaseUrl())
     );
   }
 
@@ -34,8 +35,7 @@ export async function GET(request: NextRequest) {
     return redirectTo(request, "denied");
   }
 
-  const origin = request.nextUrl.origin;
-  const token = await exchangeCodeForToken(code, origin);
+  const token = await exchangeCodeForToken(code);
   if (!token) {
     return redirectTo(request, "token_error");
   }

@@ -25,11 +25,35 @@ export function isHackatimeConfigured(): boolean {
   );
 }
 
-export function getRedirectUri(origin: string): string {
-  return `${origin}/api/hackatime/callback`;
+/**
+ * Find canonical Base URL. Prefers AUTH_URL.
+ * Default: env: AUTH_URL
+ * Fallback: Headers (req origin)
+ */
+export function getBaseUrl(origin?: string): string {
+  const envUrl = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL;
+  if (envUrl) {
+    try {
+      return new URL(envUrl).origin;
+    } catch {
+      // fall through: request origin
+    }
+  }
+  if (origin) {
+    try {
+      return new URL(origin).origin;
+    } catch {
+      // fall through
+    }
+  }
+  return "http://localhost:3000";
 }
 
-export function buildAuthorizeUrl(origin: string, state: string): string {
+export function getRedirectUri(origin?: string): string {
+  return `${getBaseUrl(origin)}/api/hackatime/callback`;
+}
+
+export function buildAuthorizeUrl(state: string, origin?: string): string {
   const url = new URL(HACKATIME.authorizeUrl);
   url.searchParams.set("client_id", process.env.AUTH_HACKATIME_CLIENT_ID ?? "");
   url.searchParams.set("redirect_uri", getRedirectUri(origin));
@@ -41,7 +65,7 @@ export function buildAuthorizeUrl(origin: string, state: string): string {
 
 export async function exchangeCodeForToken(
   code: string,
-  origin: string
+  origin?: string
 ): Promise<{ access_token: string } | null> {
   try {
     const res = await fetch(HACKATIME.tokenUrl, {
