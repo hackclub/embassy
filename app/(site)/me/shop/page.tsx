@@ -94,14 +94,6 @@ export default async function ShopPage({
         </div>
       )}
 
-      {configured && !linked && (
-        <div className="mb-8">
-          <a href="/api/hackatime/authorize" className="govuk-button">
-            Link Hackatime
-          </a>
-        </div>
-      )}
-
       {items.length === 0 ? (
         <div className="rounded-xl border border-govuk-grey-2 bg-white py-12 text-center">
           <p className="text-govuk-grey-4">Nothing in the shop right now — check back soon.</p>

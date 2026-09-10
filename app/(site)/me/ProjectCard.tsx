@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useActionState } from "react";
+import { createPortal } from "react-dom";
 import ProjectForm from "./ProjectForm";
 import JournalMarkdown from "./JournalMarkdown";
 import { useBodyScrollLock } from "./useBodyScrollLock";
@@ -11,7 +12,8 @@ import {
   type MeFormState,
 } from "@/app/actions/me";
 
-const inputClass = "w-full rounded-sm border-2 border-govuk-black px-3 py-2 text-base";
+const inputClass =
+  "w-full rounded-sm border-2 border-govuk-black px-3 py-2 text-base";
 
 export type ProjectCardData = {
   id: string;
@@ -20,7 +22,12 @@ export type ProjectCardData = {
   githubUrl: string | null;
   demoUrl: string | null;
   hackatimeProject: string | null;
-  journalEntries: { id: string; title: string; content: string; entryDate: string }[];
+  journalEntries: {
+    id: string;
+    title: string;
+    content: string;
+    entryDate: string;
+  }[];
 };
 
 export default function ProjectCard({ project }: { project: ProjectCardData }) {
@@ -29,14 +36,14 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
   useBodyScrollLock(open);
 
   return (
-    <div className="game-box flex flex-col !p-0">
+    <div className="project-card flex flex-col">
       <button
         type="button"
         onClick={() => {
           setEditing(false);
           setOpen(true);
         }}
-        className="block w-full rounded-t-[21px] p-5 text-left"
+        className="block w-full rounded-t-[11px] p-5 text-left"
         aria-haspopup="dialog"
       >
         <div className="flex items-start justify-between gap-3">
@@ -50,13 +57,14 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
             {project.description}
           </p>
         )}
-        <p className="mt-3 text-sm font-semibold text-govuk-blue">
+        <p className="mt-3 text-sm text-govuk-grey-4">
           {project.journalEntries.length}{" "}
-          {project.journalEntries.length === 1 ? "entry" : "entries"} | tap to journal
+          {project.journalEntries.length === 1 ? "entry" : "entries"} · tap to
+          journal
         </p>
       </button>
 
-      <div className="flex items-center gap-4 border-t-2 border-dashed border-govuk-grey-2 px-5 py-3">
+      <div className="flex items-center gap-4 border-t border-govuk-grey-2 px-5 py-3">
         {project.githubUrl ? (
           <a
             href={project.githubUrl}
@@ -91,85 +99,87 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
         </button>
       </div>
 
-      {open && (
-        <div
-          className="game-popup-backdrop"
-          onClick={() => setOpen(false)}
-          role="presentation"
-        >
+      {open &&
+        createPortal(
           <div
-            className="game-popup"
-            role="dialog"
-            aria-modal="true"
-            aria-label={editing ? "Edit project" : `${project.title} journal`}
-            onClick={(e) => e.stopPropagation()}
+            className="game-popup-backdrop"
+            onClick={() => setOpen(false)}
+            role="presentation"
           >
-            <div className="mb-4 flex items-center justify-between gap-4">
-              <h2 className="text-xl font-bold">
-                {editing ? "Edit project" : `${project.title} — journal`}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="text-2xl leading-none text-govuk-grey-4 hover:text-govuk-black"
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-
-            {editing ? (
-              <>
-                <ProjectForm
-                  projectId={project.id}
-                  defaultValues={{
-                    title: project.title,
-                    description: project.description ?? undefined,
-                    githubUrl: project.githubUrl ?? undefined,
-                    demoUrl: project.demoUrl ?? undefined,
-                    hackatimeProject: project.hackatimeProject,
-                  }}
-                  onSuccess={() => setOpen(false)}
-                />
-                <form
-                  action={async (formData) => {
-                    if (
-                      !window.confirm(
-                        `Delete "${project.title}"? This also deletes its ${project.journalEntries.length} journal ${project.journalEntries.length === 1 ? "entry" : "entries"}.`,
-                      )
-                    ) {
-                      return;
-                    }
-                    await deleteProjectAction(formData);
-                    setOpen(false);
-                  }}
-                  className="mt-4 border-t-2 border-dashed border-govuk-grey-2 pt-3"
+            <div
+              className="game-popup"
+              role="dialog"
+              aria-modal="true"
+              aria-label={editing ? "Edit project" : `${project.title} journal`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <h2 className="text-xl font-bold">
+                  {editing ? "Edit project" : `${project.title} — journal`}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="text-2xl leading-none text-govuk-grey-4 hover:text-govuk-black"
+                  aria-label="Close"
                 >
-                  <input type="hidden" name="projectId" value={project.id} />
-                  <button
-                    type="submit"
-                    className="text-sm font-semibold text-hc-red underline underline-offset-4 hover:opacity-80"
-                  >
-                    Delete project
-                  </button>
-                </form>
-              </>
-            ) : (
-              <JournalPanel project={project} />
-            )}
+                  ×
+                </button>
+              </div>
 
-            <div className="mt-4 border-t-2 border-dashed border-govuk-grey-2 pt-3">
-              <button
-                type="button"
-                onClick={() => setEditing(!editing)}
-                className="text-sm font-semibold text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
-              >
-                {editing ? "Back to journal" : "Edit project details"}
-              </button>
+              {editing ? (
+                <>
+                  <ProjectForm
+                    projectId={project.id}
+                    defaultValues={{
+                      title: project.title,
+                      description: project.description ?? undefined,
+                      githubUrl: project.githubUrl ?? undefined,
+                      demoUrl: project.demoUrl ?? undefined,
+                      hackatimeProject: project.hackatimeProject,
+                    }}
+                    onSuccess={() => setOpen(false)}
+                  />
+                  <form
+                    action={async (formData) => {
+                      if (
+                        !window.confirm(
+                          `Delete "${project.title}"? This also deletes its ${project.journalEntries.length} journal ${project.journalEntries.length === 1 ? "entry" : "entries"}.`,
+                        )
+                      ) {
+                        return;
+                      }
+                      await deleteProjectAction(formData);
+                      setOpen(false);
+                    }}
+                    className="mt-4 border-t-2 border-dashed border-govuk-grey-2 pt-3"
+                  >
+                    <input type="hidden" name="projectId" value={project.id} />
+                    <button
+                      type="submit"
+                      className="text-sm font-semibold text-hc-red underline underline-offset-4 hover:opacity-80"
+                    >
+                      Delete project
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <JournalPanel project={project} />
+              )}
+
+              <div className="mt-4 border-t-2 border-dashed border-govuk-grey-2 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setEditing(!editing)}
+                  className="text-sm font-semibold text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
+                >
+                  {editing ? "Back to journal" : "Edit project details"}
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -236,7 +246,7 @@ function DeleteEntryButton({ entryId }: { entryId: string }) {
 function NewEntryForm({ project }: { project: ProjectCardData }) {
   const [state, formAction, pending] = useActionState<MeFormState, FormData>(
     createJournalAction,
-    undefined
+    undefined,
   );
   const [content, setContent] = useState("");
   const [touched, setTouched] = useState(false);
@@ -258,9 +268,14 @@ function NewEntryForm({ project }: { project: ProjectCardData }) {
           })}`}
         />
         <div>
-          <label htmlFor={`entry-content-${project.id}`} className="mb-2 block font-bold">
+          <label
+            htmlFor={`entry-content-${project.id}`}
+            className="mb-2 block font-bold"
+          >
             What did you build today?{" "}
-            <span className="font-normal text-govuk-grey-4">(markdown supported)</span>
+            <span className="font-normal text-govuk-grey-4">
+              (markdown supported)
+            </span>
           </label>
           <textarea
             id={`entry-content-${project.id}`}
@@ -276,13 +291,20 @@ function NewEntryForm({ project }: { project: ProjectCardData }) {
             }`}
           />
           {contentLength > 0 && contentLength < 10 && (
-            <p id={`entry-content-error-${project.id}`} className="mt-2 text-sm font-semibold text-hc-red">
-              {10 - contentLength} more character{10 - contentLength === 1 ? "" : "s"} needed
+            <p
+              id={`entry-content-error-${project.id}`}
+              className="mt-2 text-sm font-semibold text-hc-red"
+            >
+              {10 - contentLength} more character
+              {10 - contentLength === 1 ? "" : "s"} needed
             </p>
           )}
         </div>
         {state?.error && (
-          <p role="alert" className="border-l-4 border-hc-red px-3 py-2 font-semibold">
+          <p
+            role="alert"
+            className="border-l-4 border-hc-red px-3 py-2 font-semibold"
+          >
             {state.error}
           </p>
         )}

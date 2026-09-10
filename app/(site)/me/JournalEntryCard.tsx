@@ -31,7 +31,7 @@ export default function JournalEntryCard({
   }).format(new Date(entry.entryDate));
 
   return (
-    <li className="game-box !p-5">
+    <li className="project-card p-5">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-bold leading-tight">{entry.title}</h2>
         <div className="flex items-center gap-4 text-sm">

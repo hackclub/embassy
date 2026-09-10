@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithRole } from "@/lib/org";
-import { isHackatimeConfigured, getHackatimeHours } from "@/lib/hackatime";
+import { isHackatimeConfigured } from "@/lib/hackatime";
 import { getTransactionHistory } from "@/lib/services/credits.service";
 import ProjectCard from "./ProjectCard";
 import NewProjectButton from "./NewProjectButton";
@@ -82,7 +82,7 @@ export default async function MeHome({
     },
   });
 
-  const [submissions, transactions, hours] = await Promise.all([
+  const [submissions, transactions] = await Promise.all([
     prisma.submission.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
@@ -96,7 +96,6 @@ export default async function MeHome({
       },
     }),
     getTransactionHistory(user.id, 10),
-    linked ? getHackatimeHours(user.id) : Promise.resolve(null),
   ]);
 
   const projectCount = projects.length;
@@ -246,7 +245,7 @@ export default async function MeHome({
           </div>
           <ul className="grid gap-4 sm:grid-cols-2" role="list">
             {recentEntries.map((entry) => (
-              <li key={entry.id} className="game-box">
+              <li key={entry.id} className="project-card p-5">
                 <p className="text-xs font-bold uppercase tracking-wide text-govuk-grey-4">
                   {entry.projectTitle}
                 </p>
@@ -306,60 +305,39 @@ export default async function MeHome({
         </section>
       )}
 
-      {(linked && hours !== null) || transactions.length > 0 ? (
+      {transactions.length > 0 ? (
         <section className="mt-10 grid gap-8 lg:grid-cols-2">
-          {linked && hours !== null && (
-            <div className="game-box">
-              <h2 className="mb-2 font-extrabold uppercase tracking-wide text-govuk-grey-4">
-                Hackatime
-              </h2>
-              <p className="text-3xl font-bold">{hours}h</p>
-              <p className="mt-1 text-sm text-govuk-grey-4">
-                total tracked time
-              </p>
-              <Link
-                href="https://hackatime.hackclub.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 inline-block text-sm font-semibold text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
-              >
-                View on Hackatime →
-              </Link>
-            </div>
-          )}
-          {transactions.length > 0 && (
-            <div className="game-box">
-              <h2 className="mb-2 font-extrabold uppercase tracking-wide text-govuk-grey-4">
-                Recent activity
-              </h2>
-              <ul
-                className="divide-y-2 divide-dashed divide-govuk-grey-2"
-                role="list"
-              >
-                {transactions.map((t) => (
-                  <li
-                    key={t.id}
-                    className="flex items-center justify-between gap-3 py-2"
+          <div className="game-box">
+            <h2 className="mb-2 font-extrabold uppercase tracking-wide text-govuk-grey-4">
+              Recent activity
+            </h2>
+            <ul
+              className="divide-y-2 divide-dashed divide-govuk-grey-2"
+              role="list"
+            >
+              {transactions.map((t) => (
+                <li
+                  key={t.id}
+                  className="flex items-center justify-between gap-3 py-2"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">
+                      {t.description ?? "Credits"}
+                    </p>
+                    <p className="text-xs text-govuk-grey-4">{t.type}</p>
+                  </div>
+                  <span
+                    className={`shrink-0 text-sm font-extrabold ${
+                      t.amount > 0 ? "text-[#00a85d]" : "text-hc-red"
+                    }`}
                   >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">
-                        {t.description ?? "Credits"}
-                      </p>
-                      <p className="text-xs text-govuk-grey-4">{t.type}</p>
-                    </div>
-                    <span
-                      className={`shrink-0 text-sm font-extrabold ${
-                        t.amount > 0 ? "text-[#00a85d]" : "text-hc-red"
-                      }`}
-                    >
-                      {t.amount > 0 ? "+" : ""}
-                      {t.amount}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+                    {t.amount > 0 ? "+" : ""}
+                    {t.amount}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
       ) : null}
     </>
