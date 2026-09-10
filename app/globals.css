@@ -79,6 +79,13 @@ body {
 .font-hc {
   font-family: var(--font-zarathustra), "Georgia", serif;
 }
+
+/* ---- Open Runde (used across the /me area) ---- */
+.font-runde,
+.game-popup {
+  font-family: var(--font-runde), var(--font-gds), sans-serif;
+  font-weight: 600;
+}
 .text-hc {
   color: var(--hc-red);
 }
@@ -761,18 +768,29 @@ details[open] .faq-answer {
   background: #ffffff;
   border: 1px solid var(--govuk-grey-2);
   border-radius: 12px;
-  outline: 2px dotted transparent;
-  outline-offset: 2px;
-  transition:
-    outline-color 200ms ease,
-    transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 250ms ease;
+  transition: background-color 150ms ease;
 }
-.project-card:hover,
-.project-card:focus-within {
-  outline-color: #f59e0b;
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+.project-card-clickable:hover {
+  background: #faf9f6;
+}
+.project-card-clickable:has(:focus-visible) {
+  outline: 2px dotted #f59e0b;
+  outline-offset: 2px;
+}
+
+/* "Add" slot: same language as project cards, dashed to read as empty */
+.project-card-add {
+  background: #ffffff;
+  border: 1px dashed var(--govuk-grey-2);
+  border-radius: 12px;
+  transition: background-color 150ms ease;
+}
+.project-card-add:hover {
+  background: #faf9f6;
+}
+.project-card-add:focus-visible {
+  outline: 2px dotted #f59e0b;
+  outline-offset: 2px;
 }
 
 /* Round plus button */

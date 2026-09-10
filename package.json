@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",
+    "@fontsource/open-runde": "^5.3.0",
     "@node-rs/argon2": "^2.2.0",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",

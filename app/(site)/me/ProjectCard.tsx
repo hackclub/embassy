@@ -36,67 +36,63 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
   useBodyScrollLock(open);
 
   return (
-    <div className="project-card flex flex-col">
+    <div className="project-card project-card-clickable relative">
       <button
         type="button"
         onClick={() => {
           setEditing(false);
           setOpen(true);
         }}
-        className="block w-full rounded-t-[11px] p-5 text-left"
+        className="absolute inset-0 z-0"
         aria-haspopup="dialog"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="text-lg font-bold leading-tight">{project.title}</h3>
-          {/*<span className="game-box__plus shrink-0 !h-8 !w-8 !text-lg" aria-hidden="true">
-            +
-          </span>*/}
-        </div>
+        aria-label={`Open journal for ${project.title}`}
+      />
+      <div className="pointer-events-none relative z-10 p-4">
+        <h3 className="text-base leading-tight">{project.title}</h3>
         {project.description && (
-          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-govuk-grey-4">
+          <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-govuk-grey-4">
             {project.description}
           </p>
         )}
-        <p className="mt-3 text-sm text-govuk-grey-4">
+        <p className="mt-2 text-xs text-govuk-grey-4">
           {project.journalEntries.length}{" "}
           {project.journalEntries.length === 1 ? "entry" : "entries"} · tap to
           journal
         </p>
-      </button>
-
-      <div className="flex items-center gap-4 border-t border-govuk-grey-2 px-5 py-3">
-        {project.githubUrl ? (
-          <a
-            href={project.githubUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-semibold text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
+        <div className="mt-3 flex items-center gap-3 text-xs">
+          {project.githubUrl ? (
+            <a
+              href={project.githubUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pointer-events-auto text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
+            >
+              Code
+            </a>
+          ) : (
+            <span className="text-govuk-grey-4">No code link yet</span>
+          )}
+          {project.demoUrl && (
+            <a
+              href={project.demoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pointer-events-auto text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
+            >
+              Demo
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setEditing(true);
+              setOpen(true);
+            }}
+            className="pointer-events-auto ml-auto font-semibold text-govuk-grey-4 underline underline-offset-4 hover:text-govuk-black"
           >
-            Code
-          </a>
-        ) : (
-          <span className="text-sm text-govuk-grey-4">No code link yet</span>
-        )}
-        {project.demoUrl && (
-          <a
-            href={project.demoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-semibold text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
-          >
-            Demo
-          </a>
-        )}
-        <button
-          type="button"
-          onClick={() => {
-            setEditing(true);
-            setOpen(true);
-          }}
-          className="ml-auto text-sm font-semibold text-govuk-grey-4 underline underline-offset-4 hover:text-govuk-black"
-        >
-          Edit
-        </button>
+            Edit
+          </button>
+        </div>
       </div>
 
       {open &&

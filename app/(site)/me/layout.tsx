@@ -7,7 +7,7 @@ export default async function MeLayout({ children }: { children: React.ReactNode
   if (!user) redirect("/api/auth/signin?callbackUrl=/me");
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
+    <div className="font-runde mx-auto max-w-6xl px-6 py-8">
       <MeTabs />
       {children}
     </div>

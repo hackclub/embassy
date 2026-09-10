@@ -10,6 +10,28 @@ const zarathustra = localFont({
   display: "swap",
 });
 
+const runde = localFont({
+  variable: "--font-runde",
+  src: [
+    {
+      path: "../node_modules/@fontsource/open-runde/files/open-runde-latin-400-normal.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../node_modules/@fontsource/open-runde/files/open-runde-latin-600-normal.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../node_modules/@fontsource/open-runde/files/open-runde-latin-700-normal.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  display: "swap",
+});
+
 const inter = Inter({
   variable: "--font-gds",
   subsets: ["latin"],
@@ -38,7 +60,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${zarathustra.variable} h-full antialiased`}
+      className={`${inter.variable} ${zarathustra.variable} ${runde.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-govuk-white text-govuk-text">
         {children}

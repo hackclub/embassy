@@ -41,7 +41,7 @@ function TaskRow({
   return (
     <li className="py-1.5">
       {href && !done ? (
-        <Link href={href} className="block rounded-sm px-1 py-1 hover:bg-white">
+        <Link href={href} className="block rounded-sm px-1 py-1 hover:bg-govuk-grey-4/10">
           {label}
         </Link>
       ) : (
@@ -157,7 +157,7 @@ export default async function MeHome({
         </div>
       )}
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
+      <div className="grid gap-x-4 gap-y-8 lg:grid-cols-[1fr_300px]">
         <section aria-label="Your projects">
           {projectCount === 0 ? (
             <div className="game-box flex flex-col items-center gap-4 py-12 text-center">
@@ -167,26 +167,22 @@ export default async function MeHome({
               <NewProjectButton />
             </div>
           ) : (
-            <>
-              <div className="grid gap-5 sm:grid-cols-2">
-                {projectCards.map((project) => (
-                  <ProjectCard key={project.id} project={project} />
-                ))}
-              </div>
-              <div className="mt-6">
-                <NewProjectButton />
-              </div>
-            </>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {projectCards.map((project) => (
+                <ProjectCard key={project.id} project={project} />
+              ))}
+              <NewProjectButton variant="tile" />
+            </div>
           )}
         </section>
 
         <aside aria-label="Getting started" className="self-start">
-          <div className="rounded-xl border border-govuk-grey-2 bg-white p-5">
+          <div className="rounded-xl border border-govuk-grey-2 bg-white p-4">
             <h2 className="mb-2 font-extrabold uppercase tracking-wide text-govuk-grey-4">
               Getting started
             </h2>
             <ul
-              className="divide-y-2 divide-dashed divide-govuk-grey-2"
+              className="divide-y divide-govuk-grey-2"
               role="list"
             >
               <TaskRow
@@ -206,7 +202,9 @@ export default async function MeHome({
               </TaskRow>
               <TaskRow
                 done={tasksDone.project}
-                hint={tasksDone.project ? undefined : "Use the green button."}
+                hint={
+                  tasksDone.project ? undefined : "Use the New project button."
+                }
               >
                 Add a project
               </TaskRow>
@@ -233,7 +231,7 @@ export default async function MeHome({
       </div>
 
       {recentEntries.length > 0 && (
-        <section className="mt-10" aria-label="Recent journal entries">
+        <section className="mt-6" aria-label="Recent journal entries">
           <div className="mb-4 flex items-center justify-between gap-4">
             <h2 className="text-xl font-bold">Recent journal entries</h2>
             <Link
@@ -268,7 +266,7 @@ export default async function MeHome({
       )}
 
       {submissions.length > 0 && (
-        <section className="mt-10">
+        <section className="mt-8">
           <h2 className="mb-4 text-xl font-bold">Your submissions</h2>
           <ul className="space-y-0" role="list">
             {submissions.map((s) => (
@@ -306,13 +304,13 @@ export default async function MeHome({
       )}
 
       {transactions.length > 0 ? (
-        <section className="mt-10 grid gap-8 lg:grid-cols-2">
-          <div className="game-box">
+        <section className="mt-8" aria-label="Recent activity">
+          <div className="project-card p-5">
             <h2 className="mb-2 font-extrabold uppercase tracking-wide text-govuk-grey-4">
               Recent activity
             </h2>
             <ul
-              className="divide-y-2 divide-dashed divide-govuk-grey-2"
+              className="divide-y divide-govuk-grey-2"
               role="list"
             >
               {transactions.map((t) => (

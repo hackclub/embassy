@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithRole } from "@/lib/org";
-import { isHackatimeConfigured } from "@/lib/hackatime";
 import { getBalance } from "@/lib/services/credits.service";
 import PageHeader from "@/app/components/PageHeader";
 import StatusBadge from "@/app/components/StatusBadge";
@@ -53,13 +52,6 @@ export default async function ShopPage({
 
   const { hackatime } = await searchParams;
   const banner = hackatime ? BANNER_MESSAGES[hackatime] : undefined;
-
-  const account = await prisma.user.findUnique({
-    where: { id: user.id },
-    select: { hackatimeUid: true },
-  });
-  const linked = Boolean(account?.hackatimeUid);
-  const configured = isHackatimeConfigured();
 
   const [items, balance, orders, ownedByItem] = await Promise.all([
     prisma.shopItem.findMany({
