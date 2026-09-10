@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Coins } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithRole } from "@/lib/org";
 import { isHackatimeConfigured } from "@/lib/hackatime";
@@ -95,20 +94,16 @@ export default async function ShopPage({
         </div>
       )}
 
-      <div className="govuk-inset mb-8 flex flex-wrap items-center justify-between gap-4">
-        <p className="flex items-center gap-2 text-2xl font-bold">
-          <Coins size={22} aria-hidden="true" className="text-[#00a85d]" />
-          You have {balance} credits
-        </p>
-        {configured && !linked && (
+      {configured && !linked && (
+        <div className="mb-8">
           <a href="/api/hackatime/authorize" className="govuk-button">
             Link Hackatime
           </a>
-        )}
-      </div>
+        </div>
+      )}
 
       {items.length === 0 ? (
-        <div className="game-box py-12 text-center">
+        <div className="rounded-xl border border-govuk-grey-2 bg-white py-12 text-center">
           <p className="text-govuk-grey-4">Nothing in the shop right now — check back soon.</p>
         </div>
       ) : (
@@ -118,7 +113,10 @@ export default async function ShopPage({
             const soldOut = item.stock !== null && item.stock >= 0 && item.stock <= 0;
             const owned = ownedMap.get(item.id) ?? 0;
             return (
-              <div key={item.id} className="game-box flex flex-col">
+              <div
+                key={item.id}
+                className="flex flex-col rounded-xl border border-govuk-grey-2 bg-white p-5"
+              >
                 <div className="mb-3 aspect-4/3 overflow-hidden rounded border border-govuk-grey-2 bg-white">
                   {item.imageUrl ? (
                     <Image

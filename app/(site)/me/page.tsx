@@ -24,7 +24,7 @@ function TaskRow({
         aria-hidden="true"
         className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-[3px] text-xs font-extrabold ${
           done
-            ? "border-[#00a85d] bg-[#00D875] text-white"
+            ? "border-[#f59e0b] bg-[#f59e0b] text-white"
             : "border-govuk-grey-2 bg-white text-transparent"
         }`}
       >
@@ -162,7 +162,7 @@ export default async function MeHome({
         <section aria-label="Your projects">
           {projectCount === 0 ? (
             <div className="game-box flex flex-col items-center gap-4 py-12 text-center">
-              <p className="max-w-sm text-govuk-grey-4">
+              <p className="max-w-sm text-base font-semibold text-govuk-grey-4">
                 Get started by adding a project!
               </p>
               <NewProjectButton />
@@ -181,11 +181,8 @@ export default async function MeHome({
           )}
         </section>
 
-        <aside
-          aria-label="Getting started"
-          className="self-start lg:sticky lg:top-20"
-        >
-          <div className="game-box">
+        <aside aria-label="Getting started" className="self-start">
+          <div className="rounded-xl border border-govuk-grey-2 bg-white p-5">
             <h2 className="mb-2 font-extrabold uppercase tracking-wide text-govuk-grey-4">
               Getting started
             </h2>
@@ -196,13 +193,7 @@ export default async function MeHome({
               <TaskRow
                 done={tasksDone.hackatime}
                 href={linked ? undefined : "/api/hackatime/authorize"}
-                hint={
-                  linked
-                    ? undefined
-                    : configured
-                      ? ""
-                      : undefined
-                }
+                hint={linked ? undefined : configured ? "" : undefined}
               >
                 <span
                   className={
@@ -250,7 +241,7 @@ export default async function MeHome({
               href="/me/journal"
               className="text-sm font-semibold text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
             >
-              View all →
+              View all
             </Link>
           </div>
           <ul className="grid gap-4 sm:grid-cols-2" role="list">

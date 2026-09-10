@@ -3,13 +3,12 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer>
-      <div className="footer-accent" />
       <div className="border-t border-govuk-border bg-govuk-grey-1">
-        <div className="mx-auto max-w-5xl px-5 py-6">
-          <div className="flex flex-wrap items-start justify-between gap-6">
+        <div className="mx-auto max-w-5xl px-5 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="font-hc text-2xl text-hc">Hack Club</p>
-              <p className="mt-1 text-xs text-govuk-text-muted">
+              <p className="font-hc text-xl text-hc">Hack Club</p>
+              <p className="mt-0.5 text-xs text-govuk-text-muted">
                 A Hack Club YSWS.
               </p>
             </div>
@@ -44,7 +43,7 @@ export default function Footer() {
               </a>
             </div>
           </div>
-          <div className="mt-4 border-t border-govuk-border pt-3">
+          <div className="mt-3 border-t border-govuk-border pt-2">
             <p className="text-xs text-govuk-text-muted mb-0">
               Made by Hack Club.{" "}
               <Link href="/how-it-works" className="text-govuk-blue underline">

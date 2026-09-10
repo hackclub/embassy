@@ -12,7 +12,10 @@ export default async function ProjectsPage() {
     where: { userId: user.id },
     orderBy: { updatedAt: "desc" },
     include: {
-      journalEntries: { orderBy: { entryDate: "desc" }, select: { id: true, title: true, content: true, entryDate: true } },
+      journalEntries: {
+        orderBy: { entryDate: "desc" },
+        select: { id: true, title: true, content: true, entryDate: true },
+      },
     },
   });
 
@@ -37,7 +40,7 @@ export default async function ProjectsPage() {
 
       {projectCards.length === 0 ? (
         <div className="game-box flex flex-col items-center gap-4 py-12 text-center">
-          <p className="max-w-sm text-govuk-grey-4">
+          <p className="max-w-sm text-base font-semibold text-govuk-grey-4">
             No projects yet. Add one to start keeping a build journal.
           </p>
           <NewProjectButton />

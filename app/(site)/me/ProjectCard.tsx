@@ -3,6 +3,7 @@
 import { useState, useActionState } from "react";
 import ProjectForm from "./ProjectForm";
 import JournalMarkdown from "./JournalMarkdown";
+import { useBodyScrollLock } from "./useBodyScrollLock";
 import {
   createJournalAction,
   deleteJournalAction,
@@ -25,6 +26,7 @@ export type ProjectCardData = {
 export default function ProjectCard({ project }: { project: ProjectCardData }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
+  useBodyScrollLock(open);
 
   return (
     <div className="game-box flex flex-col !p-0">

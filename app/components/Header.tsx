@@ -29,12 +29,12 @@ export default async function Header() {
           className="absolute -inset-30"
           style={{
             backgroundImage: `
-              linear-gradient(45deg, transparent 46%, rgba(255,255,255,0.12) 46%, rgba(255,255,255,0.12) 54%, transparent 54%),
-              linear-gradient(-45deg, transparent 46%, rgba(255,255,255,0.12) 46%, rgba(255,255,255,0.12) 54%, transparent 54%)
+              linear-gradient(45deg, rgba(255,255,255,0.12) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.12) 75%),
+              linear-gradient(45deg, rgba(255,255,255,0.12) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.12) 75%)
             `,
-            backgroundSize: "60px 60px",
+            backgroundSize: "44px 44px, 44px 44px",
+            backgroundPosition: "0 0, 22px 22px",
             transform: "rotate(14.59deg)",
-            backgroundPosition: "center",
           }}
         />
       </div>
