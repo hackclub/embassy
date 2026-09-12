@@ -49,18 +49,72 @@ const envSchema = z.object({
 
   // Sentry
   SENTRY_DSN: z.string().optional(),
+  SENTRY_ORG: z.string().optional(),
+  SENTRY_PROJECT: z.string().optional(),
+  NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
 
-  // Airtable
+  // Airtable (one-way Postgres -> Airtable mirror)
   AIRTABLE_API_KEY: z.string().optional(),
   AIRTABLE_BASE_ID: z.string().optional(),
 
   // Feature flags
   FEATURE_EMAIL: z.string().default("false"),
   FEATURE_AIRTABLE: z.string().default("false"),
-  FEATURE_RECIPIENT: z.string().default("false"),
+  FEATURE_RECIPIENT: z.string().default("true"),
 
   // Logging
   LOG_LEVEL: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]).default("info"),
+
+  // Testing escape hatch — see lib/bypass.ts. Hard-rejected in production.
+  ADMIN_BYPASS: z.string().optional(),
 });
 
-export const env = envSchema.parse(process.env);
+export interface EnvValidation {
+  ok: boolean;
+  issues: string[];
+}
+
+export function validateEnv(): EnvValidation {
+  const parsed = envSchema.safeParse(process.env);
+  const issues: string[] = [];
+
+  if (!parsed.success) {
+    for (const issue of parsed.error.issues) {
+      issues.push(`${issue.path.join(".") || "(root)"}: ${issue.message}`);
+    }
+  }
+
+  const isProduction = process.env.NODE_ENV === "production";
+  const bypass = (process.env.ADMIN_BYPASS ?? "").trim().toLowerCase();
+  if (isProduction && (bypass === "true" || bypass === "1" || bypass === "yes")) {
+    issues.push("ADMIN_BYPASS is set but NODE_ENV=production — the auth bypass must never be enabled in production.");
+  }
+
+  const flagOn = (v: string | undefined) => (v ?? "").trim().toLowerCase() === "true";
+  if (flagOn(process.env.FEATURE_AIRTABLE) && !(process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID)) {
+    issues.push("FEATURE_AIRTABLE=true but AIRTABLE_API_KEY/AIRTABLE_BASE_ID are missing.");
+  }
+  if (flagOn(process.env.FEATURE_EMAIL) && !(process.env.LOOPS_API_KEY || process.env.MAILPIT_URL)) {
+    issues.push("FEATURE_EMAIL=true but no email provider is configured (LOOPS_API_KEY or MAILPIT_URL).");
+  }
+
+  return { ok: issues.length === 0, issues };
+}
+
+let validated = false;
+
+/**
+ * Called from instrumentation register(). In production a bad environment is
+ * fatal (fail fast before serving traffic); elsewhere it warns loudly.
+ */
+export function assertEnv(): void {
+  if (validated) return;
+  validated = true;
+  const { ok, issues } = validateEnv();
+  if (ok) return;
+  const message = `Invalid environment:\n- ${issues.join("\n- ")}`;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(message);
+  }
+  console.warn(`[env] ${message}`);
+}

@@ -9,7 +9,7 @@ export async function sendMailpit(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      From: { Email: process.env.EMAIL_FROM ?? "noreply@whoami.local" },
+      From: { Email: process.env.EMAIL_FROM ?? "noreply@embassy.local" },
       To: [{ Email: opts.to }],
       Subject: opts.subject,
       HTML: opts.html,

@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithRole } from "@/lib/org";
+import { isAirtableConfigured } from "@/lib/airtable";
 import AdminOverviewClient from "./AdminOverviewClient";
+import AirtableMirrorPanel from "./AirtableMirrorPanel";
+import EmailQueuePanel from "./EmailQueuePanel";
 
 export default async function AdminPage() {
   await getCurrentUserWithRole();
@@ -50,10 +53,16 @@ export default async function AdminPage() {
   }));
 
   return (
-    <AdminOverviewClient
-      stats={{ orgCount, orderCount, organizerCount, userCount }}
-      recentOrders={recentOrdersRows}
-      recentEvents={recentEventsRows}
-    />
+    <>
+      <AdminOverviewClient
+        stats={{ orgCount, orderCount, organizerCount, userCount }}
+        recentOrders={recentOrdersRows}
+        recentEvents={recentEventsRows}
+      />
+      <div className="mt-6 space-y-6">
+        <AirtableMirrorPanel configured={isAirtableConfigured()} />
+        <EmailQueuePanel />
+      </div>
+    </>
   );
 }

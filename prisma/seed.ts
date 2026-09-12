@@ -10,25 +10,17 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  if (process.env.NODE_ENV === "production" && process.env.FORCE_SEED !== "1") {
+    console.error("Refusing to seed a production database (set FORCE_SEED=1 to override).");
+    process.exit(1);
+  }
+
   console.log("Starting database seed...");
 
-  const superadminEmail = process.env.SUPERADMIN_EMAILS?.split(",")[0]?.trim() || "admin@whoami.local";
-  
-  const superadmin = await prisma.user.upsert({
-    where: { email: superadminEmail },
-    update: {
-      role: "SUPERADMIN",
-      name: "Super Admin",
-    },
-    create: {
-      email: superadminEmail,
-      name: "Super Admin",
-      role: "SUPERADMIN",
-      emailVerified: new Date(),
-    },
-  });
-  console.log(`Superadmin created/updated: ${superadmin.email}`);
-
+  // NOTE: we deliberately do NOT pre-create a user row for SUPERADMIN_EMAILS.
+  // A row with that email would collide with the real person's first OAuth
+  // sign-in (unique email), and the SUPERADMIN_EMAILS env fallback already
+  // grants the role on first login.
   const org = await prisma.org.upsert({
     where: { slug: "hackclub" },
     update: {},
@@ -63,7 +55,7 @@ async function main() {
   const ysws = await upsertYSWS(prisma);
   console.log(`YSWS created/updated: ${ysws.name}`);
 
-  const organizerEmail = "organizer@whoami.local";
+  const organizerEmail = "organizer@embassy.local";
   const organizer = await prisma.user.upsert({
     where: { email: organizerEmail },
     update: {
@@ -102,7 +94,7 @@ async function main() {
   });
   console.log(`Organizer linked to YSWS`);
 
-  const participantEmail = "participant@whoami.local";
+  const participantEmail = "participant@embassy.local";
   const participant = await prisma.user.upsert({
     where: { email: participantEmail },
     update: {
@@ -129,7 +121,9 @@ async function main() {
       createdFrom: "seed",
       recipientName: "John Doe",
       recipientEmail: "john.doe@example.com",
-      recipientToken: "test_token_" + Date.now(),
+      recipientToken: Array.from(crypto.getRandomValues(new Uint8Array(32)), (b) =>
+        b.toString(16).padStart(2, "0")
+      ).join(""),
       createdByUserId: organizer.id,
       recipients: {
         create: {
@@ -211,10 +205,10 @@ async function main() {
   }
     
   console.log("\nDatabase seed completed successfully!");
-  console.log("\nTest accounts created:");
-  console.log(`  Superadmin: ${superadminEmail} (SUPERADMIN)`);
+  console.log("\nTest accounts created (dev only):");
   console.log(`  Organizer: ${organizerEmail} (ORGANIZER)`);
   console.log(`  Participant: ${participantEmail} (PARTICIPANT)`);
+  console.log("  Superadmin: sign in once, then SUPERADMIN_EMAILS grants the role.");
   console.log("\nNext steps:");
   console.log("  1. Run 'bun run dev' to start development server");
   console.log("  2. Visit http://localhost:3000");

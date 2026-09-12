@@ -2,17 +2,23 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/audit";
 import { getRequestId } from "@/lib/request-id";
+import { encryptPII } from "@/lib/encryption";
+import { recipientDetailsEnabled } from "@/lib/flags";
+import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import { deliverOrderEmail } from "@/lib/services/email.service";
+import { MAX_FILE_SIZE, ALLOWED_IMAGE_TYPES } from "@/lib/constants";
 
 const nameSchema = z.object({
   recipientName: z.string().trim().min(2, "Enter your full name").max(80, "Name is too long"),
 });
 
 const emailSchema = z.object({
-  recipientEmail: z.string().email("Enter a valid email address"),
+  recipientEmail: z.string().email("Enter a valid email address").max(254),
 });
 
 const addressSchema = z.object({
@@ -22,13 +28,6 @@ const addressSchema = z.object({
   stateProvince: z.string().trim().max(60, "State/province is too long").optional().or(z.literal("")),
   postalCode: z.string().trim().min(3, "Enter postal code").max(20, "Postal code is too long"),
   country: z.string().length(2, "Select a country"),
-});
-
-const photoSchema = z.object({
-  photo: z.instanceof(File).optional().refine((f) => !f || f.size <= 5_000_000, "File too large (max 5MB)").refine(
-    (f) => !f || ["image/jpeg", "image/png", "image/webp"].includes(f.type),
-    "Invalid file type (JPEG, PNG, WebP only)"
-  ),
 });
 
 const emergencySchema = z.object({
@@ -45,6 +44,21 @@ function getOrderByToken(token: string) {
 }
 
 async function validateToken(token: string) {
+  if (!recipientDetailsEnabled()) {
+    return { error: "The recipient details form is currently closed. Please try again later or email passports@hackclub.com." };
+  }
+  // Bound token-guessing / abuse on this public, unauthenticated surface.
+  const h = await headers();
+  const rl = await rateLimit(
+    { headers: h as unknown as Headers } as Request,
+    RATE_LIMITS.recipient,
+  );
+  if (!rl.allowed) {
+    return { error: "Too many attempts — please wait a minute and try again." };
+  }
+  if (typeof token !== "string" || !/^[a-f0-9]{64}$/i.test(token)) {
+    return { error: "Invalid or expired tracking link" };
+  }
   const order = await getOrderByToken(token);
   if (!order) return { error: "Invalid or expired tracking link" };
   if (order.currentState !== "AWAITING_RECIPIENT_DETAILS") {
@@ -109,15 +123,16 @@ export async function submitRecipientEmailAction(
   }
 
   const order = validation.order!;
+  const newEmail = parsed.data.recipientEmail.toLowerCase().trim();
   await prisma.passportRecipient.upsert({
     where: getRecipientWhere(order),
-    create: { orderId: order.id, email: parsed.data.recipientEmail, name: order.recipientName ?? "" },
-    update: { email: parsed.data.recipientEmail },
+    create: { orderId: order.id, email: newEmail, name: order.recipientName ?? "" },
+    update: { email: newEmail },
   });
 
   await prisma.passportOrder.update({
     where: { id: order.id },
-    data: { recipientEmail: parsed.data.recipientEmail },
+    data: { recipientEmail: newEmail },
   });
 
   await auditLog({
@@ -156,6 +171,16 @@ export async function submitRecipientAddressAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid address" };
   }
 
+  // Shipping addresses are PII — encrypt at rest (AES-GCM, PII_ENCRYPTION_KEY).
+  const encrypted = {
+    addressLine1: await encryptPII(parsed.data.addressLine1),
+    addressLine2: parsed.data.addressLine2 ? await encryptPII(parsed.data.addressLine2) : null,
+    city: await encryptPII(parsed.data.city),
+    stateProvince: parsed.data.stateProvince ? await encryptPII(parsed.data.stateProvince) : null,
+    postalCode: await encryptPII(parsed.data.postalCode),
+    country: await encryptPII(parsed.data.country),
+  };
+
   const order = validation.order!;
   await prisma.passportRecipient.upsert({
     where: getRecipientWhere(order),
@@ -163,21 +188,9 @@ export async function submitRecipientAddressAction(
       orderId: order.id,
       email: order.recipientEmail ?? "",
       name: order.recipientName ?? "",
-      addressLine1: parsed.data.addressLine1,
-      addressLine2: parsed.data.addressLine2 || null,
-      city: parsed.data.city,
-      stateProvince: parsed.data.stateProvince || null,
-      postalCode: parsed.data.postalCode,
-      country: parsed.data.country,
+      ...encrypted,
     },
-    update: {
-      addressLine1: parsed.data.addressLine1,
-      addressLine2: parsed.data.addressLine2 || null,
-      city: parsed.data.city,
-      stateProvince: parsed.data.stateProvince || null,
-      postalCode: parsed.data.postalCode,
-      country: parsed.data.country,
-    },
+    update: encrypted,
   });
 
   await auditLog({
@@ -194,6 +207,14 @@ export async function submitRecipientAddressAction(
   return { ok: true, nextStep: "photo" };
 }
 
+const photoSchema = z
+  .instanceof(File)
+  .refine((f) => f.size <= MAX_FILE_SIZE, "File too large (max 5MB)")
+  .refine(
+    (f) => (ALLOWED_IMAGE_TYPES as readonly string[]).includes(f.type),
+    "Invalid file type (JPEG, PNG, WebP only)"
+  );
+
 export async function submitRecipientPhotoAction(
   _prev: RecipientFormState,
   formData: FormData
@@ -204,18 +225,31 @@ export async function submitRecipientPhotoAction(
   const validation = await validateToken(token);
   if (validation.error) return { error: validation.error };
 
-  const photo = formData.get("photo") as File | null;
-  const parsed = photoSchema.safeParse({ photo });
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid photo" };
+  const photo = formData.get("photo");
+  let photoUrl: string | null = null;
+  if (photo instanceof File && photo.size > 0) {
+    const parsed = photoSchema.safeParse(photo);
+    if (!parsed.success) {
+      return { error: parsed.error.issues[0]?.message ?? "Invalid photo" };
+    }
+    // No object storage in this deployment: persist the image itself,
+    // encrypted, in the row (the old code stored a /uploads path that was
+    // never written to disk).
+    const bytes = Buffer.from(await photo.arrayBuffer());
+    const dataUrl = `data:${photo.type};base64,${bytes.toString("base64")}`;
+    photoUrl = await encryptPII(dataUrl);
   }
 
-  const photoUrl = photo ? `/uploads/${crypto.randomUUID()}-${photo.name}` : null;
-
   const order = validation.order!;
-  await prisma.passportRecipient.update({
+  await prisma.passportRecipient.upsert({
     where: getRecipientWhere(order),
-    data: { photoUrl },
+    create: {
+      orderId: order.id,
+      email: order.recipientEmail ?? "",
+      name: order.recipientName ?? "",
+      photoUrl,
+    },
+    update: { photoUrl },
   });
 
   await auditLog({
@@ -248,9 +282,17 @@ export async function submitRecipientEmergencyAction(
   }
 
   const order = validation.order!;
-  await prisma.passportRecipient.update({
+  await prisma.passportRecipient.upsert({
     where: getRecipientWhere(order),
-    data: { emergencyContact: parsed.data.emergencyContact || null },
+    create: {
+      orderId: order.id,
+      email: order.recipientEmail ?? "",
+      name: order.recipientName ?? "",
+      emergencyContact: parsed.data.emergencyContact ? await encryptPII(parsed.data.emergencyContact) : null,
+    },
+    update: {
+      emergencyContact: parsed.data.emergencyContact ? await encryptPII(parsed.data.emergencyContact) : null,
+    },
   });
 
   await auditLog({
@@ -302,15 +344,8 @@ export async function submitRecipientReviewAction(
     },
   });
 
-  // Create EmailDelivery record for confirmation email
-  await prisma.emailDelivery.create({
-    data: {
-      orderId: order.id,
-      recipientEmail: order.recipientEmail!,
-      eventType: "EMAIL_SENT",
-      status: "pending",
-    },
-  });
+  // Confirmation email — status reflects what actually happened.
+  await deliverOrderEmail(order.id, "details");
 
   await auditLog({
     entityType: "PassportOrder",
@@ -324,7 +359,7 @@ export async function submitRecipientReviewAction(
 
   revalidatePath(`/recipient/${token}`);
   revalidatePath(`/track/${token}`);
-  redirect(`/recipient/${token}/confirm`);
+  redirect(`/track/${token}`);
 }
 
 export async function skipRecipientStepAction(

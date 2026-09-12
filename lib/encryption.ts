@@ -34,7 +34,9 @@ export async function encryptPII(plaintext: string): Promise<string> {
 export async function decryptPII(ciphertext: string): Promise<string> {
   if (!ciphertext) return "";
   const [ivB64, dataB64] = ciphertext.split(":");
-  if (!ivB64 || !dataB64) return "";
+  // Rows written before encryption existed (and other non-envelope values)
+  // are treated as legacy plaintext so reads never hard-fail.
+  if (!ivB64 || !dataB64) return ciphertext;
   const iv = Buffer.from(ivB64, "base64");
   const data = Buffer.from(dataB64, "base64");
   const key = await getCryptoKey();
@@ -64,7 +66,13 @@ export async function decryptPIIFields<T extends Record<string, unknown>>(
   for (const field of fields) {
     const value = result[field as string];
     if (typeof value === "string" && value) {
-      result[field as string] = await decryptPII(value);
+      // A GCM auth failure (e.g. key rotation) must not take pages down;
+      // fall back to the stored value.
+      try {
+        result[field as string] = await decryptPII(value);
+      } catch {
+        /* keep raw */
+      }
     }
   }
   return result as T;

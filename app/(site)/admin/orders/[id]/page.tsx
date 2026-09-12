@@ -11,6 +11,7 @@ import {
 } from "@/app/components/status-variant";
 import ServerTable from "@/app/components/ServerTable";
 import Link from "next/link";
+import ShipmentForm from "./ShipmentForm";
 
 function dateLabel(d: Date) {
   return new Intl.DateTimeFormat("en-GB", {
@@ -77,7 +78,7 @@ export default async function AdminOrderDetailPage({
     <>
       <Breadcrumb
         items={[
-          { label: "whoami", href: "/" },
+          { label: "Embassy", href: "/" },
           { label: "Admin", href: "/admin" },
           { label: "Passport orders", href: "/admin/orders" },
           { label: `Order ${id.slice(0, 8)}...` },
@@ -221,20 +222,25 @@ export default async function AdminOrderDetailPage({
           )}
 
           {/* Shipments */}
-          {order.shipments.length > 0 && (
+          {order.currentState !== "CANCELLED" && (
             <Section title="Shipments" divider={false}>
-              <ServerTable
-                columns={[
-                  { key: "trackingNumber", header: "Tracking", render: (s: typeof order.shipments[0]) => s.trackingNumber ?? "&mdash;" },
-                  { key: "carrier", header: "Carrier", render: (s: typeof order.shipments[0]) => s.carrier ?? "&mdash;" },
-                  { key: "status", header: "Status", render: (s: typeof order.shipments[0]) => s.status ?? "&mdash;" },
-                  { key: "shippedAt", header: "Shipped", className: "w-28", render: (s: typeof order.shipments[0]) => s.shippedAt ? dateLabel(s.shippedAt) : "&mdash;" },
-                  { key: "deliveredAt", header: "Delivered", className: "w-28", render: (s: typeof order.shipments[0]) => s.deliveredAt ? dateLabel(s.deliveredAt) : "&mdash;" },
-                ]}
-                data={order.shipments}
-                rowKey="id"
-                emptyMessage="No shipments."
-              />
+              {order.shipments.length > 0 ? (
+                <ServerTable
+                  columns={[
+                    { key: "trackingNumber", header: "Tracking", render: (s: typeof order.shipments[0]) => s.trackingNumber ?? "&mdash;" },
+                    { key: "carrier", header: "Carrier", render: (s: typeof order.shipments[0]) => s.carrier ?? "&mdash;" },
+                    { key: "status", header: "Status", render: (s: typeof order.shipments[0]) => s.status ?? "&mdash;" },
+                    { key: "shippedAt", header: "Shipped", className: "w-28", render: (s: typeof order.shipments[0]) => s.shippedAt ? dateLabel(s.shippedAt) : "&mdash;" },
+                    { key: "deliveredAt", header: "Delivered", className: "w-28", render: (s: typeof order.shipments[0]) => s.deliveredAt ? dateLabel(s.deliveredAt) : "&mdash;" },
+                  ]}
+                  data={order.shipments}
+                  rowKey="id"
+                  emptyMessage="No shipments."
+                />
+              ) : (
+                <p className="text-govuk-grey-4">No shipments yet.</p>
+              )}
+              <ShipmentForm orderId={order.id} />
             </Section>
           )}
 

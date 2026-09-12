@@ -53,17 +53,19 @@ export async function spendCredits(
   tx: TxClient = prisma
 ): Promise<number> {
   if (input.amount <= 0) throw new Error("amount must be +ve");
-  const user = await tx.user.findUnique({
-    where: { id: input.userId },
-    select: { creditsBalance: true },
-  });
 
-  const balance = user?.creditsBalance ?? 0;
-  if (balance < input.amount) {
+  // Conditional decrement: the balance check and the subtraction happen in a
+  // single statement, so concurrent spends can never overdraw (TOCTOU).
+  const updated = await tx.user.updateMany({
+    where: { id: input.userId, creditsBalance: { gte: input.amount } },
+    data: { creditsBalance: { decrement: input.amount } },
+  });
+  if (updated.count === 0) {
     const err = new Error("Insufficient credits") as Error & { code?: string };
     err.code = "INSUFFICIENT_CREDITS";
     throw err;
   }
+
   await tx.creditTransaction.create({
     data: {
       userId: input.userId,
@@ -73,12 +75,11 @@ export async function spendCredits(
       description: input.description ?? null,
     },
   });
-  const updated = await tx.user.update({
+  const user = await tx.user.findUniqueOrThrow({
     where: { id: input.userId },
-    data: { creditsBalance: { decrement: input.amount } },
     select: { creditsBalance: true },
   });
-  return updated.creditsBalance;
+  return user.creditsBalance;
 }
 
 export async function adjustCredits(
@@ -90,12 +91,16 @@ export async function adjustCredits(
     throw new Error("amount must be a non-zero integer");
   }
   return prisma.$transaction(async (tx) => {
-    const user = await tx.user.findUnique({
-      where: { id: userId },
-      select: { creditsBalance: true },
+    // Conditional increment: for negative amounts the guard keeps the balance
+    // from going below zero even under concurrent adjustments.
+    const updated = await tx.user.updateMany({
+      where: {
+        id: userId,
+        ...(amount < 0 ? { creditsBalance: { gte: -amount } } : {}),
+      },
+      data: { creditsBalance: { increment: amount } },
     });
-    const balance = user?.creditsBalance ?? 0;
-    if (balance + amount < 0) {
+    if (updated.count === 0) {
       const err = new Error("Cannot adjust below zero") as Error & { code?: string };
       err.code = "INSUFFICIENT_CREDITS";
       throw err;
@@ -108,12 +113,11 @@ export async function adjustCredits(
         description: description ?? null,
       },
     });
-    const updated = await tx.user.update({
+    const user = await tx.user.findUniqueOrThrow({
       where: { id: userId },
-      data: { creditsBalance: { increment: amount } },
       select: { creditsBalance: true },
     });
-    return updated.creditsBalance;
+    return user.creditsBalance;
   });
 }
 

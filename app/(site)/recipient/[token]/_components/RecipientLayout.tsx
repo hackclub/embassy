@@ -9,7 +9,7 @@ interface RecipientLayoutProps {
   token: string;
 }
 
-export default function RecipientLayout({ children, order, token }: RecipientLayoutProps) {
+export default function RecipientLayout({ children, order }: RecipientLayoutProps) {
   const yswsName = order.ysws?.name ?? order.org.name;
 
   return (
@@ -30,7 +30,7 @@ export default function RecipientLayout({ children, order, token }: RecipientLay
       <footer className="bg-govuk-grey-1 border-t-2 border-govuk-grey-2 py-6 mt-8">
         <div className="mx-auto max-w-2xl px-4 text-center text-sm text-govuk-grey-4">
           <p>Questions? Contact <a href="mailto:passports@hackclub.com" className="underline hover:text-hc-red">passports@hackclub.com</a></p>
-          <p className="mt-1"><Link href="/" className="underline hover:text-hc-red">Back to whoami</Link></p>
+          <p className="mt-1"><Link href="/" className="underline hover:text-hc-red">Back to Embassy</Link></p>
         </div>
       </footer>
     </div>

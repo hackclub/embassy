@@ -11,7 +11,7 @@ type NavItem = {
   match?: (pathname: string) => boolean;
 };
 
-export default function MobileSidebar({ role }: { role: string }) {
+export default function MobileSidebar() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname() ?? "";
 

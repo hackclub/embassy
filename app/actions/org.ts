@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { generateApiKey, generateApiKeyWithExpiry, getCurrentUser, getCurrentUserWithRole, hasRole } from "@/lib/org";
+import { generateApiKeyWithExpiry, getCurrentUser, getCurrentUserWithRole, hasRole } from "@/lib/org";
 import { verifyYSWSAccess } from "@/lib/ysws-context";
 import { auditLog } from "@/lib/audit";
+import { deliverOrderEmail } from "@/lib/services/email.service";
 
 const createOrderSchema = z.object({
   recipientEmail: z.string().email("Enter a valid email"),
@@ -24,7 +25,10 @@ export async function createOrderAction(
   const user = await getCurrentUser();
   if (!user) redirect("/api/auth/signin?callbackUrl=/dashboard");
 
-  const membership = await prisma.orgMember.findFirst({ where: { userId: user.id } });
+  const membership = await prisma.orgMember.findFirst({
+    where: { userId: user.id },
+    orderBy: { id: "asc" },
+  });
   if (!membership) return { error: "You are not an organizer for any org." };
 
   const parsed = createOrderSchema.safeParse({
@@ -37,17 +41,29 @@ export async function createOrderAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid order." };
   }
 
-  let yswsId = parsed.data.yswsId ?? undefined;
-  if (!yswsId) {
-    const ysws = await prisma.ySWS.findFirst({ where: { orgId: membership.orgId } });
-    yswsId = ysws?.id ?? undefined;
-  }
+  // Resolve the YSWS the order belongs to. When one is supplied it must be
+  // one the caller can actually access, and the order's org is taken from
+  // that YSWS — never from an arbitrary membership row (which could mix
+  // org A with a YSWS from org B).
+  let finalYswsId: string | undefined;
+  let orgId = membership.orgId;
 
-  if (yswsId) {
-    const access = await verifyYSWSAccess(user.id, yswsId);
+  if (parsed.data.yswsId) {
+    const access = await verifyYSWSAccess(user.id, parsed.data.yswsId);
     if (!access) {
       return { error: "You do not have access to this YSWS." };
     }
+    finalYswsId = access.yswsId;
+    orgId = access.orgId;
+  } else {
+    const ysws = await prisma.ySWS.findFirst({
+      where: { orgId: membership.orgId, isActive: true },
+      orderBy: { createdAt: "asc" },
+    });
+    if (!ysws) {
+      return { error: "No YSWS found for this organization" };
+    }
+    finalYswsId = ysws.id;
   }
 
   const email = parsed.data.recipientEmail.toLowerCase().trim();
@@ -57,19 +73,9 @@ export async function createOrderAction(
     b.toString(16).padStart(2, "0")
   ).join("");
 
-  // Determine YSWS ID - use provided one or fall back to org's first YSWS
-  let finalYswsId = yswsId ?? undefined;
-  if (!finalYswsId) {
-    const ysws = await prisma.ySWS.findFirst({ where: { orgId: membership.orgId } });
-    finalYswsId = ysws?.id;
-  }
-  if (!finalYswsId) {
-    return { error: "No YSWS found for this organization" };
-  }
-
   const order = await prisma.passportOrder.create({
     data: {
-      orgId: membership.orgId,
+      orgId,
       yswsId: finalYswsId,
       totalQuantity: 1,
       currentState: "AWAITING_RECIPIENT_DETAILS",
@@ -89,6 +95,8 @@ export async function createOrderAction(
       },
     },
   });
+
+  await deliverOrderEmail(order.id, "created");
 
   revalidatePath("/dashboard");
   return { ok: true };
@@ -137,7 +145,8 @@ export async function regenerateApiKeyAction(
     where: { id: ysws.id },
     data: { 
       apiKeyHash: apiKeyData.hash,
-      apiKeyDisplay: apiKeyData.key.slice(-4),
+      apiKeyPrefix: apiKeyData.prefix,
+      apiKeyDisplay: apiKeyData.display,
       apiKeyExpiresAt: apiKeyData.expiresAt,
       apiKeyScopes: apiKeyData.scopes,
     },
@@ -167,13 +176,9 @@ export async function issuePassportAction(
 
   const membership = await prisma.orgMember.findFirst({
     where: { userId: user.id },
+    orderBy: { id: "asc" },
   });
   if (!membership) return { error: "You are not an organizer for any org." };
-
-  const org = await prisma.org.findUnique({
-    where: { id: membership.orgId },
-    select: { name: true },
-  });
 
   const parsed = issuePassportSchema.safeParse({
     recipientName: formData.get("recipientName"),
@@ -231,14 +236,7 @@ export async function issuePassportAction(
     },
   });
 
-  await prisma.emailDelivery.create({
-    data: {
-      orderId: order.id,
-      recipientEmail: email ?? "",
-      eventType: "EMAIL_SENT" as const,
-      status: email ? "sent" : "pending",
-    },
-  });
+  await deliverOrderEmail(order.id, "created");
 
   revalidatePath("/dashboard");
   return { ok: "Passport order created. We will be in touch." };
@@ -324,14 +322,7 @@ export async function submitRecipientDetailsAction(
   });
 
   if (email) {
-    await prisma.emailDelivery.create({
-      data: {
-        orderId: orderId,
-        recipientEmail: email,
-        eventType: "EMAIL_SENT" as const,
-        status: "sent" as const,
-      },
-    });
+    await deliverOrderEmail(orderId, "details");
   }
 
   revalidatePath("/dashboard");

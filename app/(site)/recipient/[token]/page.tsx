@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { decryptPII, decryptPIIFields, PII_FIELDS } from "@/lib/encryption";
+import { recipientDetailsEnabled } from "@/lib/flags";
 import RecipientLayout from "./_components/RecipientLayout";
 import RecipientProgressTracker from "./_components/RecipientProgressTracker";
 import RecipientStep from "./_components/RecipientStep";
+
+// Token-bearing URL exposes recipient PII — keep it out of search indexes.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 const STEPS = [
   { step: "name", label: "Your name", href: "/name" },
@@ -14,12 +22,6 @@ const STEPS = [
 ];
 
 type StepKey = (typeof STEPS)[number]["step"];
-
-interface Step {
-  step: string;
-  label: string;
-  href: string;
-}
 
 interface OrderWithRelations {
   id: string;
@@ -59,6 +61,9 @@ export default async function RecipientRootPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
+  if (!recipientDetailsEnabled()) {
+    redirect(`/track/${token}`);
+  }
   const order = await getOrder(token);
 
   if (!order) {
@@ -69,7 +74,7 @@ export default async function RecipientRootPage({
     redirect(`/track/${token}`);
   }
 
-  const recipient = order.recipients[0] ?? {
+  const rawRecipient = order.recipients[0] ?? {
     id: "",
     name: null,
     email: order.recipientEmail ?? "",
@@ -83,11 +88,17 @@ export default async function RecipientRootPage({
     emergencyContact: null,
     photoUrl: null,
   };
+  const recipient = await decryptPIIFields(
+    rawRecipient as unknown as Record<string, unknown>,
+    PII_FIELDS
+  ) as OrderWithRelations["recipients"][number];
+  // photoUrl is an encrypted data URL (not part of PII_FIELDS).
+  const photoDataUrl = recipient.photoUrl ? await decryptPII(recipient.photoUrl) : null;
   const completedSteps = [
     recipient.name ? "name" : null,
     recipient.email ? "email" : null,
     recipient.addressLine1 ? "address" : null,
-    recipient.photoUrl ? "photo" : null,
+    photoDataUrl ? "photo" : null,
     recipient.emergencyContact ? "emergency" : null,
   ].filter(Boolean) as StepKey[];
 
@@ -99,7 +110,7 @@ export default async function RecipientRootPage({
           <RecipientStep
             token={token}
             order={order}
-            recipient={recipient}
+            recipient={{ ...recipient, photoUrl: photoDataUrl }}
             completedSteps={completedSteps as StepKey[]}
           />
         </div>

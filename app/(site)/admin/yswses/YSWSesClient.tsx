@@ -60,7 +60,7 @@ export default function AdminYSWSesClient({
 
   return (
     <>
-      <Breadcrumb items={[{ label: "whoami", href: "/" }, { label: "Admin", href: "/admin" }, { label: "YSWSes" }]} />
+      <Breadcrumb items={[{ label: "Embassy", href: "/" }, { label: "Admin", href: "/admin" }, { label: "YSWSes" }]} />
 
       <PageHeader
         title="YSWS organisations"

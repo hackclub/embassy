@@ -17,10 +17,9 @@ export default function ApiIntegrationPanel({
   const [revealed, setRevealed] = useState(false);
   const [state, formAction, pending] = useActionState(regenerateApiKeyAction, undefined);
 
-  const [lastGeneratedKey, setLastGeneratedKey] = useState<string | null>(null);
-
   const shown = apiKeyDisplay ? (revealed ? "wom_" + apiKeyDisplay.padStart(4, "•") : "wom_" + "•".repeat(24)) : "";
-  const fullKey = lastGeneratedKey;
+  // The regenerate action returns the new (never-persisted) key in state.ok.
+  const fullKey = typeof state?.ok === "string" ? state.ok : null;
 
   async function copy() {
     if (!fullKey) return;

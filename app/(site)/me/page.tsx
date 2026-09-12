@@ -132,7 +132,7 @@ export default async function MeHome({
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold leading-tight tracking-tight">
-            {dbUser?.name ? `Hey ${dbUser.name.split(" ")[0]}` : "Your whoami"}
+            {dbUser?.name ? `Hey ${dbUser.name.split(" ")[0]}` : "Your profile"}
           </h1>
           <p className="mt-1 text-govuk-grey-4">{user.email}</p>
         </div>

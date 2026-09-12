@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const LINKS: { label: string; href: string; external?: boolean }[] = [
@@ -8,7 +9,7 @@ const LINKS: { label: string; href: string; external?: boolean }[] = [
     href: "https://app.slack.com/client/E09V59WQY1E/C0BM1L56D19",
     external: true,
   },
-  { label: "GitHub", href: "https://github.com/hackclub/whoami", external: true },
+  { label: "GitHub", href: "https://github.com/hackclub/embassy", external: true },
 ];
 
 export default function Footer() {
@@ -55,6 +56,9 @@ export default function Footer() {
             aria-label="Hack Club"
             className="opacity-60 transition-opacity hover:opacity-90"
           >
+            {/* Remote SVG: next/image skips SVG optimization unless
+                dangerouslyAllowSVG is enabled, so keep a plain <img>. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://assets.hackclub.com/flag-standalone-bw.svg"
               alt="Hack Club"
@@ -70,7 +74,7 @@ export default function Footer() {
             aria-label="Hack Club Slack"
             className="opacity-60 transition-opacity hover:opacity-90"
           >
-            <img
+            <Image
               src="/slack.svg"
               alt="Slack"
               width={20}

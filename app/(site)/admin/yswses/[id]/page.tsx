@@ -17,16 +17,6 @@ function dateLabel(d: Date) {
   }).format(d);
 }
 
-function datetimeLabel(d: Date) {
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(d);
-}
-
 export default async function AdminYSWSDetailPage({
   params,
 }: {
@@ -65,7 +55,7 @@ export default async function AdminYSWSDetailPage({
     <>
       <Breadcrumb
         items={[
-          { label: "whoami", href: "/" },
+          { label: "Embassy", href: "/" },
           { label: "Admin", href: "/admin" },
           { label: "YSWSes", href: "/admin/yswses" },
           { label: ysws.name },
@@ -92,13 +82,7 @@ export default async function AdminYSWSDetailPage({
               <div>
                 <dt className="text-sm text-govuk-grey-4">Org</dt>
                 <dd className="mt-1 font-medium">
-                  {ysws.org ? (
-                    <Link href={`/admin/yswses/${ysws.org.id}`} className="hover:underline">
-                      {ysws.org.name}
-                    </Link>
-                  ) : (
-                    "&mdash;"
-                  )}
+                  {ysws.org ? ysws.org.name : "&mdash;"}
                 </dd>
               </div>
               <div>
@@ -169,12 +153,6 @@ export default async function AdminYSWSDetailPage({
         <aside className="lg:col-span-4 space-y-6">
           <Section title="Actions" divider={false}>
             <div className="space-y-3">
-              <Link href={`/admin/yswses/${id}/edit`} className="govuk-button govuk-button--secondary w-full block text-center">
-                Edit YSWS
-              </Link>
-              <Link href={`/admin/yswses/${id}/organizers`} className="govuk-button govuk-button--secondary w-full block text-center">
-                Manage organizers
-              </Link>
               <Link href="/admin/create-order" className="govuk-button w-full block text-center">
                 Create passport order
               </Link>

@@ -14,7 +14,12 @@ RUN apk add --no-cache openssl libc6-compat ca-certificates
 # Stage 2: Install dependencies
 FROM base AS deps
 COPY package.json bun.lock* ./
-RUN bun install
+RUN bun install --frozen-lockfile
+
+# Stage 2b: Production-only dependencies for the runner image
+FROM base AS runner-deps
+COPY package.json bun.lock* ./
+RUN bun install --frozen-lockfile --production
 
 # Stage 3: Generate Prisma client (new generator: output = generated/prisma)
 FROM base AS prisma
@@ -32,11 +37,17 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 COPY --from=prisma /app/generated ./generated
 ENV NEXT_TELEMETRY_DISABLED=1
+# NEXT_PUBLIC_* values are inlined into the client bundle at build time
+ARG NEXT_PUBLIC_SENTRY_DSN=""
+ENV NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
 RUN bun run build
 
 # Stage 5: Production runner
 FROM base AS runner
 ENV NODE_ENV=production
+
+# curl is needed by the docker-compose healthcheck
+RUN apk add --no-cache curl
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -50,8 +61,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/generated ./generated
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./
 
-# Prisma CLI + all runtime deps (standalone output excludes node_modules)
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+# Prisma CLI + runtime deps only (standalone output excludes node_modules;
+# devDependencies like eslint/typescript never ship in the runner image)
+COPY --from=runner-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 USER nextjs
 

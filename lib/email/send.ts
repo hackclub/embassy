@@ -46,7 +46,7 @@ export async function sendEmail(opts: {
   text: string;
 }): Promise<{ ok: boolean; deliveryId?: string; error?: string }> {
   try {
-    const result = await getProvider().send({
+    await getProvider().send({
       to: opts.recipientEmail,
       subject: opts.subject,
       html: opts.html,

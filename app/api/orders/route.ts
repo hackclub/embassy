@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithRole, hasRole } from "@/lib/org";
 import { resolveAPIKeyContext, verifyYSWSAccess } from "@/lib/ysws-context";
 import { rateLimit, RATE_LIMITS, createRateLimitResponse } from "@/lib/rate-limit";
+import { deliverOrderEmail } from "@/lib/services/email.service";
 
 export const runtime = "nodejs";
 
@@ -32,10 +32,10 @@ const ORDER_FIELDS = {
 export async function POST(req: Request) {
   const rl = await rateLimit(req, RATE_LIMITS.orders);
   if (!rl.allowed) {
-    return createRateLimitResponse(rl, RATE_LIMITS.orders.windowMs);
+    return createRateLimitResponse(rl);
   }
 
-  const context = await resolveAPIKeyContext(req);
+  const context = await resolveAPIKeyContext(req, "orders:write");
   if (!context) {
     return NextResponse.json(
       { error: "Unauthorized. Provide a valid API key or sign in as an organizer." },
@@ -106,6 +106,8 @@ export async function POST(req: Request) {
     select: ORDER_FIELDS,
   });
 
+  await deliverOrderEmail(order.id, "created");
+
   return NextResponse.json({ order }, { status: 201 });
 }
 
@@ -113,10 +115,10 @@ export async function GET(req: Request) {
   // Rate limiting
   const rl = await rateLimit(req, RATE_LIMITS.orders);
   if (!rl.allowed) {
-    return createRateLimitResponse(rl, RATE_LIMITS.orders.windowMs);
+    return createRateLimitResponse(rl);
   }
 
-  const context = await resolveAPIKeyContext(req);
+  const context = await resolveAPIKeyContext(req, "orders:read");
   if (!context) {
     return NextResponse.json(
       { error: "Unauthorized. Provide a valid API key or sign in as an organizer." },

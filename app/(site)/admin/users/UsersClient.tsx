@@ -71,7 +71,7 @@ export default function AdminUsersClient({
 
   return (
     <>
-      <Breadcrumb items={[{ label: "whoami", href: "/" }, { label: "Admin", href: "/admin" }, { label: "Users & roles" }]} />
+      <Breadcrumb items={[{ label: "Embassy", href: "/" }, { label: "Admin", href: "/admin" }, { label: "Users & roles" }]} />
 
       <PageHeader
         title="Users & roles"

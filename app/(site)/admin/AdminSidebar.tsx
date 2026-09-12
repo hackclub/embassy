@@ -9,7 +9,7 @@ type NavItem = {
   match?: (pathname: string) => boolean;
 };
 
-export default function AdminSidebar({ role }: { role: string }) {
+export default function AdminSidebar() {
   const pathname = usePathname() ?? "";
 
   const items: NavItem[] = [

@@ -8,7 +8,7 @@ import { mapOrderStateToVariant } from "../../components/status-variant";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Track your passport – whoami",
+  title: "Track your passport",
   description: "Track the status of your Hack Club Passport order.",
   robots: { index: false },
 };

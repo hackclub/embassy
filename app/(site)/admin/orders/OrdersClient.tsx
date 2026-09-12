@@ -98,7 +98,7 @@ export default function AdminOrdersClient({
 
   return (
     <>
-      <Breadcrumb items={[{ label: "whoami", href: "/" }, { label: "Admin", href: "/admin" }, { label: "Passport orders" }]} />
+      <Breadcrumb items={[{ label: "Embassy", href: "/" }, { label: "Admin", href: "/admin" }, { label: "Passport orders" }]} />
 
       <PageHeader
         title="Passport orders"

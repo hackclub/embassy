@@ -6,16 +6,23 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/org";
 import { getHackatimeHours } from "@/lib/hackatime";
+import { MAX_PENDING_SUBMISSIONS_PER_USER } from "@/lib/constants";
+
+// Only http(s) URLs — z.string().url() happily accepts javascript:/data:,
+// which becomes stored XSS when an admin clicks the link in review.
+const httpUrl = z
+  .string()
+  .trim()
+  .url("Enter a valid URL (start with https://)")
+  .refine(
+    (v) => v.startsWith("https://") || v.startsWith("http://"),
+    "Only http(s) links are allowed"
+  );
 
 const submitSchema = z.object({
   title: z.string().trim().min(2, "Add a title").max(80, "Title is too long"),
   description: z.string().trim().max(400, "Description is too long").optional(),
-  url: z
-    .string()
-    .trim()
-    .url("Enter a valid URL (start with https://)")
-    .optional()
-    .or(z.literal("")),
+  url: httpUrl.optional().or(z.literal("")),
 });
 
 export type SubmitFormState = { error?: string; ok?: boolean } | undefined;
@@ -36,8 +43,18 @@ export async function submitProjectAction(
     return { error: parsed.error.issues[0]?.message ?? "Check your details." };
   }
 
+  const pendingCount = await prisma.submission.count({
+    where: { userId: user.id, status: "SUBMITTED" },
+  });
+  if (pendingCount >= MAX_PENDING_SUBMISSIONS_PER_USER) {
+    return {
+      error: `You already have ${pendingCount} submissions awaiting review. Wait for a decision before submitting more.`,
+    };
+  }
+
   const membership = await prisma.orgMember.findFirst({
     where: { userId: user.id },
+    orderBy: { id: "asc" },
   });
 
   // Snapshot the user's tracked hours so the reviewer can award credits
@@ -56,29 +73,5 @@ export async function submitProjectAction(
   });
 
   revalidatePath("/submit");
-  revalidatePath("/vote");
   return { ok: true };
-}
-
-export type VoteFormState = void;
-
-export async function voteAction(formData: FormData): Promise<void> {
-  const user = await getCurrentUser();
-  if (!user) redirect("/api/auth/signin?callbackUrl=/vote");
-
-  const submissionId = formData.get("submissionId");
-  if (typeof submissionId !== "string" || !submissionId) {
-    return;
-  }
-
-  const existing = await prisma.vote.findUnique({
-    where: { submissionId_userId: { submissionId, userId: user.id } },
-  });
-  if (existing) return;
-
-  await prisma.vote.create({
-    data: { submissionId, userId: user.id },
-  });
-
-  revalidatePath("/vote");
 }

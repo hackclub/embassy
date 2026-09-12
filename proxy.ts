@@ -7,8 +7,8 @@ import { isAuthBypassEnabled } from "@/lib/bypass";
 // This proxy only handles request IDs and auth redirects.
 
 // Page prefixes that anonymous visitors may access. Everything else requires
-// a session (unless ADMIN_BYPASS is enabled). Note: "/" is matched exactly,
-// not by prefix — a "/" entry here would make every path public.
+// a session (unless ADMIN_BYPASS is enabled). Matching is per path segment, so
+// "/track" protects "/trackable-admin" and only the exact "/" is public root.
 const PUBLIC_PATHS = [
   // APIs handle their own authentication (API keys, 401 JSON, rate limits) —
   // redirecting them to the sign-in page would break programmatic clients.
@@ -32,14 +32,21 @@ const PUBLIC_PATHS = [
 // Static assets served from /public are intended to be public (logo, icons).
 const STATIC_ASSET_PATTERN = /\.(png|jpe?g|gif|svg|ico|webp|avif|css|js|map|txt|xml|json|woff2?|otf|ttf|eot)$/i;
 
+const REQUEST_ID_PATTERN = /^[A-Za-z0-9_.:-]{1,64}$/;
+
 function isPublicPath(pathname: string): boolean {
   if (pathname === "/") return true;
-  if (STATIC_ASSET_PATTERN.test(pathname)) return true;
-  return PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
+    return true;
+  }
+  // API routes never fall back to the extension whitelist.
+  if (pathname.startsWith("/api/")) return false;
+  return STATIC_ASSET_PATTERN.test(pathname);
 }
 
 export async function proxy(request: NextRequest) {
-  const requestId = request.headers.get("x-request-id") ?? crypto.randomUUID();
+  const inbound = request.headers.get("x-request-id");
+  const requestId = inbound && REQUEST_ID_PATTERN.test(inbound) ? inbound : crypto.randomUUID();
   const response = NextResponse.next();
   response.headers.set("x-request-id", requestId);
 

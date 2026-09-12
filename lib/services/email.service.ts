@@ -1,12 +1,35 @@
 import { prisma } from "../prisma";
-import { auditLog } from "./audit.service";
+import { auditLog } from "../audit";
 import { getRequestId } from "../request-id";
+import { getProvider, sendEmail } from "../email/send";
+import { getBaseUrl } from "../hackatime";
+import { captureEmailError } from "../sentry";
 import type { EventType } from "../../generated/prisma/enums";
 
 export interface EmailTemplate {
   subject: string;
   html: string;
   text: string;
+}
+
+// Emails are HTML built from user-supplied strings (names, org names).
+// Escape everything before interpolation.
+function esc(value: string | null | undefined): string {
+  return (value ?? "")
+    .toString()
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function appBaseUrl(): string {
+  return getBaseUrl();
+}
+
+export function emailFeatureEnabled(): boolean {
+  return (process.env.FEATURE_EMAIL ?? "false") === "true";
 }
 
 export async function createEmailDelivery(input: {
@@ -57,7 +80,7 @@ export async function getPendingEmails(limit = 50) {
 export async function getFailedEmails(limit = 50) {
   return prisma.emailDelivery.findMany({
     where: { status: "failed", attempts: { lt: 3 } },
-    orderBy: { lastAttemptAt: "asc" },
+    orderBy: { lastAttemptAt: { sort: "asc", nulls: "first" } },
     take: limit,
   });
 }
@@ -65,24 +88,24 @@ export async function getFailedEmails(limit = 50) {
 export function generateOrderCreatedEmail(order: {
   id: string;
   recipientName: string | null;
-  recipientEmail: string;
   recipientToken: string;
   yswsName: string;
   orgName: string;
 }): EmailTemplate {
-  const trackingUrl = `${process.env.NEXT_PUBLIC_APP_URL}/track/${order.recipientToken}`;
-  const recipientUrl = `${process.env.NEXT_PUBLIC_APP_URL}/recipient/${order.recipientToken}`;
+  const base = appBaseUrl();
+  const trackingUrl = `${base}/track/${encodeURIComponent(order.recipientToken)}`;
+  const recipientUrl = `${base}/recipient/${encodeURIComponent(order.recipientToken)}`;
 
   return {
     subject: `Your Hack Club Passport order from ${order.yswsName}`,
     html: `
       <h1>Passport Order Created</h1>
-      <p>Hi ${order.recipientName ?? "there"},</p>
-      <p>A passport order has been created for you by <strong>${order.yswsName}</strong> (${order.orgName}).</p>
-      <p>Please complete your details at: <a href="${recipientUrl}">${recipientUrl}</a></p>
-      <p>Track your order at: <a href="${trackingUrl}">${trackingUrl}</a></p>
+      <p>Hi ${esc(order.recipientName ?? "there")},</p>
+      <p>A passport order has been created for you by <strong>${esc(order.yswsName)}</strong> (${esc(order.orgName)}).</p>
+      <p>Please complete your details at: <a href="${esc(recipientUrl)}">${esc(recipientUrl)}</a></p>
+      <p>Track your order at: <a href="${esc(trackingUrl)}">${esc(trackingUrl)}</a></p>
       <hr>
-      <p><small>Order ID: ${order.id}</small></p>
+      <p><small>Order ID: ${esc(order.id)}</small></p>
     `,
     text: `
 Passport Order Created
@@ -103,21 +126,20 @@ Order ID: ${order.id}
 export function generateDetailsReceivedEmail(order: {
   id: string;
   recipientName: string | null;
-  recipientEmail: string;
   recipientToken: string;
   yswsName: string;
 }): EmailTemplate {
-  const trackingUrl = `${process.env.NEXT_PUBLIC_APP_URL}/track/${order.recipientToken}`;
+  const trackingUrl = `${appBaseUrl()}/track/${encodeURIComponent(order.recipientToken)}`;
 
   return {
     subject: `Passport details received - ${order.yswsName}`,
     html: `
       <h1>Details Received</h1>
-      <p>Hi ${order.recipientName ?? "there"},</h1>
+      <p>Hi ${esc(order.recipientName ?? "there")},</p>
       <p>We've received your details and your passport is now being prepared.</p>
-      <p>Track your order at: <a href="${trackingUrl}">${trackingUrl}</a></p>
+      <p>Track your order at: <a href="${esc(trackingUrl)}">${esc(trackingUrl)}</a></p>
       <hr>
-      <p><small>Order ID: ${order.id}</small></p>
+      <p><small>Order ID: ${esc(order.id)}</small></p>
     `,
     text: `
 Details Received
@@ -136,23 +158,22 @@ Order ID: ${order.id}
 export function generateShippedEmail(order: {
   id: string;
   recipientName: string | null;
-  recipientEmail: string;
   recipientToken: string;
   trackingNumber: string;
   carrier: string;
 }): EmailTemplate {
-  const trackingUrl = `${process.env.NEXT_PUBLIC_APP_URL}/track/${order.recipientToken}`;
+  const trackingUrl = `${appBaseUrl()}/track/${encodeURIComponent(order.recipientToken)}`;
 
   return {
     subject: `Your passport has shipped!`,
     html: `
       <h1>Your Passport Has Shipped</h1>
-      <p>Hi ${order.recipientName ?? "there"},</p>
-      <p>Your Hack Club Passport has been shipped via <strong>${order.carrier}</strong>.</p>
-      <p>Tracking number: <strong>${order.trackingNumber}</strong></p>
-      <p>Track your shipment at: <a href="${trackingUrl}">${trackingUrl}</a></p>
+      <p>Hi ${esc(order.recipientName ?? "there")},</p>
+      <p>Your Hack Club Passport has been shipped via <strong>${esc(order.carrier)}</strong>.</p>
+      <p>Tracking number: <strong>${esc(order.trackingNumber)}</strong></p>
+      <p>Track your shipment at: <a href="${esc(trackingUrl)}">${esc(trackingUrl)}</a></p>
       <hr>
-      <p><small>Order ID: ${order.id}</small></p>
+      <p><small>Order ID: ${esc(order.id)}</small></p>
     `,
     text: `
 Your Passport Has Shipped
@@ -173,20 +194,19 @@ Order ID: ${order.id}
 export function generateDeliveredEmail(order: {
   id: string;
   recipientName: string | null;
-  recipientEmail: string;
   recipientToken: string;
 }): EmailTemplate {
-  const trackingUrl = `${process.env.NEXT_PUBLIC_APP_URL}/track/${order.recipientToken}`;
+  const trackingUrl = `${appBaseUrl()}/track/${encodeURIComponent(order.recipientToken)}`;
 
   return {
     subject: `Your passport has been delivered!`,
     html: `
       <h1>Delivered!</h1>
-      <p>Hi ${order.recipientName ?? "there"},</p>
+      <p>Hi ${esc(order.recipientName ?? "there")},</p>
       <p>Your Hack Club Passport has been delivered.</p>
-      <p>View details at: <a href="${trackingUrl}">${trackingUrl}</a></p>
+      <p>View details at: <a href="${esc(trackingUrl)}">${esc(trackingUrl)}</a></p>
       <hr>
-      <p><small>Order ID: ${order.id}</small></p>
+      <p><small>Order ID: ${esc(order.id)}</small></p>
     `,
     text: `
 Delivered!
@@ -202,58 +222,213 @@ Order ID: ${order.id}
   };
 }
 
-export async function sendEmail(options: { to: string; subject: string; html: string; text?: string }): Promise<{ success: boolean; error?: string }> {
-  // TODO: Integrate with Resend, SendGrid, or Postmark
-  // For now, log and return success
-  console.log("[EMAIL] Would send:", { to: options.to, subject: options.subject });
-  
-  // Example with Resend:
-  // const resend = new Resend(process.env.RESEND_API_KEY);
-  // await resend.emails.send({ from: 'Passports <passports@hackclub.com>', ...options });
-  
-  return { success: true };
+export type OrderEmailKind = "created" | "details" | "shipped" | "delivered";
+
+/**
+ * Send (or queue) the email for an order event. The recorded delivery status
+ * always reflects what actually happened — never a fake "sent".
+ */
+export async function deliverOrderEmail(
+  orderId: string,
+  kind: OrderEmailKind
+): Promise<void> {
+  try {
+    const order = await prisma.passportOrder.findUnique({
+      where: { id: orderId },
+      include: {
+        ysws: { select: { name: true } },
+        org: { select: { name: true } },
+        shipments: { orderBy: { createdAt: "desc" }, take: 1 },
+      },
+    });
+    if (!order || !order.recipientEmail || !order.recipientToken) return;
+
+    const shipment = order.shipments[0];
+    const eventType: EventType =
+      kind === "created"
+        ? "ORDER_CREATED"
+        : kind === "details"
+          ? "RECIPIENT_DETAILS_SUBMITTED"
+          : kind === "shipped"
+            ? "SHIPMENT_CREATED"
+            : "STATUS_CHANGED";
+
+    // One shipment / one delivery notification per order: "shipped" can be
+    // triggered both by adding a shipment and by a SHIPPING state change.
+    if (kind === "shipped" || kind === "delivered") {
+      const already = await prisma.emailDelivery.findFirst({
+        where: { orderId: order.id, eventType },
+        select: { id: true },
+      });
+      if (already) return;
+    }
+
+    if (!emailFeatureEnabled()) {
+      await createEmailDelivery({
+        orderId: order.id,
+        recipientEmail: order.recipientEmail,
+        eventType,
+        status: "pending",
+      });
+      return;
+    }
+
+    const yswsName = order.ysws?.name ?? order.org?.name ?? "Hack Club";
+    const tpl =
+      kind === "created"
+        ? generateOrderCreatedEmail({
+            id: order.id,
+            recipientName: order.recipientName,
+            recipientToken: order.recipientToken,
+            yswsName,
+            orgName: order.org?.name ?? "",
+          })
+        : kind === "details"
+          ? generateDetailsReceivedEmail({
+              id: order.id,
+              recipientName: order.recipientName,
+              recipientToken: order.recipientToken,
+              yswsName,
+            })
+          : kind === "shipped" && shipment
+            ? generateShippedEmail({
+                id: order.id,
+                recipientName: order.recipientName,
+                recipientToken: order.recipientToken,
+                trackingNumber: shipment.trackingNumber ?? "n/a",
+                carrier: shipment.carrier ?? "the courier",
+              })
+            : kind === "delivered"
+              ? generateDeliveredEmail({
+                  id: order.id,
+                  recipientName: order.recipientName,
+                  recipientToken: order.recipientToken,
+                })
+              : null;
+
+    if (!tpl) return;
+
+    await sendEmail({
+      orderId: order.id,
+      recipientEmail: order.recipientEmail,
+      eventType,
+      subject: tpl.subject,
+      html: tpl.html,
+      text: tpl.text,
+    });
+  } catch (e) {
+    captureEmailError(e instanceof Error ? e : new Error(String(e)), {
+      orderId,
+      emailType: kind,
+    });
+  }
 }
 
-export async function processEmailQueue() {
-  const pending = await getPendingEmails(10);
-  
-  for (const email of pending) {
+/**
+ * Retry queued (pending) and failed deliveries. Intended to be run from a
+ * cron job, ops task, or the admin "Email queue" button (there is no
+ * in-process scheduler). Failed rows stop after 3 attempts.
+ */
+export async function processEmailQueue(): Promise<{ sent: number; failed: number }> {
+  if (!emailFeatureEnabled()) return { sent: 0, failed: 0 };
+
+  const [pending, failedRows] = await Promise.all([
+    getPendingEmails(10),
+    getFailedEmails(10),
+  ]);
+  const queue = [...pending, ...failedRows];
+  let sent = 0;
+  let failed = 0;
+
+  for (const email of queue) {
     try {
-      // Generate email based on event type
-      // TODO: Implement when email templates are ready
-      // let template: EmailTemplate | null = null;
-      
-      // if (email.eventType === "ORDER_CREATED") {
-      //   template = generateOrderCreatedEmail({ ... });
-      // } else if (email.eventType === "RECIPIENT_DETAILS_SUBMITTED") {
-      //   template = generateDetailsReceivedEmail({ ... });
-      // }
-      
-      // const tpl = template;
-      
-      // if (tpl) {
-      //   const result = await sendEmail({
-      //     to: email.recipientEmail,
-      //     subject: tpl.subject,
-      //     html: tpl.html,
-      //     text: tpl.text,
-      //   });
-      //   await updateEmailDeliveryStatus(email.id, result.success ? "sent" : "failed", result.error);
-      // }
-      
-      // For now, just log and mark as pending
-      await updateEmailDeliveryStatus(email.id, "pending");
+      const order = email.orderId
+        ? await prisma.passportOrder.findUnique({
+            where: { id: email.orderId },
+            include: {
+              ysws: { select: { name: true } },
+              org: { select: { name: true } },
+              shipments: { orderBy: { createdAt: "desc" }, take: 1 },
+            },
+          })
+        : null;
+
+      let tpl: EmailTemplate | null = null;
+      if (order?.recipientToken) {
+        const yswsName = order.ysws?.name ?? order.org?.name ?? "Hack Club";
+        if (email.eventType === "ORDER_CREATED") {
+          tpl = generateOrderCreatedEmail({
+            id: order.id,
+            recipientName: order.recipientName,
+            recipientToken: order.recipientToken,
+            yswsName,
+            orgName: order.org?.name ?? "",
+          });
+        } else if (email.eventType === "RECIPIENT_DETAILS_SUBMITTED") {
+          tpl = generateDetailsReceivedEmail({
+            id: order.id,
+            recipientName: order.recipientName,
+            recipientToken: order.recipientToken,
+            yswsName,
+          });
+        } else if (email.eventType === "SHIPMENT_CREATED" && order.shipments[0]) {
+          const shipment = order.shipments[0];
+          tpl = generateShippedEmail({
+            id: order.id,
+            recipientName: order.recipientName,
+            recipientToken: order.recipientToken,
+            trackingNumber: shipment.trackingNumber ?? "n/a",
+            carrier: shipment.carrier ?? "the courier",
+          });
+        } else if (email.eventType === "STATUS_CHANGED") {
+          tpl = generateDeliveredEmail({
+            id: order.id,
+            recipientName: order.recipientName,
+            recipientToken: order.recipientToken,
+          });
+        }
+      }
+
+      if (!tpl) {
+        // No order/template to render — stop churning this row forever.
+        await updateEmailDeliveryStatus(email.id, "failed", "no template for event");
+        failed += 1;
+        continue;
+      }
+
+      try {
+        await getProvider().send({
+          to: email.recipientEmail,
+          subject: tpl.subject,
+          html: tpl.html,
+          text: tpl.text,
+          meta: { orderId: email.orderId ?? undefined },
+        });
+        await updateEmailDeliveryStatus(email.id, "sent");
+        sent += 1;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        await updateEmailDeliveryStatus(email.id, "failed", message);
+        failed += 1;
+        await auditLog({
+          entityType: "EmailDelivery",
+          entityId: email.id,
+          action: "EMAIL_FAILED",
+          actor: "system",
+          actorType: "SYSTEM",
+          description: `Failed to send email: ${message}`,
+          requestId: await getRequestId(),
+        });
+      }
     } catch (error) {
-      await updateEmailDeliveryStatus(email.id, "failed", error instanceof Error ? error.message : "Unknown error");
-      await auditLog({
-        entityType: "EmailDelivery",
-        entityId: email.id,
-        action: "EMAIL_FAILED",
-        actor: "system",
-        actorType: "SYSTEM",
-        description: `Failed to send email: ${error instanceof Error ? error.message : "Unknown error"}`,
-        requestId: await getRequestId(),
-      });
+      await updateEmailDeliveryStatus(
+        email.id,
+        "failed",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+      failed += 1;
     }
   }
+
+  return { sent, failed };
 }

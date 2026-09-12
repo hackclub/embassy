@@ -1,4 +1,5 @@
 import { redis, getClientIdentifier } from "./redis";
+import logger from "./logger";
 
 export interface RateLimitConfig {
   windowMs: number;
@@ -11,8 +12,13 @@ export interface RateLimitResult {
   remaining: number;
   resetTime: number;
   totalRequests: number;
+  /** True when Redis was unreachable and the request was allowed anyway. */
+  degraded?: boolean;
 }
 
+// Fail-open when Redis is down: a cache outage must not take the orders API
+// and feedback endpoints offline for everyone. Abuse protection degrades to
+// "none" for the duration, which is the lesser evil vs a full outage.
 export async function rateLimit(
   req: Request,
   config: RateLimitConfig
@@ -22,23 +28,37 @@ export async function rateLimit(
   const now = Date.now();
   const windowStart = now - config.windowMs;
 
-  const results = await redis
-    .multi()
-    .zremrangebyscore(key, 0, windowStart)
-    .zadd(key, `${now}-${Math.random()}`, `${now}`)
-    .zcard(key)
-    .pexpire(key, config.windowMs)
-    .exec();
+  try {
+    const results = await redis
+      .multi()
+      .zremrangebyscore(key, 0, windowStart)
+      .zadd(key, now, `${now}-${Math.random()}`)
+      .zcard(key)
+      .pexpire(key, config.windowMs)
+      .exec();
 
-  const current = (results?.[2]?.[1] as number) ?? 0;
-  const allowed = current <= config.maxRequests;
-  const remaining = Math.max(0, config.maxRequests - current);
-  const resetTime = now + config.windowMs;
+    const current = (results?.[2]?.[1] as number) ?? 0;
+    const allowed = current <= config.maxRequests;
+    const remaining = Math.max(0, config.maxRequests - current);
+    const resetTime = now + config.windowMs;
 
-  return { allowed, remaining, resetTime, totalRequests: current };
+    return { allowed, remaining, resetTime, totalRequests: current };
+  } catch (e) {
+    logger.error(
+      { err: e instanceof Error ? e.message : String(e), keyPrefix: config.keyPrefix },
+      "rate_limit_degraded_fail_open",
+    );
+    return {
+      allowed: true,
+      remaining: config.maxRequests,
+      resetTime: now + config.windowMs,
+      totalRequests: 0,
+      degraded: true,
+    };
+  }
 }
 
-export function getRateLimitHeaders(result: RateLimitResult, windowMs: number): HeadersInit {
+export function getRateLimitHeaders(result: RateLimitResult): HeadersInit {
   return {
     "X-RateLimit-Limit": String(result.totalRequests + result.remaining),
     "X-RateLimit-Remaining": String(result.remaining),
@@ -49,10 +69,9 @@ export function getRateLimitHeaders(result: RateLimitResult, windowMs: number): 
 
 export function createRateLimitResponse(
   result: RateLimitResult,
-  windowMs: number,
   message = "Rate limit exceeded"
 ): Response {
-  const headers = getRateLimitHeaders(result, windowMs);
+  const headers = getRateLimitHeaders(result);
   return new Response(JSON.stringify({ error: message }), {
     status: 429,
     headers: { "Content-Type": "application/json", ...headers },
@@ -60,9 +79,10 @@ export function createRateLimitResponse(
 }
 
 export const RATE_LIMITS = {
-  auth: { windowMs: 15 * 60 * 1000, maxRequests: 10, keyPrefix: "auth" },
+  // One OAuth login consumes ~3 guarded requests (signin page, provider
+  // callback) — 20/15min throttles brute force without locking out retries.
+  auth: { windowMs: 15 * 60 * 1000, maxRequests: 20, keyPrefix: "auth" },
   orders: { windowMs: 60 * 1000, maxRequests: 30, keyPrefix: "orders" },
   recipient: { windowMs: 60 * 1000, maxRequests: 20, keyPrefix: "recipient" },
   feedback: { windowMs: 60 * 60 * 1000, maxRequests: 5, keyPrefix: "feedback" },
-  api: { windowMs: 60 * 1000, maxRequests: 100, keyPrefix: "api" },
 } as const;

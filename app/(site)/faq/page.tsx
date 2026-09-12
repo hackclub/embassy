@@ -11,7 +11,7 @@ export default function FAQPage() {
       <FadeIn className="mx-auto max-w-5xl px-5 pt-10">
         <Breadcrumb
           items={[
-            { label: "whoami", href: "/" },
+            { label: "Embassy", href: "/" },
             { label: "FAQ" },
           ]}
         />

@@ -42,8 +42,6 @@ export default async function AdminUserDetailPage({
     redirect("/admin");
   }
 
-  const isSuperadmin = user.role === "SUPERADMIN";
-
   const targetUser = await prisma.user.findUnique({
     where: { id },
     include: {
@@ -82,7 +80,7 @@ export default async function AdminUserDetailPage({
     <>
       <Breadcrumb
         items={[
-          { label: "whoami", href: "/" },
+          { label: "Embassy", href: "/" },
           { label: "Admin", href: "/admin" },
           { label: "Users & roles", href: "/admin/users" },
           { label: targetUser.name ?? targetUser.email ?? "User" },
@@ -283,19 +281,6 @@ export default async function AdminUserDetailPage({
         </div>
 
         <aside className="lg:col-span-4 space-y-6">
-          <Section title="Actions" divider={false}>
-            <div className="space-y-3">
-              <Link href={`/admin/users/${id}/edit`} className="govuk-button govuk-button--secondary w-full block text-center">
-                Edit user
-              </Link>
-              {isSuperadmin && (
-                <Link href={`/admin/users/${id}/role`} className="govuk-button govuk-button--secondary w-full block text-center">
-                  Change role
-                </Link>
-              )}
-            </div>
-          </Section>
-
           <Section title="Credits" divider={false}>
             <AdjustCreditsForm userId={id} balance={balance} />
           </Section>

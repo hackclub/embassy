@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import home from "../content/home.json";
+import { BRAND } from "@/lib/brand";
 
 const zarathustra = localFont({
   variable: "--font-zarathustra",
@@ -39,7 +40,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: home.metaTitle,
+  title: {
+    default: home.metaTitle,
+    template: `%s – ${BRAND}`,
+  },
   description: home.heroIntro,
   openGraph: {
     title: home.metaTitle,

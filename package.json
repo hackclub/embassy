@@ -1,12 +1,14 @@
 {
-  "name": "whoami",
+  "name": "embassy",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync:airtable": "bun scripts/sync-airtable.ts",
+    "email:queue": "bun scripts/email-queue.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",
@@ -37,9 +39,13 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^10",
+    "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "mysql2": "^3.24.4",
+    "deepmerge-ts": "^8.0.2"
   }
 }

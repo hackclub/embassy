@@ -16,11 +16,24 @@ export interface BuyItemResult {
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
+/**
+ * Serialises all shop/passport purchases for one user for the duration of
+ * the enclosing transaction. Call before any read-then-write guard
+ * (balance, stock, max-per-user, one-passport-at-a-time).
+ */
+export async function lockUserPurchases(tx: Tx, userId: string): Promise<void> {
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`embassy:buy:${userId}`}))`;
+}
+
 /* Callers can compose this with other writes in
  * the same transaction
  *
  * Order is created before spending so the SPENT ledger can reference
  * it: if spending fails the whole transaction rolls back.
+ *
+ * A per-user transaction-scoped advisory lock serialises concurrent
+ * purchases by the same user, so balance, stock and max-per-user checks
+ * cannot be raced (TOCTOU).
  */
 export async function buyItemInTx(
   tx: Tx,
@@ -35,6 +48,8 @@ export async function buyItemInTx(
       "Quantity must be a positive whole number.",
     );
   }
+
+  await lockUserPurchases(tx, userId);
 
   const item = await tx.shopItem.findUnique({ where: { id: itemId } });
   if (!item || !item.isActive) {
@@ -106,10 +121,15 @@ export async function buyItemInTx(
   }
 
   if (item.stock !== null && item.stock >= 0) {
-    await tx.shopItem.update({
-      where: { id: item.id },
+    // Conditional decrement — stock can never go negative even if the
+    // advisory lock is bypassed by a different code path.
+    const decremented = await tx.shopItem.updateMany({
+      where: { id: item.id, stock: { gte: quantity } },
       data: { stock: { decrement: quantity } },
     });
+    if (decremented.count === 0) {
+      throw new ShopError("out_of_stock", `"${item.name}" just sold out.`);
+    }
   }
 
   return { orderId: order.id, newBalance };
@@ -138,7 +158,13 @@ export async function refundOrder(orderId: string): Promise<void> {
       include: { item: true },
     });
     if (!order) throw new ShopError("not_found", "Order not found.");
-    if (order.status === "CANCELLED") {
+
+    // Claim the cancellation atomically so concurrent refunds can't both pay.
+    const claimed = await tx.shopOrder.updateMany({
+      where: { id: orderId, status: { not: "CANCELLED" } },
+      data: { status: "CANCELLED" },
+    });
+    if (claimed.count === 0) {
       throw new ShopError("already_cancelled", "Order is already cancelled.");
     }
 
@@ -165,10 +191,5 @@ export async function refundOrder(orderId: string): Promise<void> {
         data: { stock: { increment: order.quantity } },
       });
     }
-
-    await tx.shopOrder.update({
-      where: { id: order.id },
-      data: { status: "CANCELLED" },
-    });
   });
 }

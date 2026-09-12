@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 export default function PassportImage() {
@@ -10,9 +11,11 @@ export default function PassportImage() {
   }
 
   return (
-    <img
+    <Image
       src="/passport.png"
       alt=""
+      width={240}
+      height={240}
       className="absolute object-contain pointer-events-none hidden xl:block -mt-20"
       style={{
 left: "-170px",

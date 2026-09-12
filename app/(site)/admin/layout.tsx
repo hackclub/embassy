@@ -64,7 +64,7 @@ export default async function AdminLayout({
               href="/"
               className="font-hc text-2xl font-bold text-hc leading-none"
             >
-              whoami
+              Embassy
             </Link>
             <div className="hidden sm:flex items-center gap-4 text-sm text-govuk-grey-4">
               <span>
@@ -89,14 +89,14 @@ export default async function AdminLayout({
       </header>
 
       {/* Mobile sidebar toggle (button is fixed bottom-right; desktop uses the sticky sidebar) */}
-      <MobileSidebar role={ROLE_LABEL[user.role]} />
+      <MobileSidebar />
 
       <div className="mx-auto max-w-full px-6 py-6 md:grid md:grid-cols-[260px_1fr] md:gap-6 lg:grid-cols-[260px_1fr]">
         <aside
           className="md:sticky md:top-[var(--admin-sidebar-sticky-offset)] md:self-start hidden md:block"
           aria-label="Admin navigation"
         >
-          <AdminSidebar role={ROLE_LABEL[user.role]} />
+          <AdminSidebar />
         </aside>
         <main className="w-full md:col-span-1 lg:col-span-1">{children}</main>
       </div>

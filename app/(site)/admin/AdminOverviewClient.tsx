@@ -99,7 +99,7 @@ export default function AdminOverviewClient({
 
   return (
     <>
-      <Breadcrumb items={[{ label: "whoami", href: "/" }, { label: "Admin" }]} />
+      <Breadcrumb items={[{ label: "Embassy", href: "/" }, { label: "Admin" }]} />
 
       <PageHeader
         title="Admin"

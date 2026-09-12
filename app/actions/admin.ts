@@ -4,9 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { generateApiKey, generateApiKeyWithHash, getCurrentUserWithRole, hasRole, isSuperadminEmail } from "@/lib/org";
-import { verifyYSWSAccess } from "@/lib/ysws-context";
+import { generateApiKeyWithHash, getCurrentUserWithRole, hasRole, isOrgMember, isSuperadminEmail } from "@/lib/org";
+import { isBypassUser } from "@/lib/bypass";
 import { adjustCredits } from "@/lib/services/credits.service";
+import { deliverOrderEmail, processEmailQueue } from "@/lib/services/email.service";
+import { isAirtableConfigured } from "@/lib/airtable";
+import { syncAllToAirtable } from "@/lib/airtable-sync";
+import { captureAPIError } from "@/lib/sentry";
+import { MAX_CREDIT_ADJUSTMENT } from "@/lib/constants";
 import type { Role } from "../../generated/prisma/client";
 
 const addOrganizerSchema = z.object({
@@ -71,7 +76,10 @@ export async function addOrganizerAction(
           name: org.name,
           slug: org.slug,
           apiKeyHash: apiKeyData.hash,
-          apiKeyDisplay: apiKeyData.key.slice(-4),
+          apiKeyPrefix: apiKeyData.prefix,
+          apiKeyDisplay: apiKeyData.display,
+          apiKeyExpiresAt: apiKeyData.expiresAt,
+          apiKeyScopes: apiKeyData.scopes,
           isActive: true,
           orgId: org.id,
         },
@@ -142,6 +150,9 @@ export async function setRoleAction(
   if (!target) {
     return { error: "No account found with that email." };
   }
+  if (target.id === actor.id) {
+    return { error: "You cannot change your own role." };
+  }
 
   await prisma.user.update({
     where: { id: target.id },
@@ -184,11 +195,13 @@ export async function issuePassportAdminAction(
   });
   if (!org) return { error: "That org does not exist." };
 
-  // Check actor has access to this org using unified context
-  const access = await verifyYSWSAccess(actor.id, org.id);
-  // Admin has broader access, but still verify
-  if (!access && actor.role !== "SUPERADMIN") {
-    return { error: "You do not have access to this org." };
+  // Admins may only issue into orgs they belong to; superadmins (and the
+  // dev bypass user) may issue into any org.
+  if (actor.role !== "SUPERADMIN" && !isBypassUser(actor.id)) {
+    const member = await isOrgMember(actor.id, org.id);
+    if (!member) {
+      return { error: "You do not have access to this org." };
+    }
   }
 
   const email = parsed.data.recipientEmail.toLowerCase().trim();
@@ -204,7 +217,7 @@ export async function issuePassportAdminAction(
     b.toString(16).padStart(2, "0")
   ).join("");
 
-  await prisma.passportOrder.create({
+  const order = await prisma.passportOrder.create({
     data: {
       orgId: org.id,
       yswsId: ysws.id,
@@ -228,6 +241,8 @@ export async function issuePassportAdminAction(
     },
   });
 
+  await deliverOrderEmail(order.id, "created");
+
   revalidatePath("/admin");
   revalidatePath("/dashboard");
   return {
@@ -243,7 +258,11 @@ const adjustCreditsSchema = z.object({
     .string()
     .trim()
     .regex(/^-?\d+$/, "Enter a whole number (positive to add, negative to remove)")
-    .transform(Number),
+    .transform(Number)
+    .refine(
+      (n) => Math.abs(n) <= MAX_CREDIT_ADJUSTMENT,
+      `Adjustments are capped at ${MAX_CREDIT_ADJUSTMENT} credits`
+    ),
   description: z
     .string()
     .trim()
@@ -295,4 +314,49 @@ export async function adjustCreditsAction(
   return {
     ok: `${sign}${amount} credits applied to ${target.name ?? target.email}.`,
   };
+}
+// Takes no params on purpose — useActionState passes (prev, formData), which
+// JS/TS ignore; the action only needs the session.
+export async function syncAirtableAction(): Promise<AdminFormState> {
+  const actor = await getCurrentUserWithRole();
+  if (!actor) redirect("/api/auth/signin?callbackUrl=/admin");
+  if (!hasRole(actor.role, "ADMIN")) {
+    return { error: "Admins and superadmins can sync Airtable." };
+  }
+  if (!isAirtableConfigured()) {
+    return { error: "Airtable is not configured (FEATURE_AIRTABLE/AIRTABLE_API_KEY/AIRTABLE_BASE_ID)." };
+  }
+
+  const results = await syncAllToAirtable();
+  const failed = results.filter((r) => r.error);
+  for (const f of failed) {
+    captureAPIError(new Error(f.error ?? "sync failed"), {
+      endpoint: "admin/sync-airtable",
+      method: "POST",
+    });
+  }
+
+  const changed = results.reduce((sum, r) => sum + r.created + r.updated + r.deleted, 0);
+  if (failed.length > 0) {
+    return {
+      error: `Synced ${results.length - failed.length}/${results.length} tables, then ${failed.length} failed (${failed[0]?.error}).`,
+    };
+  }
+  return { ok: `Mirrored ${results.length} tables to Airtable (${changed} rows changed).` };
+}
+
+export async function processEmailQueueAction(): Promise<AdminFormState> {
+  const actor = await getCurrentUserWithRole();
+  if (!actor) redirect("/api/auth/signin?callbackUrl=/admin");
+  if (!hasRole(actor.role, "ADMIN")) {
+    return { error: "Admins and superadmins can run the email queue." };
+  }
+  if ((process.env.FEATURE_EMAIL ?? "false") !== "true") {
+    return { error: "Email sending is disabled (FEATURE_EMAIL=true to enable)." };
+  }
+  const { sent, failed } = await processEmailQueue();
+  if (sent === 0 && failed === 0) {
+    return { ok: "Email queue is empty." };
+  }
+  return { ok: `Email queue: ${sent} sent, ${failed} failed.` };
 }

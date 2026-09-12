@@ -12,6 +12,18 @@ const HACKATIME = {
 
 export const HACKATIME_STATE_COOKIE = "hackatime_oauth_state";
 
+/**
+ * Cookie name for the OAuth state. With an https AUTH_URL we can use the
+ * __Host- prefix (secure + path=/ + no domain), which prevents other
+ * subdomains from planting a state cookie; on plain http (dev) fall back to
+ * the bare name since __Host- would be rejected by browsers.
+ */
+export function stateCookieName(): string {
+  return getBaseUrl().startsWith("https://")
+    ? `__Host-${HACKATIME_STATE_COOKIE}`
+    : HACKATIME_STATE_COOKIE;
+}
+
 export type HackatimeMe = {
   id: number;
   emails: string[];
@@ -20,9 +32,10 @@ export type HackatimeMe = {
 };
 
 export function isHackatimeConfigured(): boolean {
-  return Boolean(
-    process.env.AUTH_HACKATIME_CLIENT_ID && process.env.AUTH_HACKATIME_CLIENT_SECRET
-  );
+  const id = process.env.AUTH_HACKATIME_CLIENT_ID ?? "";
+  const secret = process.env.AUTH_HACKATIME_CLIENT_SECRET ?? "";
+  const placeholder = (v: string) => !v || v.trim().toLowerCase() === "placeholder";
+  return !placeholder(id) && !placeholder(secret);
 }
 
 /**
@@ -156,6 +169,13 @@ export async function fetchProjects(
   }
 }
 
+export class HackatimeAlreadyLinkedException extends Error {
+  constructor() {
+    super("This Hackatime account is already linked to another user");
+    this.name = "HackatimeAlreadyLinkedException";
+  }
+}
+
 export async function linkUser(
   userId: string,
   hackatimeUid: string,
@@ -172,8 +192,17 @@ export async function linkUser(
         },
       },
     });
-    if (existing && existing.userId !== userId) {
-      await tx.account.delete({ where: { id: existing.id } });
+    const existingUser = await tx.user.findFirst({
+      where: { hackatimeUid },
+      select: { id: true },
+    });
+    // A Hackatime id already owned by someone else must never be stolen:
+    // unlink the rightful owner first (they can re-link with their own login).
+    if (
+      (existing && existing.userId !== userId) ||
+      (existingUser && existingUser.id !== userId)
+    ) {
+      throw new HackatimeAlreadyLinkedException();
     }
     await tx.account.upsert({
       where: {
@@ -197,15 +226,6 @@ export async function linkUser(
         access_token: accessToken,
         token_type: "Bearer",
         scope: "profile read",
-      },
-    });
-    // User.hackatimeUid is unique — release it from any previous owner first.
-    await tx.user.updateMany({
-      where: { hackatimeUid, NOT: { id: userId } },
-      data: {
-        hackatimeUid: null,
-        hackatimeLinkedAt: null,
-        hackatimeTokenEncrypted: null,
       },
     });
     await tx.user.update({

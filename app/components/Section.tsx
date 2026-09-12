@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 interface SectionProps {
   title: string;
   description?: string;

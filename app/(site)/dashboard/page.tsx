@@ -35,7 +35,7 @@ export default async function DashboardPage({
 
   return (
     <FadeIn className="mx-auto w-full px-6 pb-12 pt-8">
-      <Breadcrumb items={[{ label: "whoami", href: "/" }, { label: "Dashboard" }]} />
+      <Breadcrumb items={[{ label: "Embassy", href: "/" }, { label: "Dashboard" }]} />
 
       {!user ? (
         <UnsignedDashboard />
@@ -143,7 +143,6 @@ async function OrganizerDashboard({
 
   const orderList = orders?.orders ?? [];
   const totalOrdered = orderList.reduce((sum, o) => sum + o.totalQuantity, 0);
-  const apiKey = activeYSWS.yswsApiKeyDisplay;
 
   // Orders needing attention (awaiting details, pending, etc.)
   const needsAttention = orderList.filter((o) => 
@@ -166,7 +165,7 @@ async function OrganizerDashboard({
       <header className="border-b border-govuk-grey-2 bg-govuk-white sticky top-0 z-10 min-h-[var(--dashboard-header-height)]">
         <div className="mx-auto max-w-full px-6 py-4">
           <nav className="flex items-center justify-between" aria-label="Global">
-            <Link href="/" className="text-xl font-bold text-hc-red">whoami</Link>
+            <Link href="/" className="text-xl font-bold text-hc-red">Embassy</Link>
             <div className="flex items-center gap-4 text-sm text-govuk-grey-4">
               <span>Signed in as <strong>{activeYSWS.orgName}</strong></span>
               <span aria-hidden="true">·</span>
@@ -252,10 +251,10 @@ async function OrganizerDashboard({
                     key: "recipient",
                     header: "Recipient",
                     render: (o: typeof orderRows[0]) => (
-                      <Link href={`/admin/orders/${o.id}`} className="font-medium hover:underline">
+                      <div className="font-medium">
                         {o.recipientName ?? "&mdash;"}
                         {o.recipientEmail && <span className="block text-xs text-govuk-grey-4">{o.recipientEmail}</span>}
-                      </Link>
+                      </div>
                     ),
                   },
                   {
@@ -306,10 +305,10 @@ async function OrganizerDashboard({
                     key: "recipient",
                     header: "Recipient",
                     render: (o: typeof orderRows[0]) => (
-                      <Link href={`/admin/orders/${o.id}`} className="font-medium hover:underline">
+                      <div className="font-medium">
                         {o.recipientName ?? "&mdash;"}
                         {o.recipientEmail && <span className="block text-xs text-govuk-grey-4">{o.recipientEmail}</span>}
-                      </Link>
+                      </div>
                     ),
                   },
                   {
