@@ -12,12 +12,7 @@ const HACKATIME = {
 
 export const HACKATIME_STATE_COOKIE = "hackatime_oauth_state";
 
-/**
- * Cookie name for the OAuth state. With an https AUTH_URL we can use the
- * __Host- prefix (secure + path=/ + no domain), which prevents other
- * subdomains from planting a state cookie; on plain http (dev) fall back to
- * the bare name since __Host- would be rejected by browsers.
- */
+// __Host- prefix (https only) keeps other subdomains from planting a state cookie
 export function stateCookieName(): string {
   return getBaseUrl().startsWith("https://")
     ? `__Host-${HACKATIME_STATE_COOKIE}`
@@ -38,18 +33,13 @@ export function isHackatimeConfigured(): boolean {
   return !placeholder(id) && !placeholder(secret);
 }
 
-/**
- * Find canonical Base URL. Prefers AUTH_URL.
- * Default: env: AUTH_URL
- * Fallback: Headers (req origin)
- */
 export function getBaseUrl(origin?: string): string {
   const envUrl = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL;
   if (envUrl) {
     try {
       return new URL(envUrl).origin;
     } catch {
-      // fall through: request origin
+      // fall through
     }
   }
   if (origin) {
@@ -181,7 +171,6 @@ export async function linkUser(
   hackatimeUid: string,
   token: { access_token: string }
 ): Promise<void> {
-  // Encrypt at rest — never keep the raw Hackatime token in the DB.
   const accessToken = await encryptPII(token.access_token);
   await prisma.$transaction(async (tx) => {
     const existing = await tx.account.findUnique({
@@ -196,8 +185,6 @@ export async function linkUser(
       where: { hackatimeUid },
       select: { id: true },
     });
-    // A Hackatime id already owned by someone else must never be stolen:
-    // unlink the rightful owner first (they can re-link with their own login).
     if (
       (existing && existing.userId !== userId) ||
       (existingUser && existingUser.id !== userId)
@@ -257,14 +244,12 @@ export async function getLinkedAccount(
     },
   });
 
-  // Prefer the dedicated field; fall back to the account row (may be legacy
-  // plaintext from before encryption, so decrypt-when-possible).
   const stored = user.hackatimeTokenEncrypted || account?.access_token || null;
   if (!stored) return null;
 
   let accessToken: string;
   try {
-    // May be legacy plaintext from before encryption, so decrypt-when-possible.
+    // value may be legacy plaintext, decryptPII falls back to raw
     const plain = await decryptPII(stored);
     accessToken = plain || stored;
   } catch {

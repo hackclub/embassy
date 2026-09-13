@@ -3,15 +3,9 @@ import type { NextRequest } from "next/server";
 import { auth } from "@/auth";
 import { isAuthBypassEnabled } from "@/lib/bypass";
 
-// Security headers are owned by the edge proxy in production.
-// This proxy only handles request IDs and auth redirects.
-
-// Page prefixes that anonymous visitors may access. Everything else requires
-// a session (unless ADMIN_BYPASS is enabled). Matching is per path segment, so
-// "/track" protects "/trackable-admin" and only the exact "/" is public root.
+// matched per path segment (not raw prefix), so "/track" won't match "/trackable-admin"
 const PUBLIC_PATHS = [
-  // APIs handle their own authentication (API keys, 401 JSON, rate limits) —
-  // redirecting them to the sign-in page would break programmatic clients.
+  // APIs do their own auth (keys, 401 JSON, rate limits)
   "/api/auth",
   "/api/health",
   "/api/feedback",
@@ -29,7 +23,7 @@ const PUBLIC_PATHS = [
   "/sitemap.xml",
 ];
 
-// Static assets served from /public are intended to be public (logo, icons).
+// static assets in /public are meant to be public
 const STATIC_ASSET_PATTERN = /\.(png|jpe?g|gif|svg|ico|webp|avif|css|js|map|txt|xml|json|woff2?|otf|ttf|eot)$/i;
 
 const REQUEST_ID_PATTERN = /^[A-Za-z0-9_.:-]{1,64}$/;

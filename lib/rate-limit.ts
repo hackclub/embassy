@@ -12,13 +12,11 @@ export interface RateLimitResult {
   remaining: number;
   resetTime: number;
   totalRequests: number;
-  /** True when Redis was unreachable and the request was allowed anyway. */
+  /** set when Redis was unreachable and the check failed open */
   degraded?: boolean;
 }
 
-// Fail-open when Redis is down: a cache outage must not take the orders API
-// and feedback endpoints offline for everyone. Abuse protection degrades to
-// "none" for the duration, which is the lesser evil vs a full outage.
+// fail open: a Redis outage shouldn't take the API down
 export async function rateLimit(
   req: Request,
   config: RateLimitConfig
@@ -79,8 +77,6 @@ export function createRateLimitResponse(
 }
 
 export const RATE_LIMITS = {
-  // One OAuth login consumes ~3 guarded requests (signin page, provider
-  // callback) — 20/15min throttles brute force without locking out retries.
   auth: { windowMs: 15 * 60 * 1000, maxRequests: 20, keyPrefix: "auth" },
   orders: { windowMs: 60 * 1000, maxRequests: 30, keyPrefix: "orders" },
   recipient: { windowMs: 60 * 1000, maxRequests: 20, keyPrefix: "recipient" },

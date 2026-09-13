@@ -7,7 +7,7 @@ import RecipientLayout from "./_components/RecipientLayout";
 import RecipientProgressTracker from "./_components/RecipientProgressTracker";
 import RecipientStep from "./_components/RecipientStep";
 
-// Token-bearing URL exposes recipient PII — keep it out of search indexes.
+// token in the URL — keep out of search indexes
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
@@ -92,7 +92,7 @@ export default async function RecipientRootPage({
     rawRecipient as unknown as Record<string, unknown>,
     PII_FIELDS
   ) as OrderWithRelations["recipients"][number];
-  // photoUrl is an encrypted data URL (not part of PII_FIELDS).
+  // encrypted data url, not covered by PII_FIELDS
   const photoDataUrl = recipient.photoUrl ? await decryptPII(recipient.photoUrl) : null;
   const completedSteps = [
     recipient.name ? "name" : null,

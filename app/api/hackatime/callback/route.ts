@@ -46,9 +46,8 @@ export async function GET(request: NextRequest) {
     return redirectTo(request, "token_error");
   }
 
-  // Only allow linking a Hackatime account whose email matches the signed-in
-  // user's verified email — otherwise anyone could complete OAuth with an
-  // account they control and hijack hours/projects onto another user.
+  // only link accounts whose email matches the signed-in user's verified one,
+  // otherwise someone could push their own hackatime data onto another user
   const userEmail = user.email?.toLowerCase().trim();
   const meEmails = me.emails.map((e) => e.toLowerCase().trim());
   if (!userEmail || !meEmails.includes(userEmail)) {

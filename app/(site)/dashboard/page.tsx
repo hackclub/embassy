@@ -30,7 +30,6 @@ export default async function DashboardPage({
   const params = await searchParams;
   const selectedYswsId = params.ysws ?? null;
 
-  // Get unified YSWS context
   const context = await getYSWSContext();
 
   return (
@@ -110,7 +109,6 @@ async function OrganizerDashboard({
 }) {
   if (!context) return <NoOrgAccess />;
 
-  // Resolve current YSWS - validate server-side
   let activeYSWS = context.activeYSWS;
   if (selectedYswsId) {
     const selected = context.accessibleYSWSes.find((y) => y.yswsId === selectedYswsId);
@@ -128,7 +126,6 @@ async function OrganizerDashboard({
     );
   }
 
-  // Fetch orders for the selected YSWS
   const orders = await prisma.ySWS.findUnique({
     where: { id: activeYSWS.yswsId },
     include: {
@@ -144,7 +141,6 @@ async function OrganizerDashboard({
   const orderList = orders?.orders ?? [];
   const totalOrdered = orderList.reduce((sum, o) => sum + o.totalQuantity, 0);
 
-  // Orders needing attention (awaiting details, pending, etc.)
   const needsAttention = orderList.filter((o) => 
     ["AWAITING_RECIPIENT_DETAILS", "RECIPIENT_DETAILS_RECEIVED", "DRAFTING", "ERROR"].includes(o.currentState)
   );

@@ -2,8 +2,7 @@ import { type NextRequest } from "next/server";
 import { handlers } from "@/auth";
 import { rateLimit, RATE_LIMITS, createRateLimitResponse } from "@/lib/rate-limit";
 
-// /api/auth is public (programmatic clients must reach it) and the sign-in /
-// OAuth-callback flow is the brute-force surface — so the limiter lives here.
+// only the signin/callback steps are rate limited; rest of /api/auth stays public
 const SIGNIN_FLOW = /\/api\/auth\/(signin|callback)/;
 
 async function guard(req: NextRequest): Promise<Response | null> {

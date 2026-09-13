@@ -16,25 +16,11 @@ export interface BuyItemResult {
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
-/**
- * Serialises all shop/passport purchases for one user for the duration of
- * the enclosing transaction. Call before any read-then-write guard
- * (balance, stock, max-per-user, one-passport-at-a-time).
- */
+// per-user advisory lock; call before any read-then-write check
 export async function lockUserPurchases(tx: Tx, userId: string): Promise<void> {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`embassy:buy:${userId}`}))`;
 }
 
-/* Callers can compose this with other writes in
- * the same transaction
- *
- * Order is created before spending so the SPENT ledger can reference
- * it: if spending fails the whole transaction rolls back.
- *
- * A per-user transaction-scoped advisory lock serialises concurrent
- * purchases by the same user, so balance, stock and max-per-user checks
- * cannot be raced (TOCTOU).
- */
 export async function buyItemInTx(
   tx: Tx,
   userId: string,
@@ -121,8 +107,7 @@ export async function buyItemInTx(
   }
 
   if (item.stock !== null && item.stock >= 0) {
-    // Conditional decrement — stock can never go negative even if the
-    // advisory lock is bypassed by a different code path.
+    // conditional decrement, stock can't go negative
     const decremented = await tx.shopItem.updateMany({
       where: { id: item.id, stock: { gte: quantity } },
       data: { stock: { decrement: quantity } },
@@ -135,10 +120,7 @@ export async function buyItemInTx(
   return { orderId: order.id, newBalance };
 }
 
-/**
- * Convenience wrapper.
- * PREFER buyItemInTx over buyItem.
- */
+// prefer buyItemInTx inside a transaction; this opens its own
 export async function buyItem(
   userId: string,
   itemId: string,
@@ -150,7 +132,6 @@ export async function buyItem(
   );
 }
 
-// AUTOMATICALLY RUNS!!
 export async function refundOrder(orderId: string): Promise<void> {
   await prisma.$transaction(async (tx) => {
     const order = await tx.shopOrder.findUnique({
@@ -159,7 +140,7 @@ export async function refundOrder(orderId: string): Promise<void> {
     });
     if (!order) throw new ShopError("not_found", "Order not found.");
 
-    // Claim the cancellation atomically so concurrent refunds can't both pay.
+    // claim the cancellation so concurrent refunds can't both pay
     const claimed = await tx.shopOrder.updateMany({
       where: { id: orderId, status: { not: "CANCELLED" } },
       data: { status: "CANCELLED" },

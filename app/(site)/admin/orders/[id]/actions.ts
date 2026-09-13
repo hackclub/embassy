@@ -191,7 +191,6 @@ export async function updateOrderStateAction(
     description: `Order state updated by ${actor.name ?? actor.email}`,
   });
 
-  // Notify the recipient when a passport is actually on its way / arrives.
   if (parsed.data.currentState === "SHIPPING") {
     await deliverOrderEmail(orderId, "shipped");
   } else if (parsed.data.currentState === "DELIVERED") {
@@ -211,11 +210,7 @@ const createShipmentSchema = z.object({
   note: z.string().trim().max(300).optional(),
 });
 
-/**
- * Record a shipment on an order and, when the order isn't already moving,
- * advance it to SHIPPING (which sends the "shipped" email). This is the only
- * way to attach a real tracking number to a passport order.
- */
+// records a shipment and advances the order to SHIPPING if it isn't moving yet
 export async function createShipmentAction(
   _prev: OrderFormState,
   formData: FormData
@@ -279,7 +274,6 @@ export async function createShipmentAction(
     description: `Shipment added to order by ${actor.name ?? actor.email}`,
   });
 
-  // Advance to SHIPPING (which sends the shipped email) unless it already is.
   let advancedToShipping = false;
   if (order.currentState !== "SHIPPING" && order.currentState !== "DELIVERED") {
     try {
@@ -293,8 +287,7 @@ export async function createShipmentAction(
       });
       advancedToShipping = true;
     } catch {
-      // Order may already be past SHIPPING in a state machine sense; the
-      // shipment + tracking are still recorded, so don't fail the request.
+      // order already past SHIPPING; the shipment is still recorded
     }
   }
   await deliverOrderEmail(orderId, "shipped");

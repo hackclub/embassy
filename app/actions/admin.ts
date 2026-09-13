@@ -91,16 +91,13 @@ export async function addOrganizerAction(
         create: { orgId: org.id, userId: user.id, role: "OWNER" },
         update: { role: "OWNER" },
       });
-      // Only upgrade global role if user is currently PARTICIPANT
-      // YSWS membership and global roles are separate dimensions
-      // Don't downgrade superadmins (from env var) to organizer
+      // don't downgrade env superadmins
       const currentUser = await tx.user.findUnique({
         where: { id: user.id },
         select: { role: true, email: true },
       });
       const isSuperadmin = currentUser?.email ? isSuperadminEmail(currentUser.email) : false;
       const currentRole = currentUser?.role;
-      // Only upgrade if user is PARTICIPANT and not a superadmin via env var
       if (currentRole === "PARTICIPANT" && !isSuperadmin) {
         await tx.user.update({
           where: { id: user.id },
@@ -195,8 +192,7 @@ export async function issuePassportAdminAction(
   });
   if (!org) return { error: "That org does not exist." };
 
-  // Admins may only issue into orgs they belong to; superadmins (and the
-  // dev bypass user) may issue into any org.
+  // admins can only issue into orgs they belong to
   if (actor.role !== "SUPERADMIN" && !isBypassUser(actor.id)) {
     const member = await isOrgMember(actor.id, org.id);
     if (!member) {
@@ -230,7 +226,6 @@ export async function issuePassportAdminAction(
       recipientName: parsed.data.recipientName.trim(),
       recipientEmail: email,
       recipientToken,
-      // Create the recipient record (one order = one recipient)
       recipients: {
         create: {
           email,
@@ -315,8 +310,7 @@ export async function adjustCreditsAction(
     ok: `${sign}${amount} credits applied to ${target.name ?? target.email}.`,
   };
 }
-// Takes no params on purpose — useActionState passes (prev, formData), which
-// JS/TS ignore; the action only needs the session.
+// no params: useActionState calls it with (prev, formData), both unused here
 export async function syncAirtableAction(): Promise<AdminFormState> {
   const actor = await getCurrentUserWithRole();
   if (!actor) redirect("/api/auth/signin?callbackUrl=/admin");

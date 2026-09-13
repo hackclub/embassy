@@ -40,9 +40,7 @@ export async function getCurrentUser() {
   const session = await auth();
   if (session?.user?.id) return session.user;
 
-  // ADMIN_BYPASS=true: allow testing everything without signing in.
-  // A synthetic superadmin user row is created so foreign keys and
-  // user-scoped queries keep working.
+  // upsert the synthetic bypass user so FKs keep working
   if (isAuthBypassEnabled()) {
     await prisma.user.upsert({
       where: { id: BYPASS_USER.id },
@@ -72,13 +70,10 @@ export async function getCurrentUserWithRole(): Promise<
   });
   if (!dbUser) return null;
 
-  // DB role is the source of truth
   let role = dbUser.role;
 
-  // Attribute everything on this request to the current user in Sentry.
   setSentryUserContext({ id: user.id, email: user.email ?? undefined, role });
 
-  // Only use SUPERADMIN_EMAILS as fallback for bootstrap (when DB role is PARTICIPANT)
   const email = user.email?.toLowerCase().trim();
   if (email && SUPERADMIN_EMAILS.includes(email) && role === "PARTICIPANT") {
     console.warn(
@@ -177,9 +172,7 @@ export async function generateApiKeyWithExpiry(
   return {
     key,
     hash: await generateApiKeyHash(key),
-    // Prefix is indexed for O(1) candidate lookup during auth; it only ever
-    // exposes the first 8 of 48 random chars (5e9 space) to anyone who can
-    // read the DB.
+    // indexed for fast key lookup; first 8 of 48 random chars
     prefix: key.slice(0, API_KEY_PREFIX_LEN),
     display: key.slice(-4),
     expiresAt: new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000),

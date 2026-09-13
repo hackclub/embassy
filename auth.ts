@@ -23,8 +23,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       })) as unknown as AdapterUser;
     },
     async updateUser(user) {
-      // Only touch fields the caller actually provided — a partial update
-      // must never null out slackId/hcaId/image.
+      // don't null out fields missing from a partial update
       const data: Record<string, unknown> = {};
       if (user.name !== undefined) data.name = user.name;
       if (user.email !== undefined) data.email = user.email;
@@ -51,9 +50,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       name: "Hack Club",
       type: "oidc",
       issuer: "https://auth.hackclub.com",
-      // Single trusted IdP whose emails are verified (enforced in profile()
-      // below: an unverified email means no email at all). If a second
-      // provider is ever added, this MUST become false.
+      // safe only while hackclub is the sole provider and emails are verified below
       allowDangerousEmailAccountLinking: true,
       clientId: process.env.AUTH_HCA_CLIENT_ID,
       clientSecret: process.env.AUTH_HCA_CLIENT_SECRET,
@@ -66,16 +63,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const p = profile as Record<string, unknown>;
         const sub = typeof p.sub === "string" && p.sub ? p.sub : null;
         if (!sub) {
-          // Never fall back to a shared id like "0" — that would funnel every
-          // malformed login into one account.
           throw new Error("OIDC profile missing subject claim (sub)");
         }
         const emailVerified = p.email_verified === true;
         return {
           id: sub,
           name: (p.name as string) ?? null,
-          // Unverified emails are dropped so account linking can only ever
-          // happen on identity the IdP has confirmed.
           email: emailVerified ? ((p.email as string) ?? null) : null,
           emailVerified: emailVerified ? new Date() : null,
           image: (p.avatar as string) ?? (p.picture as string) ?? null,
@@ -105,8 +98,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   events: {
-    // OAuth sign-ins don't run the adapter's updateUser, so existing rows keep
-    // stale/null profile data. Refresh HCA-linked fields on every login.
+    // OAuth sign-ins don't run updateUser, so refresh profile fields here
     async signIn({ user, account, profile }) {
       if (account?.provider !== "hackclub") return;
       try {
@@ -122,7 +114,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           },
         });
       } catch (e) {
-        // Bookkeeping must never break sign-in.
         console.warn("[auth] post-signIn profile refresh failed:", e);
       }
     },

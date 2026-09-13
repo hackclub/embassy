@@ -13,11 +13,8 @@ export const redis: Redis =
 
 if (process.env.NODE_ENV !== "production") globalThis.__redis = redis;
 
-// Identifier used for rate limiting. Prefer the *rightmost* x-forwarded-for
-// hop: a trusted fronting proxy (Caddy) appends the real peer address last,
-// while any client-spoofed prefix sits earlier in the list. When traffic hits
-// the node server directly the header is attacker-controlled and rate limits
-// are best-effort only — run behind a proxy that overwrites XFF in production.
+// rightmost x-forwarded-for hop = the real client (appended by our fronting
+// proxy); earlier ones are client-controllable, so only trust it behind Caddy
 export function getClientIdentifier(req: Request): string {
   const forwarded = req.headers.get("x-forwarded-for");
   const hops = forwarded

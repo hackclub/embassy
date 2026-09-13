@@ -41,10 +41,8 @@ export async function createOrderAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid order." };
   }
 
-  // Resolve the YSWS the order belongs to. When one is supplied it must be
-  // one the caller can actually access, and the order's org is taken from
-  // that YSWS — never from an arbitrary membership row (which could mix
-  // org A with a YSWS from org B).
+  // org is taken from the verified ysws, not the membership row, so an
+  // org/ysws pair from different orgs can't be mixed
   let finalYswsId: string | undefined;
   let orgId = membership.orgId;
 

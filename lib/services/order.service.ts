@@ -12,8 +12,7 @@ export interface UpdateOrderStateInput {
   status?: OrderStatus;
 }
 
-// The order pipeline is linear; CANCELLED/ERROR are reachable from any
-// non-terminal state and can be recovered to RECIPIENT_DETAILS_RECEIVED.
+// linear pipeline; CANCELLED/ERROR reachable from any non-terminal state
 const LINEAR_FLOW: OrderTransition[] = [
   "AWAITING_RECIPIENT_DETAILS",
   "RECIPIENT_DETAILS_RECEIVED",

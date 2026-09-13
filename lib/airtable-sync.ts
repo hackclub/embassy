@@ -1,9 +1,5 @@
-// One-way Postgres -> Airtable mirror.
-//
-// Field policy: business "main info" only. Explicitly NOT mirrored:
-// recipient tokens, YSWS API key hashes/prefixes/scopes, Hackatime tokens,
-// encrypted recipient PII (addresses/emergency contacts), passport drafts,
-// NextAuth accounts/sessions/verification tokens, and audit logs.
+// One-way Postgres -> Airtable mirror. Secrets and PII (tokens, API key
+// hashes, encrypted addresses, NextAuth tables, audit logs) are never mirrored.
 
 import { prisma } from "@/lib/prisma";
 import {
@@ -51,8 +47,6 @@ export const MIRROR_TABLES: MirrorTableConfig[] = [
       { name: "org", type: "string" },
     ],
     rows: async () => {
-      // No apiKeyHash/apiKeyPrefix/apiKeyScopes/apiKeyExpiresAt — API auth
-      // material stays in Postgres.
       const list = await prisma.ySWS.findMany({
         select: { id: true, name: true, slug: true, isActive: true, org: { select: { name: true } } },
       });
@@ -71,7 +65,6 @@ export const MIRROR_TABLES: MirrorTableConfig[] = [
       { name: "createdAt", type: "datetime" },
     ],
     rows: async () => {
-      // slackId/hcaId/hackatimeUid intentionally omitted.
       const users = await prisma.user.findMany({
         select: { id: true, name: true, email: true, role: true, creditsBalance: true, emailVerified: true, createdAt: true },
       });
@@ -102,7 +95,6 @@ export const MIRROR_TABLES: MirrorTableConfig[] = [
       { name: "updatedAt", type: "datetime" },
     ],
     rows: async () => {
-      // recipientToken is a bearer secret — never mirrored.
       const orders = await prisma.passportOrder.findMany({
         select: {
           id: true, status: true, currentState: true, totalQuantity: true, createdFrom: true,
@@ -270,7 +262,6 @@ export const MIRROR_TABLES: MirrorTableConfig[] = [
       { name: "createdAt", type: "datetime" },
     ],
     rows: async () => {
-      // recipientEmail excluded — the mirror references the order, not the inboxes.
       const rows = await prisma.emailDelivery.findMany({
         select: { id: true, orderId: true, eventType: true, status: true, attempts: true, createdAt: true },
         take: 2000, orderBy: { createdAt: "desc" },
@@ -325,8 +316,7 @@ export async function syncMirrorTable(cfg: MirrorTableConfig): Promise<TableSync
     result.created = await createRecords(cfg.table, toCreate);
     result.updated = await updateRecords(cfg.table, toUpdate);
 
-    // Rows in Airtable whose id no longer exists in Postgres. Only prune when
-    // the source returned rows, so an empty/broken query can't wipe a table.
+    // don't prune against an empty source read
     const stale =
       dbRows.length > 0
         ? existing

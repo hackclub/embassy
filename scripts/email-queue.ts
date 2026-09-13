@@ -1,7 +1,5 @@
 #!/usr/bin/env bun
-// Retry pending/failed email deliveries. Run from cron (every ~5 min):
-//   bun run email:queue
-// Requires FEATURE_EMAIL=true and a working provider (MAILPIT_URL or LOOPS_API_KEY).
+// usage: bun run email:queue   (cron; needs FEATURE_EMAIL + a provider)
 
 import { processEmailQueue } from "../lib/services/email.service";
 import { prisma } from "../lib/prisma";

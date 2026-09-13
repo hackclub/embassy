@@ -17,8 +17,7 @@ function optionalString(value: FormDataEntryValue | null): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
-// http(s) only — these URLs are rendered as clickable links (and the same
-// pattern is reviewed by admins), so javascript:/data: must never be stored.
+// http(s) only: these render as clickable links
 const httpUrl = z
   .string()
   .trim()
@@ -272,8 +271,7 @@ export type ShopFormState =
   | { error?: string; ok?: string; trackUrl?: string }
   | undefined;
 
-// Legacy identifier kept on purpose: the org slug is a unique DB key and
-// existing passport orders reference the row created under "whoami-shop".
+// unique DB key referenced by existing orders, renaming it would orphan them
 const SHOP_ORG_SLUG = "whoami-shop";
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
@@ -339,7 +337,7 @@ export async function buyShopItemAction(
       } | null = null;
 
       if (isPassport) {
-        // Lock first so the "one passport on the way" check can't be raced.
+        // lock first so the next check can't be raced
         await lockUserPurchases(tx, user.id);
         const activeOrderCount = await tx.passportOrder.count({
           where: {

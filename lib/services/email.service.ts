@@ -12,8 +12,7 @@ export interface EmailTemplate {
   text: string;
 }
 
-// Emails are HTML built from user-supplied strings (names, org names).
-// Escape everything before interpolation.
+// escape all user-supplied values before interpolating into HTML
 function esc(value: string | null | undefined): string {
   return (value ?? "")
     .toString()
@@ -224,10 +223,6 @@ Order ID: ${order.id}
 
 export type OrderEmailKind = "created" | "details" | "shipped" | "delivered";
 
-/**
- * Send (or queue) the email for an order event. The recorded delivery status
- * always reflects what actually happened — never a fake "sent".
- */
 export async function deliverOrderEmail(
   orderId: string,
   kind: OrderEmailKind
@@ -253,8 +248,7 @@ export async function deliverOrderEmail(
             ? "SHIPMENT_CREATED"
             : "STATUS_CHANGED";
 
-    // One shipment / one delivery notification per order: "shipped" can be
-    // triggered both by adding a shipment and by a SHIPPING state change.
+    // send shipped/delivered at most once per order
     if (kind === "shipped" || kind === "delivered") {
       const already = await prisma.emailDelivery.findFirst({
         where: { orderId: order.id, eventType },
@@ -324,11 +318,7 @@ export async function deliverOrderEmail(
   }
 }
 
-/**
- * Retry queued (pending) and failed deliveries. Intended to be run from a
- * cron job, ops task, or the admin "Email queue" button (there is no
- * in-process scheduler). Failed rows stop after 3 attempts.
- */
+// retry pending/failed deliveries; run from cron or the admin button
 export async function processEmailQueue(): Promise<{ sent: number; failed: number }> {
   if (!emailFeatureEnabled()) return { sent: 0, failed: 0 };
 
@@ -390,7 +380,6 @@ export async function processEmailQueue(): Promise<{ sent: number; failed: numbe
       }
 
       if (!tpl) {
-        // No order/template to render — stop churning this row forever.
         await updateEmailDeliveryStatus(email.id, "failed", "no template for event");
         failed += 1;
         continue;

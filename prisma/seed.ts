@@ -17,10 +17,8 @@ async function main() {
 
   console.log("Starting database seed...");
 
-  // NOTE: we deliberately do NOT pre-create a user row for SUPERADMIN_EMAILS.
-  // A row with that email would collide with the real person's first OAuth
-  // sign-in (unique email), and the SUPERADMIN_EMAILS env fallback already
-  // grants the role on first login.
+  // no user row for SUPERADMIN_EMAILS: it would collide with the real
+  // person's first OAuth sign-in, and the env fallback grants the role anyway
   const org = await prisma.org.upsert({
     where: { slug: "hackclub" },
     update: {},

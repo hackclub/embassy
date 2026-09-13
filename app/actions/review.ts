@@ -51,8 +51,7 @@ export async function reviewSubmissionAction(
       const credits = creditsForHours(hours);
 
       await prisma.$transaction(async (tx) => {
-        // Guarded update: only flips to ACCEPTED if no credits were ever
-        // awarded, so two concurrent accepts can't double-pay.
+        // guarded so two concurrent accepts can't double-pay
         const claimed = await tx.submission.updateMany({
           where: { id: submission.id, creditsAwarded: null },
           data: {

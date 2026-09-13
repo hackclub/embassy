@@ -8,8 +8,7 @@ import { getCurrentUser } from "@/lib/org";
 import { getHackatimeHours } from "@/lib/hackatime";
 import { MAX_PENDING_SUBMISSIONS_PER_USER } from "@/lib/constants";
 
-// Only http(s) URLs — z.string().url() happily accepts javascript:/data:,
-// which becomes stored XSS when an admin clicks the link in review.
+// http(s) only: z.url() also accepts javascript:/data: (stored XSS in review)
 const httpUrl = z
   .string()
   .trim()

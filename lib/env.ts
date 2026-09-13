@@ -10,13 +10,13 @@ const envSchema = z.object({
   AUTH_HCA_CLIENT_ID: z.string().min(1),
   AUTH_HCA_CLIENT_SECRET: z.string().min(1),
 
-  // Superadmin bootstrap (optional, for initial setup only)
+  // Superadmin bootstrap
   SUPERADMIN_EMAILS: z.string().default(""),
 
-  // Redis / Valkey (for feedback, rate limiting)
+  // Redis
   REDIS_URL: z.string().default("redis://127.0.0.1:6379"),
 
-  // PII encryption (for Hackatime tokens etc.) — AES-GCM key, base64, 16/24/32 bytes
+  // AES-GCM key, base64, 16/24/32 bytes
   PII_ENCRYPTION_KEY: z
     .string()
     .default("")
@@ -36,11 +36,11 @@ const envSchema = z.object({
       }
     }),
 
-  // Hackatime OAuth (optional — the link flow is disabled until both are set)
+  // Hackatime OAuth
   AUTH_HACKATIME_CLIENT_ID: z.string().min(1).optional(),
   AUTH_HACKATIME_CLIENT_SECRET: z.string().min(1).optional(),
 
-  // Email (provider interface)
+  // Email
   EMAIL_PROVIDER: z.enum(["mailpit", "loops"]).default("mailpit"),
   MAILPIT_URL: z.string().url().default("http://127.0.0.1:8025"),
   EMAIL_FROM: z.string().email().optional(),
@@ -53,7 +53,7 @@ const envSchema = z.object({
   SENTRY_PROJECT: z.string().optional(),
   NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
 
-  // Airtable (one-way Postgres -> Airtable mirror)
+  // Airtable mirror
   AIRTABLE_API_KEY: z.string().optional(),
   AIRTABLE_BASE_ID: z.string().optional(),
 
@@ -65,7 +65,7 @@ const envSchema = z.object({
   // Logging
   LOG_LEVEL: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]).default("info"),
 
-  // Testing escape hatch — see lib/bypass.ts. Hard-rejected in production.
+  // see lib/bypass.ts
   ADMIN_BYPASS: z.string().optional(),
 });
 
@@ -103,10 +103,6 @@ export function validateEnv(): EnvValidation {
 
 let validated = false;
 
-/**
- * Called from instrumentation register(). In production a bad environment is
- * fatal (fail fast before serving traffic); elsewhere it warns loudly.
- */
 export function assertEnv(): void {
   if (validated) return;
   validated = true;

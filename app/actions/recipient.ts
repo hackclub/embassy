@@ -47,7 +47,7 @@ async function validateToken(token: string) {
   if (!recipientDetailsEnabled()) {
     return { error: "The recipient details form is currently closed. Please try again later or email passports@hackclub.com." };
   }
-  // Bound token-guessing / abuse on this public, unauthenticated surface.
+  // public endpoint: rate limit token guessing
   const h = await headers();
   const rl = await rateLimit(
     { headers: h as unknown as Headers } as Request,
@@ -171,7 +171,6 @@ export async function submitRecipientAddressAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid address" };
   }
 
-  // Shipping addresses are PII — encrypt at rest (AES-GCM, PII_ENCRYPTION_KEY).
   const encrypted = {
     addressLine1: await encryptPII(parsed.data.addressLine1),
     addressLine2: parsed.data.addressLine2 ? await encryptPII(parsed.data.addressLine2) : null,
@@ -232,9 +231,7 @@ export async function submitRecipientPhotoAction(
     if (!parsed.success) {
       return { error: parsed.error.issues[0]?.message ?? "Invalid photo" };
     }
-    // No object storage in this deployment: persist the image itself,
-    // encrypted, in the row (the old code stored a /uploads path that was
-    // never written to disk).
+    // no object storage: keep the photo encrypted in the row
     const bytes = Buffer.from(await photo.arrayBuffer());
     const dataUrl = `data:${photo.type};base64,${bytes.toString("base64")}`;
     photoUrl = await encryptPII(dataUrl);
@@ -325,7 +322,6 @@ export async function submitRecipientReviewAction(
     return { error: "Please complete all required steps first" };
   }
 
-  // Transition order to RECIPIENT_DETAILS_RECEIVED
   await prisma.passportOrder.update({
     where: { id: order.id },
     data: { currentState: "RECIPIENT_DETAILS_RECEIVED", status: "CONFIRMED" },
@@ -344,7 +340,6 @@ export async function submitRecipientReviewAction(
     },
   });
 
-  // Confirmation email — status reflects what actually happened.
   await deliverOrderEmail(order.id, "details");
 
   await auditLog({
@@ -384,7 +379,7 @@ export async function skipRecipientStepAction(
   return { ok: true, nextStep };
 }
 
-// Wrapper functions for direct form action usage (only take FormData)
+// FormData wrappers for direct form usage
 export async function submitRecipientNameActionDirect(
   formData: FormData
 ): Promise<RecipientFormState> {

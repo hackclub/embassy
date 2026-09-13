@@ -6,7 +6,7 @@ export const JWT_MAX_AGE_DAYS = 30;
 
 export const CREDITS_PER_HOUR = 10 as const;
 
-// Caps on admin-supplied numbers (defense against fat-finger / abuse).
+// caps for admin-entered numbers
 export const MAX_CREDIT_ADJUSTMENT = 100_000;
 export const MAX_REVIEWABLE_HOURS = 100_000;
 export const MAX_PENDING_SUBMISSIONS_PER_USER = 5;

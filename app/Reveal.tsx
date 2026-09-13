@@ -3,9 +3,7 @@
 import { motion, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 
-// motion@13's HTMLMotionProps type resolution is broken against React 19.2
-// types (motion props vanish from JSX), so bind the div factory to the props
-// this component actually uses.
+// motion.div types are broken against React 19, cast to the props used here
 const MotionDiv = motion.div as unknown as (props: {
   className?: string;
   children?: ReactNode;

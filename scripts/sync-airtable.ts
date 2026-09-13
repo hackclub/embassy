@@ -1,8 +1,5 @@
 #!/usr/bin/env bun
-// One-way Postgres -> Airtable mirror. Run from cron/CI:
-//   bun run sync:airtable            # all tables
-//   bun run sync:airtable -- Users   # single table (matches MIRROR_TABLES.table)
-// Requires FEATURE_AIRTABLE=true, AIRTABLE_API_KEY, AIRTABLE_BASE_ID, DATABASE_URL.
+// usage: bun run sync:airtable [<table>]   (no arg = all tables)
 
 import { MIRROR_TABLES, syncMirrorTable, type TableSyncResult } from "../lib/airtable-sync";
 import { isAirtableConfigured } from "../lib/airtable";
