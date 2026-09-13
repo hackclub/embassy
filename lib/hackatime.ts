@@ -156,6 +156,43 @@ export async function fetchProjects(
   }
 }
 
+export async function fetchTrackedTime(token: string, hackatimeProjects: string[], startDate?: string): Promise<Map<string, number> | null> {
+  try {
+    const url = new URL(HACKATIME.projectsUrl);
+        if (startDate) url.searchParams.set("start", startDate);
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        });
+
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      projects?: Array<{ name?: unknown; archived?: unknown; total_seconds?: unknown }>;
+    };
+    if (!Array.isArray(data.projects)) return null;
+
+    const hrs = new Map<string, number>();
+
+    hackatimeProjects.forEach((n: string) => {
+      const project = data.projects?.find(
+        (p) =>
+          !p.archived &&
+          p.name === n &&
+          typeof p.total_seconds === "number",
+      );
+      hrs.set(n, project?.total_seconds as number ?? 0);
+      
+    });
+    
+    return hrs;
+
+  } catch {
+    return null;
+  }
+}
+
+
+
 export async function linkUser(
   userId: string,
   hackatimeUid: string,

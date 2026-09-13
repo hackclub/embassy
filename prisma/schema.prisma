@@ -378,6 +378,8 @@ model Submission {
   status      SubmissionStatus @default(SUBMITTED)
   votes       Vote[]
 
+  projectId String?
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   org  Org? @relation(fields: [orgId], references: [id], onDelete: SetNull)
 
@@ -392,9 +394,11 @@ model Submission {
 
   hackatimeHours Float?
   creditsAwarded Int?
+  project        Project? @relation(fields: [projectId], references: [id])
 
   @@index([userId])
   @@index([orgId])
+  @@index([projectId])
 }
 
 model Vote {
@@ -412,8 +416,8 @@ model Vote {
 }
 
 model Project {
-  id          String  @id @default(cuid())
-  userId      String
+  id               String  @id @default(cuid())
+  userId           String
   title            String
   description      String?
   githubUrl        String?
@@ -422,6 +426,8 @@ model Project {
 
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   journalEntries JournalEntry[]
+
+  submissions Submission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

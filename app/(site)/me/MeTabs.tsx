@@ -8,6 +8,7 @@ const TABS = [
   { href: "/me", label: "Home" },
   { href: "/me/projects", label: "Projects" },
   { href: "/me/shop", label: "Shop" },
+  { href: "/me/leaderboard", label: "Leaderboard" },
 ];
 
 export default function MeTabs() {
@@ -59,7 +60,7 @@ export default function MeTabs() {
         })}
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute bottom-0 left-0 h-1 bg-govuk-blue transition-[transform,width] duration-[400ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+          className="pointer-events-none absolute bottom-0 left-0 h-1 bg-govuk-blue transition-[transform,width] duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
           style={{
             width: indicator.width,
             transform: `translateX(${indicator.left}px)`,

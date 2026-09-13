@@ -1,5 +1,9 @@
 export const MAX_FILE_SIZE = 5_000_000; // 5MB
-export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+export const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
 export const MAX_NOTE_LENGTH = 300;
 export const MAX_NAME_LENGTH = 80;
 export const MIN_NAME_LENGTH = 2;
@@ -36,7 +40,11 @@ export const ORDER_TRANSITIONS = [
   "ERROR",
 ] as const;
 
-export const FULFILLMENT_STATUSES = ["PENDING", "CONFIRMED", "SHIPPED"] as const;
+export const FULFILLMENT_STATUSES = [
+  "PENDING",
+  "CONFIRMED",
+  "SHIPPED",
+] as const;
 
 export const EVENT_TYPES = [
   "ORDER_CREATED",
@@ -54,14 +62,24 @@ export const EVENT_TYPES = [
   "ORDER_CANCELLED",
 ] as const;
 
-export const ACTOR_TYPES = ["ORGANIZER", "ADMIN", "SYSTEM", "RECIPIENT", "API"] as const;
+export const ACTOR_TYPES = [
+  "ORGANIZER",
+  "ADMIN",
+  "SYSTEM",
+  "RECIPIENT",
+  "API",
+] as const;
 
 export const SUBMISSION_STATUSES = ["DRAFT", "SUBMITTED", "REJECTED"] as const;
 
 export const ORG_ROLES = ["OWNER", "ORGANIZER"] as const;
 
-export const USER_ROLES = ["PARTICIPANT", "ORGANIZER", "ADMIN", "SUPERADMIN"] as const;
-
+export const USER_ROLES = [
+  "PARTICIPANT",
+  "ORGANIZER",
+  "ADMIN",
+  "SUPERADMIN",
+] as const;
 
 export const ROLE_RANK = {
   PARTICIPANT: 0,
@@ -133,7 +151,10 @@ export const COUNTRIES = [
 ] as const;
 
 export function hasRole(role: string, minRole: string): boolean {
-  return ROLE_RANK[role as keyof typeof ROLE_RANK] >= ROLE_RANK[minRole as keyof typeof ROLE_RANK];
+  return (
+    ROLE_RANK[role as keyof typeof ROLE_RANK] >=
+    ROLE_RANK[minRole as keyof typeof ROLE_RANK]
+  );
 }
 
 export function getRoleLabel(role: string): string {
@@ -141,9 +162,20 @@ export function getRoleLabel(role: string): string {
 }
 
 export function getTransitionLabel(state: string): string {
-  return ORDER_TRANSITION_LABELS[state as keyof typeof ORDER_TRANSITION_LABELS] ?? state;
+  return (
+    ORDER_TRANSITION_LABELS[state as keyof typeof ORDER_TRANSITION_LABELS] ??
+    state
+  );
 }
 
 export function getFulfillmentLabel(status: string): string {
-  return FULFILLMENT_STATUS_LABELS[status as keyof typeof FULFILLMENT_STATUS_LABELS] ?? status;
+  return (
+    FULFILLMENT_STATUS_LABELS[
+      status as keyof typeof FULFILLMENT_STATUS_LABELS
+    ] ?? status
+  );
 }
+
+export const LEADERBOARD_TOP_N = 20 as const;
+export const LEADERBOARD_TTL_SECONDS = 300 as const;
+export const WEEKLY_LEADERBOARD_DAYS = 7 as const;

@@ -334,6 +334,7 @@ export const SubmissionScalarFieldEnum = {
   url: 'url',
   image: 'image',
   status: 'status',
+  projectId: 'projectId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   reviewedById: 'reviewedById',

@@ -22,7 +22,7 @@ export type SubmitFormState = { error?: string; ok?: boolean } | undefined;
 
 export async function submitProjectAction(
   _prev: SubmitFormState,
-  formData: FormData
+  formData: FormData,
 ): Promise<SubmitFormState> {
   const user = await getCurrentUser();
   if (!user) redirect("/api/auth/signin?callbackUrl=/submit");
