@@ -61,6 +61,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
     container_name: whoami-app
     depends_on:
       postgres:
@@ -73,19 +75,24 @@ services:
       HOSTNAME: 0.0.0.0
       DATABASE_URL: postgresql://whoami:whoami@whoami-postgres:5432/whoami?schema=public
       AUTH_URL: ${APP_BASE_URL:-http://localhost:3000}
-      AUTH_SECRET: ${AUTH_SECRET:-}
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET (openssl rand -base64 32)}
       AUTH_HCA_CLIENT_ID: ${AUTH_HCA_CLIENT_ID:-}
       AUTH_HCA_CLIENT_SECRET: ${AUTH_HCA_CLIENT_SECRET:-}
-      PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:-}
+      PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:?set PII_ENCRYPTION_KEY (openssl rand -base64 32)}
       AUTH_HACKATIME_CLIENT_ID: ${AUTH_HACKATIME_CLIENT_ID:-}
       AUTH_HACKATIME_CLIENT_SECRET: ${AUTH_HACKATIME_CLIENT_SECRET:-}
       SUPERADMIN_EMAILS: ${SUPERADMIN_EMAILS:-}
       REDIS_URL: redis://whoami-redis:6379
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      FEATURE_AIRTABLE: ${FEATURE_AIRTABLE:-false}
+      AIRTABLE_API_KEY: ${AIRTABLE_API_KEY:-}
+      AIRTABLE_BASE_ID: ${AIRTABLE_BASE_ID:-}
     command: >
       sh -c "bun node_modules/prisma/build/index.js migrate deploy &&
         exec bun server.js"
     ports:
-      - "3000:3000"
+      # Localhost only — expose via the fronting proxy (Caddy), never 0.0.0.0.
+      - "127.0.0.1:3000:3000"
     restart: unless-stopped
     networks:
       - whoami-network

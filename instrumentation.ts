@@ -1,3 +1,9 @@
-import { initSentry } from "@/lib/sentry";
+import { assertEnv } from "@/lib/env";
 
-initSentry();
+export async function register() {
+  assertEnv();
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    const { initSentry } = await import("@/lib/sentry");
+    initSentry();
+  }
+}

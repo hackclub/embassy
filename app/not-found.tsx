@@ -4,7 +4,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 
 export const metadata: Metadata = {
-  title: "Page not found – whoami",
+  title: "Page not found",
 };
 
 export default function NotFound() {

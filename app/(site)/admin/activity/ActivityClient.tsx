@@ -85,7 +85,7 @@ export default function AdminActivityClient({
 
   return (
     <>
-      <Breadcrumb items={[{ label: "whoami", href: "/" }, { label: "Admin", href: "/admin" }, { label: "Audit log" }]} />
+      <Breadcrumb items={[{ label: "Embassy", href: "/" }, { label: "Admin", href: "/admin" }, { label: "Audit log" }]} />
 
       <PageHeader
         title="Audit log"

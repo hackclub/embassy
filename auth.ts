@@ -3,6 +3,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { AdapterUser } from "@auth/core/adapters";
 import type { OIDCConfig } from "@auth/core/providers/oauth";
 import { prisma } from "@/lib/prisma";
+import { JWT_MAX_AGE_DAYS } from "@/lib/constants";
 
 const prismaAdapter = PrismaAdapter(prisma);
 
@@ -22,20 +23,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       })) as unknown as AdapterUser;
     },
     async updateUser(user) {
+      // don't null out fields missing from a partial update
+      const data: Record<string, unknown> = {};
+      if (user.name !== undefined) data.name = user.name;
+      if (user.email !== undefined) data.email = user.email;
+      if (user.image !== undefined) data.image = user.image;
+      if (user.emailVerified !== undefined) data.emailVerified = user.emailVerified;
+      const extra = user as { slackId?: string | null; hcaId?: string | null };
+      if (extra.slackId !== undefined) data.slackId = extra.slackId;
+      if (extra.hcaId !== undefined) data.hcaId = extra.hcaId;
       return (await prisma.user.update({
         where: { id: user.id! },
-        data: {
-          name: user.name ?? null,
-          email: user.email ?? null,
-          image: user.image ?? null,
-          emailVerified: user.emailVerified ?? null,
-          slackId: (user as { slackId?: string }).slackId ?? null,
-          hcaId: (user as { hcaId?: string }).hcaId ?? null,
-        },
+        data,
       })) as unknown as AdapterUser;
     },
   },
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: JWT_MAX_AGE_DAYS * 24 * 60 * 60,
+  },
+  // Behind Caddy in production; remove if ever exposed directly.
   trustHost: true,
   providers: [
     {
@@ -43,6 +50,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       name: "Hack Club",
       type: "oidc",
       issuer: "https://auth.hackclub.com",
+      // safe only while hackclub is the sole provider and emails are verified below
       allowDangerousEmailAccountLinking: true,
       clientId: process.env.AUTH_HCA_CLIENT_ID,
       clientSecret: process.env.AUTH_HCA_CLIENT_SECRET,
@@ -53,15 +61,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       userinfo: "https://auth.hackclub.com/api/v1/me",
       profile(profile) {
         const p = profile as Record<string, unknown>;
-        const id = String(p.sub ?? p.id ?? "0");
+        const sub = typeof p.sub === "string" && p.sub ? p.sub : null;
+        if (!sub) {
+          throw new Error("OIDC profile missing subject claim (sub)");
+        }
+        const emailVerified = p.email_verified === true;
         return {
-          id,
+          id: sub,
           name: (p.name as string) ?? null,
-          email: (p.email as string) ?? null,
-          emailVerified: p.email_verified === true ? new Date() : null,
+          email: emailVerified ? ((p.email as string) ?? null) : null,
+          emailVerified: emailVerified ? new Date() : null,
           image: (p.avatar as string) ?? (p.picture as string) ?? null,
           slackId: (p.slack_id as string) ?? null,
-          hcaId: id,
+          hcaId: sub,
         };
       },
     } satisfies OIDCConfig<Record<string, unknown>>,
@@ -70,6 +82,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        const slackId = (user as { slackId?: string | null }).slackId;
+        if (slackId !== undefined) token.slackId = slackId;
       }
       return token;
     },
@@ -77,27 +91,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user && token.id) {
         session.user.id = token.id as string;
       }
+      if (session.user) {
+        session.user.slackId = (token.slackId as string | null | undefined) ?? null;
+      }
       return session;
     },
   },
   events: {
-    // OAuth sign-ins don't run the adapter's updateUser, so existing rows keep
-    // stale/null profile data. Refresh HCA-linked fields on every login.
+    // OAuth sign-ins don't run updateUser, so refresh profile fields here
     async signIn({ user, account, profile }) {
       if (account?.provider !== "hackclub") return;
-      const p = profile as Record<string, unknown>;
-      const slackId = typeof p.slack_id === "string" ? p.slack_id : null;
-      const emailVerified = p.email_verified === true ? new Date() : null;
-      const hcaId = String(p.sub ?? "0");
-      if (!slackId && !emailVerified) return;
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          ...(slackId ? { slackId } : {}),
-          ...(emailVerified ? { emailVerified } : {}),
-          ...(hcaId && hcaId !== "0" ? { hcaId } : {}),
-        },
-      });
+      try {
+        const p = profile as Record<string, unknown>;
+        const slackId = typeof p.slack_id === "string" ? p.slack_id : null;
+        const emailVerified = p.email_verified === true ? new Date() : null;
+        if (!slackId && !emailVerified) return;
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            ...(slackId ? { slackId } : {}),
+            ...(emailVerified ? { emailVerified } : {}),
+          },
+        });
+      } catch (e) {
+        console.warn("[auth] post-signIn profile refresh failed:", e);
+      }
     },
   },
 });

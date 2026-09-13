@@ -36,7 +36,6 @@ const navItems: {
 ];
 
 export default function NavHoverCard() {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [visibleIndex, setVisibleIndex] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
@@ -54,14 +53,12 @@ export default function NavHoverCard() {
 
   function showCard(index: number) {
     if (hideTimer.current) clearTimeout(hideTimer.current);
-    setActiveIndex(index);
     setVisibleIndex(index);
   }
 
   function scheduleHide() {
     hideTimer.current = setTimeout(() => {
       setVisibleIndex(null);
-      setTimeout(() => setActiveIndex(null), 150);
     }, 120);
   }
 
@@ -81,7 +78,6 @@ export default function NavHoverCard() {
       <ul className="flex items-center gap-1 p-1.5 text-sm font-semibold sm:gap-2">
         {navItems.map((item, i) => {
           const hasCard = !item.external && (item.cardTitle || item.mailto);
-          const isActive = activeIndex === i;
           const isVisible = visibleIndex === i;
 
           return (

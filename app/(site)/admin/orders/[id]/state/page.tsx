@@ -35,7 +35,7 @@ export default async function AdminOrderStatePage({
     <>
       <Breadcrumb
         items={[
-          { label: "whoami", href: "/" },
+          { label: "Embassy", href: "/" },
           { label: "Admin", href: "/admin" },
           { label: "Passport orders", href: "/admin/orders" },
           { label: `Order ${id.slice(0, 8)}...`, href: `/admin/orders/${id}` },

@@ -3,24 +3,20 @@ title = "Gitleaks Config"
 [allowlist]
 description = "Allowlisted patterns for gitleaks"
 paths = [
-  ".*\\.md$",
-  ".*\\.txt$",
-  ".*\\.json$",
-  ".*\\.yml$",
-  ".*\\.yaml$",
   "^\\.env\\.example$",
-  "^fixies\\.md$",
-  "^todo\\.md$",
-  "^flake\\.nix$",
-  "^nixos-module\\.nix$",
-  "^Dockerfile$",
 ]
+# Only known, deliberately-fake values — no broad "test/example" or whole-file
+# path exemptions (those hid real secrets from the scanner).
 regexes = [
-  "test",
-  "example",
-  "placeholder",
-  "your-.*-here",
-  "generate-with:",
+  "generate-with-openssl-rand-base64-32",
+  "wom_dev_key_placeholder",
+  "dev-only-not-for-prod-change-me",
+  "your-domain\\.com",
+  "postgresql://placeholder",
+  "postgresql://build:build@localhost",
+  # dev compose creds (user matches the docker-compose service); written as a
+  # pattern so this file never contains a credential-shaped string
+  "postgresql://whoami:[^@\\s]+@(localhost|whoami-postgres)",
 ]
 
 [[rules]]

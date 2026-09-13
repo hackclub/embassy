@@ -51,22 +51,24 @@ interface RecipientReviewProps {
   } | null;
   action: (formData: FormData) => Promise<RecipientFormState>;
   state: { error?: string; pending?: boolean } | undefined;
+  onError: (error: string | undefined) => void;
 }
 
 const RecipientReview = ({
   token,
-  order,
   recipient,
   action,
   state,
+  onError,
 }: RecipientReviewProps) => {
   return (
     <form
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         formData.append("token", token);
-        action(formData);
+        const result = await action(formData);
+        if (result?.error) onError(result.error);
       }}
       className="space-y-6"
       noValidate
@@ -97,7 +99,14 @@ const RecipientReview = ({
           {recipient?.photoUrl && (
             <div>
               <dt className="text-sm text-govuk-grey-4">Photo</dt>
-              <dd className="font-medium">Uploaded</dd>
+              <dd className="font-medium">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={recipient.photoUrl}
+                  alt="Your passport photo"
+                  className="mt-1 h-32 w-24 border-2 border-govuk-black object-cover"
+                />
+              </dd>
             </div>
           )}
           {recipient?.emergencyContact && (
@@ -513,6 +522,7 @@ export default function RecipientStep({ token, order, recipient, completedSteps 
             recipient={recipient}
             action={submitRecipientReviewAction as (formData: FormData) => Promise<RecipientFormState>}
             state={reviewError ? { error: reviewError } : undefined}
+            onError={setReviewError}
           />
         );
     }

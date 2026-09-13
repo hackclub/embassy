@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { generateRecipientToken, getCurrentUserWithRole } from "@/lib/org";
-import { buyItemInTx, ShopError } from "@/lib/services/shop.service";
+import { buyItemInTx, lockUserPurchases, ShopError } from "@/lib/services/shop.service";
 
 export type MeFormState = { error?: string; ok?: string } | undefined;
 
@@ -16,6 +16,17 @@ function optionalString(value: FormDataEntryValue | null): string | undefined {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
 }
+
+// http(s) only: these render as clickable links
+const httpUrl = z
+  .string()
+  .trim()
+  .url("Enter a valid URL (start with https://)")
+  .max(500, "URL is too long")
+  .refine(
+    (v) => v.startsWith("https://") || v.startsWith("http://"),
+    "Only http(s) links are allowed"
+  );
 
 const projectSchema = z.object({
   title: z
@@ -28,16 +39,8 @@ const projectSchema = z.object({
     .trim()
     .max(1000, "Description is too long (maximum 1000 characters)")
     .optional(),
-  githubUrl: z
-    .string()
-    .trim()
-    .optional(),
-  demoUrl: z
-    .string()
-    .trim()
-    .regex(/^https:\/\//, "Demo URL must start with https://")
-    .max(500, "Demo URL is too long")
-    .optional(),
+  githubUrl: httpUrl.optional(),
+  demoUrl: httpUrl.optional(),
   hackatimeProject: z
     .string()
     .trim()
@@ -275,6 +278,7 @@ export type ShopFormState =
   | { error?: string; ok?: string; trackUrl?: string }
   | undefined;
 
+// unique DB key referenced by existing orders, renaming it would orphan them
 const SHOP_ORG_SLUG = "whoami-shop";
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
@@ -284,13 +288,13 @@ async function ensureShopOrg(
 ): Promise<{ orgId: string; yswsId: string }> {
   const org = await tx.org.upsert({
     where: { slug: SHOP_ORG_SLUG },
-    create: { name: "whoami shop", slug: SHOP_ORG_SLUG },
+    create: { name: "Embassy shop", slug: SHOP_ORG_SLUG },
     update: {},
   });
   const ysws = await tx.ySWS.upsert({
     where: { slug: SHOP_ORG_SLUG },
     create: {
-      name: "whoami shop",
+      name: "Embassy shop",
       slug: SHOP_ORG_SLUG,
       isActive: true,
       orgId: org.id,
@@ -332,18 +336,6 @@ export async function buyShopItemAction(
     return { error: "You can only buy one passport at a time." };
   }
 
-  if (isPassport) {
-    const activeOrderCount = await prisma.passportOrder.count({
-      where: {
-        recipientUserId: user.id,
-        currentState: { notIn: ["DELIVERED", "CANCELLED", "ERROR"] },
-      },
-    });
-    if (activeOrderCount > 0) {
-      return { error: "You already have a passport on the way." };
-    }
-  }
-
   try {
     const result = await prisma.$transaction(async (tx) => {
       let passport: {
@@ -352,6 +344,21 @@ export async function buyShopItemAction(
       } | null = null;
 
       if (isPassport) {
+        // lock first so the next check can't be raced
+        await lockUserPurchases(tx, user.id);
+        const activeOrderCount = await tx.passportOrder.count({
+          where: {
+            recipientUserId: user.id,
+            currentState: { notIn: ["DELIVERED", "CANCELLED", "ERROR"] },
+          },
+        });
+        if (activeOrderCount > 0) {
+          throw new ShopError(
+            "passport_in_flight",
+            "You already have a passport on the way.",
+          );
+        }
+
         const { orgId, yswsId } = await ensureShopOrg(tx);
 
         const recipientToken = generateRecipientToken();
@@ -365,7 +372,7 @@ export async function buyShopItemAction(
             createdFrom: "shop",
             createdByUserId: user.id,
             recipientUserId: user.id,
-            recipientName: user.name ?? user.email ?? "whoami user",
+            recipientName: user.name ?? user.email ?? "Embassy user",
             recipientEmail: user.email ?? "",
             recipientToken,
             recipients: {
@@ -375,7 +382,7 @@ export async function buyShopItemAction(
                 userId: user.id,
               },
             },
-            note: `Purchased from the whoami shop for ${item.price} credits.`,
+            note: `Purchased from the Embassy shop for ${item.price} credits.`,
           },
           select: { id: true },
         });
@@ -387,7 +394,7 @@ export async function buyShopItemAction(
             newState: "RECIPIENT_DETAILS_RECEIVED",
             actor: user.id,
             actorType: "RECIPIENT",
-            description: `${item.name} purchased from the whoami shop`,
+            description: `${item.name} purchased from the Embassy shop`,
           },
         });
         passport = { orderId: order.id, recipientToken };

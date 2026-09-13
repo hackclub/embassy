@@ -11,10 +11,10 @@ export default function CookieBanner() {
     <div
       className="govuk-cookie-banner"
       role="region"
-      aria-label="Cookies on whoami"
+      aria-label="Cookies on Embassy"
     >
       <div className="mx-auto max-w-5xl px-5 py-6">
-        <h2 className="text-lg font-bold">Cookies on whoami</h2>
+        <h2 className="text-lg font-bold">Cookies on Embassy</h2>
         <p className="mt-2 max-w-2xl text-base leading-relaxed text-govuk-black">
           We use some essential cookies to make this service work.
         </p>

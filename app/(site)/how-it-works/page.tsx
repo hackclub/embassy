@@ -9,7 +9,7 @@ export default function HowItWorksPage() {
     <div className="pb-12">
       <FadeIn className="mx-auto max-w-5xl px-5 pt-10">
         <Breadcrumb
-          items={[{ label: "whoami", href: "/" }, { label: "How it works" }]}
+          items={[{ label: "Embassy", href: "/" }, { label: "How it works" }]}
         />
 
         <h1 className="mb-6 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">

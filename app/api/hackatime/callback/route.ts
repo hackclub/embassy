@@ -4,13 +4,14 @@ import {
   exchangeCodeForToken,
   fetchMe,
   getBaseUrl,
-  HACKATIME_STATE_COOKIE,
+  HackatimeAlreadyLinkedException,
   linkUser,
+  stateCookieName,
 } from "@/lib/hackatime";
 
 function redirectTo(request: NextRequest, status: string): NextResponse {
   const res = NextResponse.redirect(new URL(`/me?hackatime=${status}`, getBaseUrl()));
-  res.cookies.delete(HACKATIME_STATE_COOKIE);
+  res.cookies.delete(stateCookieName());
   return res;
 }
 
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const code = params.get("code");
   const state = params.get("state");
-  const expectedState = request.cookies.get(HACKATIME_STATE_COOKIE)?.value;
+  const expectedState = request.cookies.get(stateCookieName())?.value;
 
   if (!state || !expectedState || state !== expectedState) {
     return redirectTo(request, "state_mismatch");
@@ -45,9 +46,20 @@ export async function GET(request: NextRequest) {
     return redirectTo(request, "token_error");
   }
 
+  // only link accounts whose email matches the signed-in user's verified one,
+  // otherwise someone could push their own hackatime data onto another user
+  const userEmail = user.email?.toLowerCase().trim();
+  const meEmails = me.emails.map((e) => e.toLowerCase().trim());
+  if (!userEmail || !meEmails.includes(userEmail)) {
+    return redirectTo(request, "email_mismatch");
+  }
+
   try {
     await linkUser(user.id, String(me.id), token);
-  } catch {
+  } catch (e) {
+    if (e instanceof HackatimeAlreadyLinkedException) {
+      return redirectTo(request, "already_linked");
+    }
     return redirectTo(request, "token_error");
   }
 

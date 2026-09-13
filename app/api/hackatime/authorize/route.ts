@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/org";
-import { buildAuthorizeUrl, getBaseUrl, HACKATIME_STATE_COOKIE, isHackatimeConfigured } from "@/lib/hackatime";
+import { buildAuthorizeUrl, getBaseUrl, isHackatimeConfigured, stateCookieName } from "@/lib/hackatime";
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -19,12 +19,12 @@ export async function GET() {
   ).join("");
 
   const res = NextResponse.redirect(buildAuthorizeUrl(state));
-  res.cookies.set(HACKATIME_STATE_COOKIE, state, {
+  res.cookies.set(stateCookieName(), state, {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
     maxAge: 600,
-    secure: getBaseUrl().startsWith("https://"), // hacky but works perfect
+    secure: getBaseUrl().startsWith("https://"),
   });
   return res;
 }

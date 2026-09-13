@@ -1,9 +1,6 @@
-"use server";
-
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUserWithRole, hasRole } from "@/lib/org";
-import { verifyApiKeyHash } from "@/lib/org";
+import { getCurrentUserWithRole, hasRole, verifyApiKeyHash, API_KEY_PREFIX_LEN } from "@/lib/org";
 import { isBypassUser, isAuthBypassEnabled } from "@/lib/bypass";
 import type { Role, OrgRole } from "../generated/prisma/client";
 
@@ -36,18 +33,14 @@ export interface APIKeyContext {
   actorType: "api" | "organizer" | "admin";
 }
 
-/**
- * Get the complete YSWS context for the current user.
- * This is the single source of truth for YSWS authorization.
- */
+export type ApiScope = "orders:read" | "orders:write";
+
 export async function getYSWSContext(): Promise<YSWSContext | null> {
   const user = await getCurrentUserWithRole();
   if (!user) return null;
 
-  // Superadmins and admins can access all YSWSes via org membership
   if (hasRole(user.role, "ADMIN")) {
     const orgs = await prisma.org.findMany({
-      // The bypass user is not a member of any org; let them see everything.
       where: isBypassUser(user.id)
         ? {}
         : { members: { some: { userId: user.id } } },
@@ -94,7 +87,6 @@ export async function getYSWSContext(): Promise<YSWSContext | null> {
     };
   }
 
-  // Organizers can only access YSWSes they have explicit membership for
   const memberships = await prisma.organizerYSWSMembership.findMany({
     where: { userId: user.id },
     include: {
@@ -133,19 +125,13 @@ export async function getYSWSContext(): Promise<YSWSContext | null> {
   };
 }
 
-/**
- * Verify that a user has access to a specific YSWS.
- * Returns the YSWS if authorized, null otherwise.
- */
 export async function verifyYSWSAccess(
   userId: string,
-  yswsId: string,
-  requiredRole: Role = "ORGANIZER"
+  yswsId: string
 ): Promise<AccessibleYSWS | null> {
   const user = await getCurrentUserWithRole();
   if (!user || user.id !== userId) return null;
 
-  // Superadmins and admins can access any YSWS in their orgs
   if (hasRole(user.role, "ADMIN")) {
     const ysws = await prisma.ySWS.findUnique({
       where: { id: yswsId },
@@ -161,7 +147,6 @@ export async function verifyYSWSAccess(
 
     if (!ysws || !ysws.isActive || !ysws.orgId) return null;
 
-    // Check if admin is member of the org (bypass user can access everything)
     if (!isBypassUser(userId)) {
       const orgMember = await prisma.orgMember.findUnique({
         where: { orgId_userId: { orgId: ysws.orgId, userId } },
@@ -183,7 +168,6 @@ export async function verifyYSWSAccess(
     };
   }
 
-  // Organizers need explicit YSWS membership
   const membership = await prisma.organizerYSWSMembership.findFirst({
     where: { userId, yswsId },
     include: {
@@ -208,34 +192,59 @@ export async function verifyYSWSAccess(
   };
 }
 
-/**
- * Resolve organization context from API key or session.
- * Used by /api/orders route.
- */
-export async function resolveAPIKeyContext(req: Request): Promise<APIKeyContext | null> {
-  const apiKey = req.headers.get("authorization")?.startsWith("Bearer ")
-    ? req.headers.get("authorization")!.slice("Bearer ".length).trim()
+const LAST_USED_THROTTLE_MS = 5 * 60 * 1000;
+
+async function touchApiKeyLastUsed(yswsId: string, lastUsed: Date | null): Promise<void> {
+  if (lastUsed && Date.now() - lastUsed.getTime() < LAST_USED_THROTTLE_MS) return;
+  try {
+    await prisma.ySWS.update({
+      where: { id: yswsId },
+      data: { apiKeyLastUsed: new Date() },
+    });
+  } catch {
+    // best-effort
+  }
+}
+
+export async function resolveAPIKeyContext(
+  req: Request,
+  requiredScope?: ApiScope
+): Promise<APIKeyContext | null> {
+  const authHeader = req.headers.get("authorization");
+  const apiKey = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice("Bearer ".length).trim()
     : req.headers.get("x-api-key")?.trim() ?? null;
 
   if (apiKey) {
-    // Fetch all active YSWS and verify the API key hash
-    const yswsList = await prisma.ySWS.findMany({
-      where: { isActive: true },
+    if (!apiKey.startsWith("wom_") || apiKey.length < API_KEY_PREFIX_LEN + 8) {
+      return null;
+    }
+
+    // match the stored prefix first so we only argon2-verify actual candidates
+    const prefix = apiKey.slice(0, API_KEY_PREFIX_LEN);
+    let candidates = await prisma.ySWS.findMany({
+      where: { isActive: true, apiKeyPrefix: prefix },
       include: { org: true },
     });
+    // legacy rows from before prefixes were stored
+    if (candidates.length === 0) {
+      candidates = await prisma.ySWS.findMany({
+        where: { isActive: true, apiKeyPrefix: null, apiKeyHash: { not: null } },
+        include: { org: true },
+      });
+    }
 
-    for (const ysws of yswsList) {
-      if (ysws.apiKeyHash && ysws.orgId) {
-        const isValid = await verifyApiKeyHash(apiKey, ysws.apiKeyHash);
-        if (isValid) {
-          // Update last used timestamp
-          await prisma.ySWS.update({
-            where: { id: ysws.id },
-            data: { apiKeyLastUsed: new Date() },
-          });
-          return { orgId: ysws.orgId, yswsId: ysws.id, actorId: "api", actorType: "api" };
-        }
+    for (const ysws of candidates) {
+      if (!ysws.apiKeyHash || !ysws.orgId) continue;
+      if (!(await verifyApiKeyHash(apiKey, ysws.apiKeyHash))) continue;
+      if (ysws.apiKeyExpiresAt && ysws.apiKeyExpiresAt.getTime() < Date.now()) {
+        return null; // valid key, but expired — do not fall through
       }
+      if (requiredScope && ysws.apiKeyScopes.length > 0 && !ysws.apiKeyScopes.includes(requiredScope)) {
+        return null; // valid key, but lacks scope
+      }
+      await touchApiKeyLastUsed(ysws.id, ysws.apiKeyLastUsed);
+      return { orgId: ysws.orgId, yswsId: ysws.id, actorId: "api", actorType: "api" };
     }
     return null;
   }
@@ -246,15 +255,13 @@ export async function resolveAPIKeyContext(req: Request): Promise<APIKeyContext 
   const user = await getCurrentUserWithRole();
   if (!user) return null;
 
-  // For session users, find their org membership
   const membership = await prisma.orgMember.findFirst({
     where: { userId: user.id },
+    orderBy: { id: "asc" },
     include: { org: true },
   });
 
   if (!membership) {
-    // Bypass user has no org membership; fall back to the first org so the
-    // orders API stays testable without signing in.
     if (isBypassUser(user.id)) {
       const org = await prisma.org.findFirst({ orderBy: { createdAt: "asc" } });
       if (!org) return null;
@@ -271,7 +278,6 @@ export async function resolveAPIKeyContext(req: Request): Promise<APIKeyContext 
     return null;
   }
 
-  // Get the YSWS for this org
   const ysws = await prisma.ySWS.findFirst({
     where: { orgId: membership.orgId, isActive: true },
   });
@@ -282,41 +288,4 @@ export async function resolveAPIKeyContext(req: Request): Promise<APIKeyContext 
     actorId: user.id,
     actorType: hasRole(user.role, "ADMIN") ? "admin" : "organizer",
   };
-}
-
-/**
- * Check if a user can access a specific YSWS (legacy compatibility).
- */
-export async function canAccessYSWS(userId: string, ywsId: string): Promise<boolean> {
-  const access = await verifyYSWSAccess(userId, ywsId);
-  return access !== null;
-}
-
-/**
- * Get all YSWSes an organizer can access with stats.
- */
-export async function getOrganizerYSWSes(userId: string): Promise<AccessibleYSWS[]> {
-  const context = await getYSWSContext();
-  if (!context) return [];
-  return context.accessibleYSWSes;
-}
-
-/**
- * Get all orders for a YSWS that an organizer can manage.
- */
-export async function getYSWSOrders(
-  userId: string,
-  ywsId: string
-) {
-  const access = await verifyYSWSAccess(userId, ywsId);
-  if (!access) return [];
-
-  return prisma.passportOrder.findMany({
-    where: { yswsId: ywsId },
-    orderBy: { createdAt: "desc" },
-    include: {
-      org: { select: { name: true } },
-      recipients: { select: { email: true, name: true } },
-    },
-  });
 }

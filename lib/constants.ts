@@ -7,8 +7,8 @@ export const ALLOWED_IMAGE_TYPES = [
 export const MAX_NOTE_LENGTH = 300;
 export const MAX_NAME_LENGTH = 80;
 export const MIN_NAME_LENGTH = 2;
+export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 export const FEEDBACK_RETENTION_DAYS = 30;
-export const API_KEY_BYTES = 24;
 export const RECIPIENT_TOKEN_BYTES = 32;
 export const JWT_MAX_AGE_DAYS = 30;
 
@@ -182,3 +182,7 @@ export const WEEKLY_LEADERBOARD_DAYS = 7 as const;
 
 // submission hrs count only from this onward
 export const YSWS_START_DATE = process.env.YSWS_START_DATE ?? "2026-09-01";
+// caps for admin-entered numbers
+export const MAX_CREDIT_ADJUSTMENT = 100_000;
+export const MAX_REVIEWABLE_HOURS = 100_000;
+export const MAX_PENDING_SUBMISSIONS_PER_USER = 5;

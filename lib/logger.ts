@@ -21,7 +21,7 @@ const logger = pino({
   },
   timestamp: pino.stdTimeFunctions.isoTime,
   base: {
-    service: "whoami",
+    service: "embassy",
     environment: process.env.NODE_ENV || "development",
   },
 });

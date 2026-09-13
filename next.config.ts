@@ -1,18 +1,12 @@
 import path from "node:path";
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
-// Security headers (CSP, X-Frame-Options, etc.) are owned by Caddy in
-// production — see infra/nix/services.nix. Do not re-add them here; they
-// would be applied twice.
+// security headers (CSP etc.) are set by Caddy in production, not here
 const nextConfig: NextConfig = {
   output: "standalone",
   turbopack: {
     root: path.join(__dirname),
-  },
-  experimental: {
-    serverActions: {
-      allowedOrigins: ["localhost:3000"],
-    },
   },
   images: {
     remotePatterns: [
@@ -24,4 +18,10 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// uploads source maps only when SENTRY_ORG/PROJECT/AUTH_TOKEN are set at build time
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: true,
+  telemetry: false,
+});

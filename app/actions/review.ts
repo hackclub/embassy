@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithRole, hasRole } from "@/lib/org";
 import { addCredits } from "@/lib/services/credits.service";
 import { creditsForHours } from "@/lib/helpers";
+import { MAX_REVIEWABLE_HOURS } from "@/lib/constants";
 
 export type ReviewFormState = { error?: string; ok?: boolean } | undefined;
 
@@ -39,9 +40,11 @@ export async function reviewSubmissionAction(
       : null;
   if (
     hoursOverride !== null &&
-    (!Number.isFinite(hoursOverride) || hoursOverride < 0)
+    (!Number.isFinite(hoursOverride) ||
+      hoursOverride < 0 ||
+      hoursOverride > MAX_REVIEWABLE_HOURS)
   ) {
-    return { error: "Hours must be a positive number." };
+    return { error: `Hours must be between 0 and ${MAX_REVIEWABLE_HOURS}.` };
   }
 
   const submission = await prisma.submission.findUnique({
@@ -51,19 +54,13 @@ export async function reviewSubmissionAction(
 
   try {
     if (decision === "ACCEPTED") {
-      if (submission.status === "ACCEPTED") {
-        return { error: "This submission was already accepted." };
-      }
-      if (submission.creditsAwarded !== null) {
-        return { error: "Credits were already awarded for this submission." };
-      }
-
       const hours = hoursOverride ?? submission.hackatimeHours ?? 0;
       const credits = creditsForHours(hours);
 
       await prisma.$transaction(async (tx) => {
-        await tx.submission.update({
-          where: { id: submission.id },
+        // guarded so two concurrent accepts can't double-pay
+        const claimed = await tx.submission.updateMany({
+          where: { id: submission.id, creditsAwarded: null },
           data: {
             status: "ACCEPTED",
             creditsAwarded: credits,
@@ -72,6 +69,9 @@ export async function reviewSubmissionAction(
             reviewReason,
           },
         });
+        if (claimed.count === 0) {
+          throw new Error("ALREADY_REVIEWED");
+        }
         await addCredits(
           {
             userId: submission.userId,
@@ -94,7 +94,10 @@ export async function reviewSubmissionAction(
         },
       });
     }
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.message === "ALREADY_REVIEWED") {
+      return { error: "This submission was already accepted." };
+    }
     return { error: "Couldn't save the review. Try again." };
   }
 

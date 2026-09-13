@@ -12,6 +12,13 @@ const HACKATIME = {
 
 export const HACKATIME_STATE_COOKIE = "hackatime_oauth_state";
 
+// __Host- prefix (https only) keeps other subdomains from planting a state cookie
+export function stateCookieName(): string {
+  return getBaseUrl().startsWith("https://")
+    ? `__Host-${HACKATIME_STATE_COOKIE}`
+    : HACKATIME_STATE_COOKIE;
+}
+
 export type HackatimeMe = {
   id: number;
   emails: string[];
@@ -24,20 +31,19 @@ export function isHackatimeConfigured(): boolean {
     process.env.AUTH_HACKATIME_CLIENT_ID &&
     process.env.AUTH_HACKATIME_CLIENT_SECRET,
   );
+  const id = process.env.AUTH_HACKATIME_CLIENT_ID ?? "";
+  const secret = process.env.AUTH_HACKATIME_CLIENT_SECRET ?? "";
+  const placeholder = (v: string) => !v || v.trim().toLowerCase() === "placeholder";
+  return !placeholder(id) && !placeholder(secret);
 }
 
-/**
- * Find canonical Base URL. Prefers AUTH_URL.
- * Default: env: AUTH_URL
- * Fallback: Headers (req origin)
- */
 export function getBaseUrl(origin?: string): string {
   const envUrl = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL;
   if (envUrl) {
     try {
       return new URL(envUrl).origin;
     } catch {
-      // fall through: request origin
+      // fall through
     }
   }
   if (origin) {
@@ -194,6 +200,10 @@ export async function fetchTrackedTime(
     return hrs;
   } catch {
     return null;
+export class HackatimeAlreadyLinkedException extends Error {
+  constructor() {
+    super("This Hackatime account is already linked to another user");
+    this.name = "HackatimeAlreadyLinkedException";
   }
 }
 
@@ -202,7 +212,6 @@ export async function linkUser(
   hackatimeUid: string,
   token: { access_token: string },
 ): Promise<void> {
-  // Encrypt at rest — never keep the raw Hackatime token in the DB.
   const accessToken = await encryptPII(token.access_token);
   await prisma.$transaction(async (tx) => {
     const existing = await tx.account.findUnique({
@@ -213,8 +222,15 @@ export async function linkUser(
         },
       },
     });
-    if (existing && existing.userId !== userId) {
-      await tx.account.delete({ where: { id: existing.id } });
+    const existingUser = await tx.user.findFirst({
+      where: { hackatimeUid },
+      select: { id: true },
+    });
+    if (
+      (existing && existing.userId !== userId) ||
+      (existingUser && existingUser.id !== userId)
+    ) {
+      throw new HackatimeAlreadyLinkedException();
     }
     await tx.account.upsert({
       where: {
@@ -238,15 +254,6 @@ export async function linkUser(
         access_token: accessToken,
         token_type: "Bearer",
         scope: "profile read",
-      },
-    });
-    // User.hackatimeUid is unique — release it from any previous owner first.
-    await tx.user.updateMany({
-      where: { hackatimeUid, NOT: { id: userId } },
-      data: {
-        hackatimeUid: null,
-        hackatimeLinkedAt: null,
-        hackatimeTokenEncrypted: null,
       },
     });
     await tx.user.update({
@@ -278,14 +285,12 @@ export async function getLinkedAccount(
     },
   });
 
-  // Prefer the dedicated field; fall back to the account row (may be legacy
-  // plaintext from before encryption, so decrypt-when-possible).
   const stored = user.hackatimeTokenEncrypted || account?.access_token || null;
   if (!stored) return null;
 
   let accessToken: string;
   try {
-    // May be legacy plaintext from before encryption, so decrypt-when-possible.
+    // value may be legacy plaintext, decryptPII falls back to raw
     const plain = await decryptPII(stored);
     accessToken = plain || stored;
   } catch {
