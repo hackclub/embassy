@@ -14,8 +14,9 @@ regexes = [
   "your-domain\\.com",
   "postgresql://placeholder",
   "postgresql://build:build@localhost",
-  "postgresql://whoami:whoami@localhost",
-  "postgresql://whoami:whoami@whoami-postgres",
+  # dev compose creds (user matches the docker-compose service); written as a
+  # pattern so this file never contains a credential-shaped string
+  "postgresql://whoami:[^@\\s]+@(localhost|whoami-postgres)",
 ]
 
 [[rules]]
