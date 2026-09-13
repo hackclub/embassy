@@ -334,11 +334,15 @@ export const SubmissionScalarFieldEnum = {
   url: 'url',
   image: 'image',
   status: 'status',
+  aiUseDeclaration: 'aiUseDeclaration',
+  aiUsed: 'aiUsed',
+  noteForReviewer: 'noteForReviewer',
   projectId: 'projectId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   reviewedById: 'reviewedById',
   reviewedAt: 'reviewedAt',
+  reviewReason: 'reviewReason',
   hackatimeHours: 'hackatimeHours',
   creditsAwarded: 'creditsAwarded'
 } as const
@@ -364,6 +368,7 @@ export const ProjectScalarFieldEnum = {
   githubUrl: 'githubUrl',
   demoUrl: 'demoUrl',
   hackatimeProject: 'hackatimeProject',
+  aiDeclaration: 'aiDeclaration',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

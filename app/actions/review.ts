@@ -21,8 +21,15 @@ export async function reviewSubmissionAction(
 
   const submissionId = String(formData.get("submissionId") ?? "");
   const decision = String(formData.get("decision") ?? "");
+  const reviewReason = String(formData.get("reviewReason") ?? "").trim();
   if (!submissionId || !["ACCEPTED", "REJECTED"].includes(decision)) {
     return { error: "Invalid review." };
+  }
+  if (reviewReason.length < 3) {
+    return { error: "Add a reason for your decision — the student will see it." };
+  }
+  if (reviewReason.length > 2000) {
+    return { error: "Reason is too long (maximum 2000 characters)." };
   }
 
   const rawHours = formData.get("hoursOverride");
@@ -62,6 +69,7 @@ export async function reviewSubmissionAction(
             creditsAwarded: credits,
             reviewedById: reviewer.id,
             reviewedAt: new Date(),
+            reviewReason,
           },
         });
         await addCredits(
@@ -82,6 +90,7 @@ export async function reviewSubmissionAction(
           status: "REJECTED",
           reviewedById: reviewer.id,
           reviewedAt: new Date(),
+          reviewReason,
         },
       });
     }

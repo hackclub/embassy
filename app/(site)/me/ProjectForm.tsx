@@ -15,6 +15,7 @@ interface ProjectFormProps {
     githubUrl?: string;
     demoUrl?: string;
     hackatimeProject?: string | null;
+    aiDeclaration?: string;
   };
   onSuccess?: () => void;
 }
@@ -183,6 +184,24 @@ export default function ProjectForm({
           type="url"
           placeholder="https://your-project.demo.dev"
           defaultValue={defaultValues?.demoUrl}
+          className={inputClass}
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor={`project-ai-${projectId ?? "new"}`}
+          className="mb-2 block font-bold"
+        >
+          AI declaration{" "}
+          <span className="font-normal text-govuk-grey-4">(optional)</span>
+        </label>
+        <textarea
+          id={`project-ai-${projectId ?? "new"}`}
+          name="aiDeclaration"
+          rows={3}
+          defaultValue={defaultValues?.aiDeclaration}
+          placeholder="If you used AI to help build this, say how here (e.g. which tools, for what)."
           className={inputClass}
         />
       </div>

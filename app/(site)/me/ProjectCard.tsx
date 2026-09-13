@@ -3,6 +3,7 @@
 import { useState, useActionState } from "react";
 import { createPortal } from "react-dom";
 import ProjectForm from "./ProjectForm";
+import SubmitForm from "./SubmitForm";
 import JournalMarkdown from "./JournalMarkdown";
 import { useBodyScrollLock } from "./useBodyScrollLock";
 import {
@@ -11,9 +12,16 @@ import {
   deleteProjectAction,
   type MeFormState,
 } from "@/app/actions/me";
+import { rescindSubmissionAction } from "@/app/actions/submissions";
 
 const inputClass =
   "w-full rounded-sm border-2 border-govuk-black px-3 py-2 text-base";
+
+export type SubmissionStatus =
+  | "DRAFT"
+  | "SUBMITTED"
+  | "ACCEPTED"
+  | "REJECTED";
 
 export type ProjectCardData = {
   id: string;
@@ -22,6 +30,9 @@ export type ProjectCardData = {
   githubUrl: string | null;
   demoUrl: string | null;
   hackatimeProject: string | null;
+  aiDeclaration: string | null;
+  submissionStatus: SubmissionStatus | null;
+  reviewReason: string | null;
   journalEntries: {
     id: string;
     title: string;
@@ -30,19 +41,32 @@ export type ProjectCardData = {
   }[];
 };
 
+type Dialog = "journal" | "edit" | "submit" | null;
+
+function SubmissionTag({ status }: { status: SubmissionStatus }) {
+  const map: Record<SubmissionStatus, { cls: string; label: string }> = {
+    DRAFT: { cls: "govuk-tag--grey", label: "Draft" },
+    SUBMITTED: { cls: "govuk-tag--blue", label: "Under review" },
+    ACCEPTED: { cls: "govuk-tag--green", label: "Accepted" },
+    REJECTED: { cls: "govuk-tag--grey", label: "Rejected" },
+  };
+  const t = map[status];
+  return <span className={`govuk-tag ${t.cls}`}>{t.label}</span>;
+}
+
 export default function ProjectCard({ project }: { project: ProjectCardData }) {
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState(false);
-  useBodyScrollLock(open);
+  const [dialog, setDialog] = useState<Dialog>(null);
+  useBodyScrollLock(dialog !== null);
+
+  const submitted =
+    project.submissionStatus === "SUBMITTED" ||
+    project.submissionStatus === "ACCEPTED";
 
   return (
     <div className="project-card project-card-clickable relative">
       <button
         type="button"
-        onClick={() => {
-          setEditing(false);
-          setOpen(true);
-        }}
+        onClick={() => setDialog("journal")}
         className="absolute inset-0 z-0"
         aria-haspopup="dialog"
         aria-label={`Open journal for ${project.title}`}
@@ -54,11 +78,29 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
             {project.description}
           </p>
         )}
-        <p className="mt-2 text-xs text-govuk-grey-4">
-          {project.journalEntries.length}{" "}
-          {project.journalEntries.length === 1 ? "entry" : "entries"} · tap to
-          journal
-        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <p className="text-xs text-govuk-grey-4">
+            {project.journalEntries.length}{" "}
+            {project.journalEntries.length === 1 ? "entry" : "entries"} · tap to
+            journal
+          </p>
+          {project.submissionStatus && (
+            <SubmissionTag status={project.submissionStatus} />
+          )}
+        </div>
+        {project.reviewReason &&
+          (project.submissionStatus === "REJECTED" ||
+            project.submissionStatus === "ACCEPTED") && (
+            <p className="mt-2 line-clamp-2 rounded-md border-l-4 border-govuk-green bg-govuk-grey-1 px-3 py-2 text-xs leading-relaxed">
+              <span className="font-bold">
+                {project.submissionStatus === "REJECTED"
+                  ? "Rejected"
+                  : "Accepted"}
+                :
+              </span>{" "}
+              {project.reviewReason}
+            </p>
+          )}
         <div className="mt-3 flex items-center gap-3 text-xs">
           {project.githubUrl ? (
             <a
@@ -82,40 +124,60 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
               Demo
             </a>
           )}
-          <button
-            type="button"
-            onClick={() => {
-              setEditing(true);
-              setOpen(true);
-            }}
-            className="pointer-events-auto ml-auto font-semibold text-govuk-grey-4 underline underline-offset-4 hover:text-govuk-black"
-          >
-            Edit
-          </button>
+          {project.submissionStatus === "SUBMITTED" ? (
+            <RescindButton projectId={project.id} title={project.title} />
+          ) : !submitted ? (
+            <button
+              type="button"
+              onClick={() => setDialog("submit")}
+              className="pointer-events-auto ml-auto font-semibold text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
+            >
+              Submit
+            </button>
+          ) : null}
+          {!submitted && (
+            <button
+              type="button"
+              onClick={() => setDialog("edit")}
+              className="pointer-events-auto font-semibold text-govuk-grey-4 underline underline-offset-4 hover:text-govuk-black"
+            >
+              Edit
+            </button>
+          )}
         </div>
       </div>
 
-      {open &&
+      {dialog &&
         createPortal(
           <div
             className="game-popup-backdrop"
-            onClick={() => setOpen(false)}
+            onClick={() => setDialog(null)}
             role="presentation"
           >
             <div
               className="game-popup"
               role="dialog"
               aria-modal="true"
-              aria-label={editing ? "Edit project" : `${project.title} journal`}
+              aria-label={
+                dialog === "edit"
+                  ? "Edit project"
+                  : dialog === "submit"
+                    ? `Submit ${project.title}`
+                    : `${project.title} journal`
+              }
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-4 flex items-center justify-between gap-4">
                 <h2 className="text-xl font-bold">
-                  {editing ? "Edit project" : `${project.title} — journal`}
+                  {dialog === "edit"
+                    ? "Edit project"
+                    : dialog === "submit"
+                      ? `Submit — ${project.title}`
+                      : `${project.title} — journal`}
                 </h2>
                 <button
                   type="button"
-                  onClick={() => setOpen(false)}
+                  onClick={() => setDialog(null)}
                   className="text-2xl leading-none text-govuk-grey-4 hover:text-govuk-black"
                   aria-label="Close"
                 >
@@ -123,7 +185,15 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
                 </button>
               </div>
 
-              {editing ? (
+              {submitted && (
+                <p className="mb-4 rounded-md border-l-4 border-govuk-blue bg-govuk-grey-1 px-3 py-2 text-sm font-semibold text-govuk-black">
+                  {project.submissionStatus === "ACCEPTED"
+                    ? "This project was accepted — its details are locked."
+                    : "This project is under review — its details are locked."}
+                </p>
+              )}
+
+              {dialog === "edit" ? (
                 <>
                   <ProjectForm
                     projectId={project.id}
@@ -133,8 +203,9 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
                       githubUrl: project.githubUrl ?? undefined,
                       demoUrl: project.demoUrl ?? undefined,
                       hackatimeProject: project.hackatimeProject,
+                      aiDeclaration: project.aiDeclaration ?? undefined,
                     }}
-                    onSuccess={() => setOpen(false)}
+                    onSuccess={() => setDialog(null)}
                   />
                   <form
                     action={async (formData) => {
@@ -146,7 +217,7 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
                         return;
                       }
                       await deleteProjectAction(formData);
-                      setOpen(false);
+                      setDialog(null);
                     }}
                     className="mt-4 border-t-2 border-dashed border-govuk-grey-2 pt-3"
                   >
@@ -159,24 +230,70 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
                     </button>
                   </form>
                 </>
+              ) : dialog === "submit" ? (
+                <SubmitForm
+                  project={project}
+                  onSuccess={() => setDialog(null)}
+                />
               ) : (
                 <JournalPanel project={project} />
               )}
 
-              <div className="mt-4 border-t-2 border-dashed border-govuk-grey-2 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setEditing(!editing)}
-                  className="text-sm font-semibold text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
-                >
-                  {editing ? "Back to journal" : "Edit project details"}
-                </button>
-              </div>
+              {dialog !== "submit" && !submitted && (
+                <div className="mt-4 border-t-2 border-dashed border-govuk-grey-2 pt-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setDialog(dialog === "edit" ? "journal" : "edit")
+                    }
+                    className="text-sm font-semibold text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
+                  >
+                    {dialog === "edit"
+                      ? "Back to journal"
+                      : "Edit project details"}
+                  </button>
+                </div>
+              )}
             </div>
           </div>,
           document.body,
         )}
     </div>
+  );
+}
+
+function RescindButton({
+  projectId,
+  title,
+}: {
+  projectId: string;
+  title: string;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  return (
+    <form
+      action={async () => {
+        if (
+          !window.confirm(
+            `Rescind "${title}"? Reviewers will no longer see this submission and you'll be able to edit and resubmit.`,
+          )
+        ) {
+          return;
+        }
+        setBusy(true);
+        await rescindSubmissionAction(projectId);
+      }}
+      className="pointer-events-auto ml-auto"
+    >
+      <button
+        type="submit"
+        disabled={busy}
+        className="font-semibold text-hc-red underline underline-offset-4 hover:opacity-80 disabled:opacity-50"
+      >
+        {busy ? "Rescinding..." : "Rescind"}
+      </button>
+    </form>
   );
 }
 

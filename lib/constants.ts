@@ -179,3 +179,6 @@ export function getFulfillmentLabel(status: string): string {
 export const LEADERBOARD_TOP_N = 20 as const;
 export const LEADERBOARD_TTL_SECONDS = 300 as const;
 export const WEEKLY_LEADERBOARD_DAYS = 7 as const;
+
+// submission hrs count only from this onward
+export const YSWS_START_DATE = process.env.YSWS_START_DATE ?? "2026-09-01";

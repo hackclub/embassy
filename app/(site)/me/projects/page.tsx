@@ -16,6 +16,11 @@ export default async function ProjectsPage() {
         orderBy: { entryDate: "desc" },
         select: { id: true, title: true, content: true, entryDate: true },
       },
+      submissions: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { status: true, reviewReason: true },
+      },
     },
   });
 
@@ -26,6 +31,9 @@ export default async function ProjectsPage() {
     githubUrl: p.githubUrl,
     demoUrl: p.demoUrl,
     hackatimeProject: p.hackatimeProject,
+    aiDeclaration: p.aiDeclaration,
+    submissionStatus: p.submissions[0]?.status ?? null,
+    reviewReason: p.submissions[0]?.reviewReason ?? null,
     journalEntries: p.journalEntries.map((e) => ({
       id: e.id,
       title: e.title,

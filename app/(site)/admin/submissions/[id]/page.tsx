@@ -19,6 +19,14 @@ export default async function AdminSubmissionReviewPage({
     include: {
       user: { select: { name: true, email: true } },
       reviewer: { select: { name: true, email: true } },
+      project: {
+        select: {
+          aiDeclaration: true,
+          githubUrl: true,
+          demoUrl: true,
+          hackatimeProject: true,
+        },
+      },
       _count: { select: { votes: true } },
     },
   });
@@ -48,7 +56,7 @@ export default async function AdminSubmissionReviewPage({
         }).format(submission.createdAt)}
       </p>
 
-      <div className="mb-6 grid gap-6 md:grid-cols-2">
+      <div className="mb-6 space-y-6">
         <div className="game-box">
           <h2 className="mb-2 font-extrabold uppercase tracking-wide text-govuk-grey-4">
             Details
@@ -58,15 +66,67 @@ export default async function AdminSubmissionReviewPage({
           ) : (
             <p className="text-sm text-govuk-grey-4">No description.</p>
           )}
-          {submission.url && (
-            <a
-              href={submission.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-block text-sm font-semibold text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
-            >
-              {submission.url}
-            </a>
+
+          <div className="mt-3 space-y-1">
+            {submission.project?.githubUrl ? (
+              <a
+                href={submission.project.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-sm font-semibold text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
+              >
+                Code: {submission.project.githubUrl}
+              </a>
+            ) : (
+              <p className="text-sm text-govuk-grey-4">No code URL.</p>
+            )}
+            {submission.project?.demoUrl ? (
+              <a
+                href={submission.project.demoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-sm font-semibold text-govuk-blue underline underline-offset-4 hover:text-govuk-blue-hover"
+              >
+                Demo: {submission.project.demoUrl}
+              </a>
+            ) : (
+              <p className="text-sm text-govuk-grey-4">No demo URL.</p>
+            )}
+            {submission.project?.hackatimeProject && (
+              <p className="text-sm font-semibold">
+                Hackatime project: {submission.project.hackatimeProject}
+              </p>
+            )}
+          </div>
+          {submission.noteForReviewer && (
+            <div className="mt-4 rounded-md border-l-4 border-[#ff902f] bg-[#fff7e6] px-3 py-2">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-govuk-grey-4">
+                Note to reviewer
+              </h3>
+              <p className="mt-1 text-sm leading-relaxed whitespace-pre-wrap">
+                {submission.noteForReviewer}
+              </p>
+            </div>
+          )}
+          {submission.project?.aiDeclaration && (
+            <div className="mt-3 rounded-md border-l-4 border-govuk-blue bg-govuk-grey-1 px-3 py-2">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-govuk-grey-4">
+                AI declaration
+              </h3>
+              <p className="mt-1 text-sm leading-relaxed whitespace-pre-wrap">
+                {submission.project.aiDeclaration}
+              </p>
+            </div>
+          )}
+          {submission.reviewReason && (
+            <div className="mt-4 rounded-md border-l-4 border-govuk-green bg-govuk-grey-1 px-3 py-2">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-govuk-grey-4">
+                Review reason
+              </h3>
+              <p className="mt-1 text-sm leading-relaxed whitespace-pre-wrap">
+                {submission.reviewReason}
+              </p>
+            </div>
           )}
           <p className="mt-4 text-sm text-govuk-grey-4">
             {submission._count.votes} vote{submission._count.votes === 1 ? "" : "s"}

@@ -378,6 +378,10 @@ model Submission {
   status      SubmissionStatus @default(SUBMITTED)
   votes       Vote[]
 
+  aiUseDeclaration String?
+  aiUsed           Boolean?
+  noteForReviewer  String?
+
   projectId String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -388,6 +392,7 @@ model Submission {
 
   reviewedById String?
   reviewedAt   DateTime?
+  reviewReason String?
 
   reviewer           User?               @relation("ReviewedSubmissions", fields: [reviewedById], references: [id], onDelete: SetNull)
   creditTransactions CreditTransaction[]
@@ -423,6 +428,7 @@ model Project {
   githubUrl        String?
   demoUrl          String?
   hackatimeProject String?
+  aiDeclaration    String?
 
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   journalEntries JournalEntry[]

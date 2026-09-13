@@ -21,7 +21,8 @@ export type HackatimeMe = {
 
 export function isHackatimeConfigured(): boolean {
   return Boolean(
-    process.env.AUTH_HACKATIME_CLIENT_ID && process.env.AUTH_HACKATIME_CLIENT_SECRET
+    process.env.AUTH_HACKATIME_CLIENT_ID &&
+    process.env.AUTH_HACKATIME_CLIENT_SECRET,
   );
 }
 
@@ -65,7 +66,7 @@ export function buildAuthorizeUrl(state: string, origin?: string): string {
 
 export async function exchangeCodeForToken(
   code: string,
-  origin?: string
+  origin?: string,
 ): Promise<{ access_token: string } | null> {
   try {
     const res = await fetch(HACKATIME.tokenUrl, {
@@ -82,7 +83,8 @@ export async function exchangeCodeForToken(
     });
     if (!res.ok) return null;
     const data = (await res.json()) as { access_token?: unknown };
-    if (typeof data.access_token !== "string" || !data.access_token) return null;
+    if (typeof data.access_token !== "string" || !data.access_token)
+      return null;
     return { access_token: data.access_token };
   } catch {
     return null;
@@ -103,7 +105,9 @@ export async function fetchMe(token: string): Promise<HackatimeMe | null> {
       emails: Array.isArray(data.emails) ? (data.emails as string[]) : [],
       slack_id: typeof data.slack_id === "string" ? data.slack_id : undefined,
       github_username:
-        typeof data.github_username === "string" ? data.github_username : undefined,
+        typeof data.github_username === "string"
+          ? data.github_username
+          : undefined,
     };
   } catch {
     return null;
@@ -133,9 +137,7 @@ export async function fetchTotalHours(token: string): Promise<number | null> {
 
 const IGNORED_PROJECTS = new Set(["<<LAST_PROJECT>>", "Other"]);
 
-export async function fetchProjects(
-  token: string
-): Promise<string[] | null> {
+export async function fetchProjects(token: string): Promise<string[] | null> {
   try {
     const res = await fetch(HACKATIME.projectsUrl, {
       headers: { Authorization: `Bearer ${token}` },
@@ -156,18 +158,26 @@ export async function fetchProjects(
   }
 }
 
-export async function fetchTrackedTime(token: string, hackatimeProjects: string[], startDate?: string): Promise<Map<string, number> | null> {
+export async function fetchTrackedTime(
+  token: string,
+  hackatimeProjects: string[],
+  startDate?: string,
+): Promise<Map<string, number> | null> {
   try {
     const url = new URL(HACKATIME.projectsUrl);
-        if (startDate) url.searchParams.set("start", startDate);
-        const res = await fetch(url, {
-          headers: { Authorization: `Bearer ${token}` },
-          cache: "no-store",
-        });
+    if (startDate) url.searchParams.set("start", startDate);
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
 
     if (!res.ok) return null;
     const data = (await res.json()) as {
-      projects?: Array<{ name?: unknown; archived?: unknown; total_seconds?: unknown }>;
+      projects?: Array<{
+        name?: unknown;
+        archived?: unknown;
+        total_seconds?: unknown;
+      }>;
     };
     if (!Array.isArray(data.projects)) return null;
 
@@ -176,27 +186,21 @@ export async function fetchTrackedTime(token: string, hackatimeProjects: string[
     hackatimeProjects.forEach((n: string) => {
       const project = data.projects?.find(
         (p) =>
-          !p.archived &&
-          p.name === n &&
-          typeof p.total_seconds === "number",
+          !p.archived && p.name === n && typeof p.total_seconds === "number",
       );
-      hrs.set(n, project?.total_seconds as number ?? 0);
-      
+      hrs.set(n, (project?.total_seconds as number) ?? 0);
     });
-    
-    return hrs;
 
+    return hrs;
   } catch {
     return null;
   }
 }
 
-
-
 export async function linkUser(
   userId: string,
   hackatimeUid: string,
-  token: { access_token: string }
+  token: { access_token: string },
 ): Promise<void> {
   // Encrypt at rest — never keep the raw Hackatime token in the DB.
   const accessToken = await encryptPII(token.access_token);
@@ -257,7 +261,7 @@ export async function linkUser(
 }
 
 export async function getLinkedAccount(
-  userId: string
+  userId: string,
 ): Promise<{ hackatimeUid: string; accessToken: string } | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -305,7 +309,9 @@ export async function unlinkUser(userId: string): Promise<void> {
   ]);
 }
 
-export async function getHackatimeHours(userId: string): Promise<number | null> {
+export async function getHackatimeHours(
+  userId: string,
+): Promise<number | null> {
   if (isBypassUser(userId) && process.env.ADMIN_BYPASS_HOURS) {
     const hours = Number(process.env.ADMIN_BYPASS_HOURS);
     return Number.isFinite(hours) ? hours : null;
@@ -314,6 +320,32 @@ export async function getHackatimeHours(userId: string): Promise<number | null> 
     const linked = await getLinkedAccount(userId);
     if (!linked) return null;
     return await fetchTotalHours(linked.accessToken);
+  } catch {
+    return null;
+  }
+}
+
+export async function getProjectHackatimeHours(
+  userId: string,
+  projectName: string,
+  startDate: string,
+): Promise<number | null> {
+  if (!projectName) return null;
+  if (isBypassUser(userId) && process.env.ADMIN_BYPASS_HOURS) {
+    const hours = Number(process.env.ADMIN_BYPASS_HOURS);
+    return Number.isFinite(hours) ? hours : null;
+  }
+  try {
+    const linked = await getLinkedAccount(userId);
+    if (!linked) return null;
+    const map = await fetchTrackedTime(
+      linked.accessToken,
+      [projectName],
+      startDate,
+    );
+    if (!map) return null;
+    const seconds = map.get(projectName) ?? 0;
+    return Math.round((seconds / 3600) * 100) / 100;
   } catch {
     return null;
   }

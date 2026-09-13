@@ -43,6 +43,11 @@ const projectSchema = z.object({
     .trim()
     .max(120, "Hackatime project name is too long")
     .optional(),
+  aiDeclaration: z
+    .string()
+    .trim()
+    .max(1000, "AI declaration is too long (maximum 1000 characters)")
+    .optional(),
 });
 
 const journalSchema = z.object({
@@ -66,6 +71,7 @@ async function createProjectData(formData: FormData) {
     githubUrl: optionalString(formData.get("githubUrl")),
     demoUrl: optionalString(formData.get("demoUrl")),
     hackatimeProject: optionalString(formData.get("hackatimeProject")),
+    aiDeclaration: optionalString(formData.get("aiDeclaration")),
   });
   if (!parsed.success) {
     return {
@@ -79,6 +85,7 @@ async function createProjectData(formData: FormData) {
       githubUrl: parsed.data.githubUrl ?? null,
       demoUrl: parsed.data.demoUrl ?? null,
       hackatimeProject: parsed.data.hackatimeProject ?? null,
+      aiDeclaration: parsed.data.aiDeclaration ?? null,
     },
   } as const;
 }

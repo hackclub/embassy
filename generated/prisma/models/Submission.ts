@@ -45,11 +45,15 @@ export type SubmissionMinAggregateOutputType = {
   url: string | null
   image: string | null
   status: $Enums.SubmissionStatus | null
+  aiUseDeclaration: string | null
+  aiUsed: boolean | null
+  noteForReviewer: string | null
   projectId: string | null
   createdAt: Date | null
   updatedAt: Date | null
   reviewedById: string | null
   reviewedAt: Date | null
+  reviewReason: string | null
   hackatimeHours: number | null
   creditsAwarded: number | null
 }
@@ -63,11 +67,15 @@ export type SubmissionMaxAggregateOutputType = {
   url: string | null
   image: string | null
   status: $Enums.SubmissionStatus | null
+  aiUseDeclaration: string | null
+  aiUsed: boolean | null
+  noteForReviewer: string | null
   projectId: string | null
   createdAt: Date | null
   updatedAt: Date | null
   reviewedById: string | null
   reviewedAt: Date | null
+  reviewReason: string | null
   hackatimeHours: number | null
   creditsAwarded: number | null
 }
@@ -81,11 +89,15 @@ export type SubmissionCountAggregateOutputType = {
   url: number
   image: number
   status: number
+  aiUseDeclaration: number
+  aiUsed: number
+  noteForReviewer: number
   projectId: number
   createdAt: number
   updatedAt: number
   reviewedById: number
   reviewedAt: number
+  reviewReason: number
   hackatimeHours: number
   creditsAwarded: number
   _all: number
@@ -111,11 +123,15 @@ export type SubmissionMinAggregateInputType = {
   url?: true
   image?: true
   status?: true
+  aiUseDeclaration?: true
+  aiUsed?: true
+  noteForReviewer?: true
   projectId?: true
   createdAt?: true
   updatedAt?: true
   reviewedById?: true
   reviewedAt?: true
+  reviewReason?: true
   hackatimeHours?: true
   creditsAwarded?: true
 }
@@ -129,11 +145,15 @@ export type SubmissionMaxAggregateInputType = {
   url?: true
   image?: true
   status?: true
+  aiUseDeclaration?: true
+  aiUsed?: true
+  noteForReviewer?: true
   projectId?: true
   createdAt?: true
   updatedAt?: true
   reviewedById?: true
   reviewedAt?: true
+  reviewReason?: true
   hackatimeHours?: true
   creditsAwarded?: true
 }
@@ -147,11 +167,15 @@ export type SubmissionCountAggregateInputType = {
   url?: true
   image?: true
   status?: true
+  aiUseDeclaration?: true
+  aiUsed?: true
+  noteForReviewer?: true
   projectId?: true
   createdAt?: true
   updatedAt?: true
   reviewedById?: true
   reviewedAt?: true
+  reviewReason?: true
   hackatimeHours?: true
   creditsAwarded?: true
   _all?: true
@@ -252,11 +276,15 @@ export type SubmissionGroupByOutputType = {
   url: string | null
   image: string | null
   status: $Enums.SubmissionStatus
+  aiUseDeclaration: string | null
+  aiUsed: boolean | null
+  noteForReviewer: string | null
   projectId: string | null
   createdAt: Date
   updatedAt: Date
   reviewedById: string | null
   reviewedAt: Date | null
+  reviewReason: string | null
   hackatimeHours: number | null
   creditsAwarded: number | null
   _count: SubmissionCountAggregateOutputType | null
@@ -293,11 +321,15 @@ export type SubmissionWhereInput = {
   url?: Prisma.StringNullableFilter<"Submission"> | string | null
   image?: Prisma.StringNullableFilter<"Submission"> | string | null
   status?: Prisma.EnumSubmissionStatusFilter<"Submission"> | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.StringNullableFilter<"Submission"> | string | null
+  aiUsed?: Prisma.BoolNullableFilter<"Submission"> | boolean | null
+  noteForReviewer?: Prisma.StringNullableFilter<"Submission"> | string | null
   projectId?: Prisma.StringNullableFilter<"Submission"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Submission"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Submission"> | Date | string
   reviewedById?: Prisma.StringNullableFilter<"Submission"> | string | null
   reviewedAt?: Prisma.DateTimeNullableFilter<"Submission"> | Date | string | null
+  reviewReason?: Prisma.StringNullableFilter<"Submission"> | string | null
   hackatimeHours?: Prisma.FloatNullableFilter<"Submission"> | number | null
   creditsAwarded?: Prisma.IntNullableFilter<"Submission"> | number | null
   votes?: Prisma.VoteListRelationFilter
@@ -317,11 +349,15 @@ export type SubmissionOrderByWithRelationInput = {
   url?: Prisma.SortOrderInput | Prisma.SortOrder
   image?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
+  aiUseDeclaration?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiUsed?: Prisma.SortOrderInput | Prisma.SortOrder
+  noteForReviewer?: Prisma.SortOrderInput | Prisma.SortOrder
   projectId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   reviewedById?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  reviewReason?: Prisma.SortOrderInput | Prisma.SortOrder
   hackatimeHours?: Prisma.SortOrderInput | Prisma.SortOrder
   creditsAwarded?: Prisma.SortOrderInput | Prisma.SortOrder
   votes?: Prisma.VoteOrderByRelationAggregateInput
@@ -344,11 +380,15 @@ export type SubmissionWhereUniqueInput = Prisma.AtLeast<{
   url?: Prisma.StringNullableFilter<"Submission"> | string | null
   image?: Prisma.StringNullableFilter<"Submission"> | string | null
   status?: Prisma.EnumSubmissionStatusFilter<"Submission"> | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.StringNullableFilter<"Submission"> | string | null
+  aiUsed?: Prisma.BoolNullableFilter<"Submission"> | boolean | null
+  noteForReviewer?: Prisma.StringNullableFilter<"Submission"> | string | null
   projectId?: Prisma.StringNullableFilter<"Submission"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Submission"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Submission"> | Date | string
   reviewedById?: Prisma.StringNullableFilter<"Submission"> | string | null
   reviewedAt?: Prisma.DateTimeNullableFilter<"Submission"> | Date | string | null
+  reviewReason?: Prisma.StringNullableFilter<"Submission"> | string | null
   hackatimeHours?: Prisma.FloatNullableFilter<"Submission"> | number | null
   creditsAwarded?: Prisma.IntNullableFilter<"Submission"> | number | null
   votes?: Prisma.VoteListRelationFilter
@@ -368,11 +408,15 @@ export type SubmissionOrderByWithAggregationInput = {
   url?: Prisma.SortOrderInput | Prisma.SortOrder
   image?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
+  aiUseDeclaration?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiUsed?: Prisma.SortOrderInput | Prisma.SortOrder
+  noteForReviewer?: Prisma.SortOrderInput | Prisma.SortOrder
   projectId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   reviewedById?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  reviewReason?: Prisma.SortOrderInput | Prisma.SortOrder
   hackatimeHours?: Prisma.SortOrderInput | Prisma.SortOrder
   creditsAwarded?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.SubmissionCountOrderByAggregateInput
@@ -394,11 +438,15 @@ export type SubmissionScalarWhereWithAggregatesInput = {
   url?: Prisma.StringNullableWithAggregatesFilter<"Submission"> | string | null
   image?: Prisma.StringNullableWithAggregatesFilter<"Submission"> | string | null
   status?: Prisma.EnumSubmissionStatusWithAggregatesFilter<"Submission"> | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.StringNullableWithAggregatesFilter<"Submission"> | string | null
+  aiUsed?: Prisma.BoolNullableWithAggregatesFilter<"Submission"> | boolean | null
+  noteForReviewer?: Prisma.StringNullableWithAggregatesFilter<"Submission"> | string | null
   projectId?: Prisma.StringNullableWithAggregatesFilter<"Submission"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Submission"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Submission"> | Date | string
   reviewedById?: Prisma.StringNullableWithAggregatesFilter<"Submission"> | string | null
   reviewedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Submission"> | Date | string | null
+  reviewReason?: Prisma.StringNullableWithAggregatesFilter<"Submission"> | string | null
   hackatimeHours?: Prisma.FloatNullableWithAggregatesFilter<"Submission"> | number | null
   creditsAwarded?: Prisma.IntNullableWithAggregatesFilter<"Submission"> | number | null
 }
@@ -410,9 +458,13 @@ export type SubmissionCreateInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
   votes?: Prisma.VoteCreateNestedManyWithoutSubmissionInput
@@ -432,11 +484,15 @@ export type SubmissionUncheckedCreateInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   projectId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedById?: string | null
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutSubmissionInput
@@ -450,9 +506,13 @@ export type SubmissionUpdateInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUpdateManyWithoutSubmissionNestedInput
@@ -472,11 +532,15 @@ export type SubmissionUncheckedUpdateInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   projectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUncheckedUpdateManyWithoutSubmissionNestedInput
@@ -492,11 +556,15 @@ export type SubmissionCreateManyInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   projectId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedById?: string | null
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
 }
@@ -508,9 +576,13 @@ export type SubmissionUpdateManyMutationInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
@@ -524,11 +596,15 @@ export type SubmissionUncheckedUpdateManyInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   projectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
@@ -552,11 +628,15 @@ export type SubmissionCountOrderByAggregateInput = {
   url?: Prisma.SortOrder
   image?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  aiUseDeclaration?: Prisma.SortOrder
+  aiUsed?: Prisma.SortOrder
+  noteForReviewer?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   reviewedById?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
+  reviewReason?: Prisma.SortOrder
   hackatimeHours?: Prisma.SortOrder
   creditsAwarded?: Prisma.SortOrder
 }
@@ -575,11 +655,15 @@ export type SubmissionMaxOrderByAggregateInput = {
   url?: Prisma.SortOrder
   image?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  aiUseDeclaration?: Prisma.SortOrder
+  aiUsed?: Prisma.SortOrder
+  noteForReviewer?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   reviewedById?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
+  reviewReason?: Prisma.SortOrder
   hackatimeHours?: Prisma.SortOrder
   creditsAwarded?: Prisma.SortOrder
 }
@@ -593,11 +677,15 @@ export type SubmissionMinOrderByAggregateInput = {
   url?: Prisma.SortOrder
   image?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  aiUseDeclaration?: Prisma.SortOrder
+  aiUsed?: Prisma.SortOrder
+  noteForReviewer?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   reviewedById?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
+  reviewReason?: Prisma.SortOrder
   hackatimeHours?: Prisma.SortOrder
   creditsAwarded?: Prisma.SortOrder
 }
@@ -747,6 +835,10 @@ export type EnumSubmissionStatusFieldUpdateOperationsInput = {
   set?: $Enums.SubmissionStatus
 }
 
+export type NullableBoolFieldUpdateOperationsInput = {
+  set?: boolean | null
+}
+
 export type NullableFloatFieldUpdateOperationsInput = {
   set?: number | null
   increment?: number
@@ -834,9 +926,13 @@ export type SubmissionCreateWithoutReviewerInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
   votes?: Prisma.VoteCreateNestedManyWithoutSubmissionInput
@@ -855,10 +951,14 @@ export type SubmissionUncheckedCreateWithoutReviewerInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   projectId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutSubmissionInput
@@ -882,9 +982,13 @@ export type SubmissionCreateWithoutUserInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
   votes?: Prisma.VoteCreateNestedManyWithoutSubmissionInput
@@ -902,11 +1006,15 @@ export type SubmissionUncheckedCreateWithoutUserInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   projectId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedById?: string | null
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutSubmissionInput
@@ -951,11 +1059,15 @@ export type SubmissionScalarWhereInput = {
   url?: Prisma.StringNullableFilter<"Submission"> | string | null
   image?: Prisma.StringNullableFilter<"Submission"> | string | null
   status?: Prisma.EnumSubmissionStatusFilter<"Submission"> | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.StringNullableFilter<"Submission"> | string | null
+  aiUsed?: Prisma.BoolNullableFilter<"Submission"> | boolean | null
+  noteForReviewer?: Prisma.StringNullableFilter<"Submission"> | string | null
   projectId?: Prisma.StringNullableFilter<"Submission"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Submission"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Submission"> | Date | string
   reviewedById?: Prisma.StringNullableFilter<"Submission"> | string | null
   reviewedAt?: Prisma.DateTimeNullableFilter<"Submission"> | Date | string | null
+  reviewReason?: Prisma.StringNullableFilter<"Submission"> | string | null
   hackatimeHours?: Prisma.FloatNullableFilter<"Submission"> | number | null
   creditsAwarded?: Prisma.IntNullableFilter<"Submission"> | number | null
 }
@@ -983,9 +1095,13 @@ export type SubmissionCreateWithoutOrgInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
   votes?: Prisma.VoteCreateNestedManyWithoutSubmissionInput
@@ -1003,11 +1119,15 @@ export type SubmissionUncheckedCreateWithoutOrgInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   projectId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedById?: string | null
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutSubmissionInput
@@ -1047,9 +1167,13 @@ export type SubmissionCreateWithoutVotesInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
   user: Prisma.UserCreateNestedOneWithoutSubmissionsInput
@@ -1068,11 +1192,15 @@ export type SubmissionUncheckedCreateWithoutVotesInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   projectId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedById?: string | null
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
   creditTransactions?: Prisma.CreditTransactionUncheckedCreateNestedManyWithoutSubmissionInput
@@ -1101,9 +1229,13 @@ export type SubmissionUpdateWithoutVotesInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   user?: Prisma.UserUpdateOneRequiredWithoutSubmissionsNestedInput
@@ -1122,11 +1254,15 @@ export type SubmissionUncheckedUpdateWithoutVotesInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   projectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   creditTransactions?: Prisma.CreditTransactionUncheckedUpdateManyWithoutSubmissionNestedInput
@@ -1139,9 +1275,13 @@ export type SubmissionCreateWithoutProjectInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
   votes?: Prisma.VoteCreateNestedManyWithoutSubmissionInput
@@ -1160,10 +1300,14 @@ export type SubmissionUncheckedCreateWithoutProjectInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedById?: string | null
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutSubmissionInput
@@ -1203,9 +1347,13 @@ export type SubmissionCreateWithoutCreditTransactionsInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
   votes?: Prisma.VoteCreateNestedManyWithoutSubmissionInput
@@ -1224,11 +1372,15 @@ export type SubmissionUncheckedCreateWithoutCreditTransactionsInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   projectId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedById?: string | null
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutSubmissionInput
@@ -1257,9 +1409,13 @@ export type SubmissionUpdateWithoutCreditTransactionsInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUpdateManyWithoutSubmissionNestedInput
@@ -1278,11 +1434,15 @@ export type SubmissionUncheckedUpdateWithoutCreditTransactionsInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   projectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUncheckedUpdateManyWithoutSubmissionNestedInput
@@ -1297,10 +1457,14 @@ export type SubmissionCreateManyReviewerInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   projectId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
 }
@@ -1313,11 +1477,15 @@ export type SubmissionCreateManyUserInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   projectId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedById?: string | null
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
 }
@@ -1329,9 +1497,13 @@ export type SubmissionUpdateWithoutReviewerInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUpdateManyWithoutSubmissionNestedInput
@@ -1350,10 +1522,14 @@ export type SubmissionUncheckedUpdateWithoutReviewerInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   projectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUncheckedUpdateManyWithoutSubmissionNestedInput
@@ -1369,10 +1545,14 @@ export type SubmissionUncheckedUpdateManyWithoutReviewerInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   projectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
@@ -1384,9 +1564,13 @@ export type SubmissionUpdateWithoutUserInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUpdateManyWithoutSubmissionNestedInput
@@ -1404,11 +1588,15 @@ export type SubmissionUncheckedUpdateWithoutUserInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   projectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUncheckedUpdateManyWithoutSubmissionNestedInput
@@ -1423,11 +1611,15 @@ export type SubmissionUncheckedUpdateManyWithoutUserInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   projectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
@@ -1440,11 +1632,15 @@ export type SubmissionCreateManyOrgInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   projectId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedById?: string | null
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
 }
@@ -1456,9 +1652,13 @@ export type SubmissionUpdateWithoutOrgInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUpdateManyWithoutSubmissionNestedInput
@@ -1476,11 +1676,15 @@ export type SubmissionUncheckedUpdateWithoutOrgInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   projectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUncheckedUpdateManyWithoutSubmissionNestedInput
@@ -1495,11 +1699,15 @@ export type SubmissionUncheckedUpdateManyWithoutOrgInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   projectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
@@ -1513,10 +1721,14 @@ export type SubmissionCreateManyProjectInput = {
   url?: string | null
   image?: string | null
   status?: $Enums.SubmissionStatus
+  aiUseDeclaration?: string | null
+  aiUsed?: boolean | null
+  noteForReviewer?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   reviewedById?: string | null
   reviewedAt?: Date | string | null
+  reviewReason?: string | null
   hackatimeHours?: number | null
   creditsAwarded?: number | null
 }
@@ -1528,9 +1740,13 @@ export type SubmissionUpdateWithoutProjectInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUpdateManyWithoutSubmissionNestedInput
@@ -1549,10 +1765,14 @@ export type SubmissionUncheckedUpdateWithoutProjectInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   votes?: Prisma.VoteUncheckedUpdateManyWithoutSubmissionNestedInput
@@ -1568,10 +1788,14 @@ export type SubmissionUncheckedUpdateManyWithoutProjectInput = {
   url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
+  aiUseDeclaration?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiUsed?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  noteForReviewer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hackatimeHours?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   creditsAwarded?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
@@ -1625,11 +1849,15 @@ export type SubmissionSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   url?: boolean
   image?: boolean
   status?: boolean
+  aiUseDeclaration?: boolean
+  aiUsed?: boolean
+  noteForReviewer?: boolean
   projectId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   reviewedById?: boolean
   reviewedAt?: boolean
+  reviewReason?: boolean
   hackatimeHours?: boolean
   creditsAwarded?: boolean
   votes?: boolean | Prisma.Submission$votesArgs<ExtArgs>
@@ -1650,11 +1878,15 @@ export type SubmissionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   url?: boolean
   image?: boolean
   status?: boolean
+  aiUseDeclaration?: boolean
+  aiUsed?: boolean
+  noteForReviewer?: boolean
   projectId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   reviewedById?: boolean
   reviewedAt?: boolean
+  reviewReason?: boolean
   hackatimeHours?: boolean
   creditsAwarded?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1672,11 +1904,15 @@ export type SubmissionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   url?: boolean
   image?: boolean
   status?: boolean
+  aiUseDeclaration?: boolean
+  aiUsed?: boolean
+  noteForReviewer?: boolean
   projectId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   reviewedById?: boolean
   reviewedAt?: boolean
+  reviewReason?: boolean
   hackatimeHours?: boolean
   creditsAwarded?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1694,16 +1930,20 @@ export type SubmissionSelectScalar = {
   url?: boolean
   image?: boolean
   status?: boolean
+  aiUseDeclaration?: boolean
+  aiUsed?: boolean
+  noteForReviewer?: boolean
   projectId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   reviewedById?: boolean
   reviewedAt?: boolean
+  reviewReason?: boolean
   hackatimeHours?: boolean
   creditsAwarded?: boolean
 }
 
-export type SubmissionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "orgId" | "title" | "description" | "url" | "image" | "status" | "projectId" | "createdAt" | "updatedAt" | "reviewedById" | "reviewedAt" | "hackatimeHours" | "creditsAwarded", ExtArgs["result"]["submission"]>
+export type SubmissionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "orgId" | "title" | "description" | "url" | "image" | "status" | "aiUseDeclaration" | "aiUsed" | "noteForReviewer" | "projectId" | "createdAt" | "updatedAt" | "reviewedById" | "reviewedAt" | "reviewReason" | "hackatimeHours" | "creditsAwarded", ExtArgs["result"]["submission"]>
 export type SubmissionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   votes?: boolean | Prisma.Submission$votesArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1745,11 +1985,15 @@ export type $SubmissionPayload<ExtArgs extends runtime.Types.Extensions.Internal
     url: string | null
     image: string | null
     status: $Enums.SubmissionStatus
+    aiUseDeclaration: string | null
+    aiUsed: boolean | null
+    noteForReviewer: string | null
     projectId: string | null
     createdAt: Date
     updatedAt: Date
     reviewedById: string | null
     reviewedAt: Date | null
+    reviewReason: string | null
     hackatimeHours: number | null
     creditsAwarded: number | null
   }, ExtArgs["result"]["submission"]>
@@ -2189,11 +2433,15 @@ export interface SubmissionFieldRefs {
   readonly url: Prisma.FieldRef<"Submission", 'String'>
   readonly image: Prisma.FieldRef<"Submission", 'String'>
   readonly status: Prisma.FieldRef<"Submission", 'SubmissionStatus'>
+  readonly aiUseDeclaration: Prisma.FieldRef<"Submission", 'String'>
+  readonly aiUsed: Prisma.FieldRef<"Submission", 'Boolean'>
+  readonly noteForReviewer: Prisma.FieldRef<"Submission", 'String'>
   readonly projectId: Prisma.FieldRef<"Submission", 'String'>
   readonly createdAt: Prisma.FieldRef<"Submission", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Submission", 'DateTime'>
   readonly reviewedById: Prisma.FieldRef<"Submission", 'String'>
   readonly reviewedAt: Prisma.FieldRef<"Submission", 'DateTime'>
+  readonly reviewReason: Prisma.FieldRef<"Submission", 'String'>
   readonly hackatimeHours: Prisma.FieldRef<"Submission", 'Float'>
   readonly creditsAwarded: Prisma.FieldRef<"Submission", 'Int'>
 }

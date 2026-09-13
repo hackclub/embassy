@@ -62,6 +62,23 @@ export default function ReviewForm({
             </p>
           </div>
 
+          <div>
+            <label htmlFor="reviewReason" className="mb-2 block font-bold">
+              Reason for this decision{" "}
+              <span className="font-normal text-govuk-grey-4">
+                (shown to the student)
+              </span>
+            </label>
+            <textarea
+              id="reviewReason"
+              name="reviewReason"
+              rows={3}
+              required
+              placeholder="e.g. Solid build and the demo works — great docs too."
+              className="w-full border-2 border-govuk-black px-3 py-2 text-base"
+            />
+          </div>
+
           <div className="space-y-2">
             <button
               type="submit"
