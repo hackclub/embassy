@@ -7,7 +7,6 @@ export const ALLOWED_IMAGE_TYPES = [
 export const MAX_NOTE_LENGTH = 300;
 export const MAX_NAME_LENGTH = 80;
 export const MIN_NAME_LENGTH = 2;
-export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 export const FEEDBACK_RETENTION_DAYS = 30;
 export const RECIPIENT_TOKEN_BYTES = 32;
 export const JWT_MAX_AGE_DAYS = 30;

@@ -62,10 +62,6 @@ async function getBucketHours(
   return seconds;
 }
 
-function titlematch(a: string, b: string): boolean {
-  return a.trim().toLowerCase() === b.trim().toLowerCase();
-}
-
 export async function getLeaderboard(
   bucket: LeaderboardBucket,
   take: number = LEADERBOARD_TOP_N,

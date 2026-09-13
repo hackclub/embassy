@@ -52,8 +52,8 @@ export default function SubmitForm({
 
       {!project.hackatimeProject && (
         <p className="border-l-4 border-govuk-yellow bg-[#fff7e6] px-3 py-2 text-sm font-semibold">
-          This project isn't linked to a Hackatime project — no hours will be
-          snapshotted, so you'd get 0 credits on acceptance. Add one in “Edit”
+          This project isn’t linked to a Hackatime project — no hours will be
+          snapshotted, so you’d get 0 credits on acceptance. Add one in “Edit”
           first.
         </p>
       )}

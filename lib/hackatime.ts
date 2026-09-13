@@ -27,10 +27,6 @@ export type HackatimeMe = {
 };
 
 export function isHackatimeConfigured(): boolean {
-  return Boolean(
-    process.env.AUTH_HACKATIME_CLIENT_ID &&
-    process.env.AUTH_HACKATIME_CLIENT_SECRET,
-  );
   const id = process.env.AUTH_HACKATIME_CLIENT_ID ?? "";
   const secret = process.env.AUTH_HACKATIME_CLIENT_SECRET ?? "";
   const placeholder = (v: string) => !v || v.trim().toLowerCase() === "placeholder";
@@ -200,6 +196,9 @@ export async function fetchTrackedTime(
     return hrs;
   } catch {
     return null;
+  }
+}
+
 export class HackatimeAlreadyLinkedException extends Error {
   constructor() {
     super("This Hackatime account is already linked to another user");
